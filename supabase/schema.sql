@@ -25,7 +25,6 @@ CREATE TABLE characters (
   notes       TEXT,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (name, stars)
 );
 
 CREATE INDEX idx_characters_stars     ON characters(stars);

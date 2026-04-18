@@ -51,8 +51,7 @@ def import_characters(supabase: Client, df: pd.DataFrame):
             "status":    "rostered",
         })
     if records:
-        # Unique key is (name, stars) — upsert updates level/status if re-imported
-        supabase.table("characters").upsert(records, on_conflict="name,stars").execute()
+        supabase.table("characters").insert(records).execute()
     print(f"  ✓ {len(records)} personnages importés")
 
 def import_supports(supabase: Client, df: pd.DataFrame):
