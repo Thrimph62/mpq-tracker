@@ -104,7 +104,11 @@ export default function Characters() {
   const [saving, setSaving]       = useState(false)
 
   async function load() {
-    const { data } = await supabase.from('characters').select('*').order('base_name').order('stars', { ascending: false })
+    const { data } = await supabase
+      .from('characters').select('*')
+      .order('base_name')
+      .order('version')
+      .order('level', { ascending: false })
     if (data) setChars(data)
     setLoading(false)
   }
@@ -124,11 +128,31 @@ export default function Characters() {
       return matchSearch && matchStars && matchStatus && matchAscended
     })
     .sort((a, b) => {
+      // Primary sort
       const va = sortField === 'base_name' ? a.base_name.toLowerCase() : sortField === 'stars' ? a.stars : (a.level ?? -1)
       const vb = sortField === 'base_name' ? b.base_name.toLowerCase() : sortField === 'stars' ? b.stars : (b.level ?? -1)
       if (va < vb) return sortDir === 'asc' ? -1 : 1
       if (va > vb) return sortDir === 'asc' ? 1 : -1
-      return 0
+      // Tie-breakers: always name → version → level
+      if (sortField !== 'base_name') {
+        const na = a.base_name.toLowerCase(), nb = b.base_name.toLowerCase()
+        if (na < nb) return -1
+        if (na > nb) return 1
+      }
+      if (sortField !== 'base_name') {
+        const va2 = a.version?.toLowerCase() ?? '', vb2 = b.version?.toLowerCase() ?? ''
+        if (va2 < vb2) return -1
+        if (va2 > vb2) return 1
+      }
+      if (sortField === 'base_name') {
+        // secondary: version
+        const va2 = a.version?.toLowerCase() ?? '', vb2 = b.version?.toLowerCase() ?? ''
+        if (va2 < vb2) return -1
+        if (va2 > vb2) return 1
+        // tertiary: level desc
+        return (b.level ?? -1) - (a.level ?? -1)
+      }
+      return (b.level ?? -1) - (a.level ?? -1)
     })
 
   const grouped = filtered.reduce<Record<string, Character[]>>((acc, c) => {
