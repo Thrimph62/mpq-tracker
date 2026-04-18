@@ -8,6 +8,7 @@ import Teams from './pages/Teams'
 import Supports from './pages/Supports'
 import Quetes from './pages/Quetes'
 import PuzzleGauntlet from './pages/PuzzleGauntlet'
+import Import from './pages/Import'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth()
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="supports" element={<Supports />} />
         <Route path="quetes" element={<Quetes />} />
         <Route path="gauntlet" element={<PuzzleGauntlet />} />
+        <Route path="import" element={<Import />} />
       </Route>
     </Routes>
   )

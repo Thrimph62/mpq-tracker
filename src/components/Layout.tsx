@@ -1,7 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import {
-  LayoutDashboard, Users, Swords, Shield, Scroll, Puzzle, LogOut
+  LayoutDashboard, Users, Swords, Shield, Scroll, Puzzle, LogOut, Upload
 } from 'lucide-react'
 
 const NAV = [
@@ -11,6 +11,7 @@ const NAV = [
   { to: '/supports',  icon: Shield,          label: 'Supports'        },
   { to: '/quetes',    icon: Scroll,          label: 'Quêtes'          },
   { to: '/gauntlet',  icon: Puzzle,          label: 'Puzzle Gauntlet' },
+  { to: '/import',    icon: Upload,          label: 'Import Excel'    },
 ]
 
 export default function Layout() {
