@@ -48,16 +48,21 @@ export interface Support {
   rang: number | null
   niveau: number | null
   restriction: string | null
-  mp_bonus: string | null
-  degats_up: string | null
-  degats_ennemis: string | null
-  creation: string | null
-  destruction_ennemi: string | null
-  fortification: string | null
-  sante: string | null
-  autre: string | null
-  synergie: string | null
-  for_filter: string | null
+  // Effects 1–5
+  effect_1_category: string | null
+  effect_1_detail: string | null
+  effect_2_category: string | null
+  effect_2_detail: string | null
+  effect_3_category: string | null
+  effect_3_detail: string | null
+  effect_4_category: string | null
+  effect_4_detail: string | null
+  effect_5_category: string | null
+  effect_5_detail: string | null
+  // Synergy
+  synergy_restriction: string | null
+  synergy_category: string | null
+  synergy_detail: string | null
   created_at: string
   updated_at: string
 }

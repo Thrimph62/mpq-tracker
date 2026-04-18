@@ -61,24 +61,32 @@ CREATE INDEX idx_powers_character ON character_powers(character_id);
 -- ────────────────────────────────────────────────
 -- SUPPORTS
 -- ────────────────────────────────────────────────
+-- Each support has up to 5 effects, each with a category + free text detail.
+-- Synergy has: a restriction (who it synergises with) + same category+detail structure.
+-- Effect categories are stored as free text — no enum constraint so new ones can be added anytime.
 CREATE TABLE supports (
-  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name                TEXT NOT NULL,
-  rang                INTEGER,
-  niveau              INTEGER,
-  restriction         TEXT,   -- Héros, Vilains, /
-  mp_bonus            TEXT,
-  degats_up           TEXT,
-  degats_ennemis      TEXT,
-  creation            TEXT,
-  destruction_ennemi  TEXT,
-  fortification       TEXT,
-  sante               TEXT,
-  autre               TEXT,
-  synergie            TEXT,
-  for_filter          TEXT,
-  created_at          TIMESTAMPTZ DEFAULT NOW(),
-  updated_at          TIMESTAMPTZ DEFAULT NOW()
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name                 TEXT NOT NULL,
+  rang                 INTEGER,
+  niveau               INTEGER,
+  restriction          TEXT,          -- Héros, Vilains, / or custom
+  -- Effects 1–5
+  effect_1_category    TEXT,
+  effect_1_detail      TEXT,
+  effect_2_category    TEXT,
+  effect_2_detail      TEXT,
+  effect_3_category    TEXT,
+  effect_3_detail      TEXT,
+  effect_4_category    TEXT,
+  effect_4_detail      TEXT,
+  effect_5_category    TEXT,
+  effect_5_detail      TEXT,
+  -- Synergy
+  synergy_restriction  TEXT,          -- free text: character name, tag, etc.
+  synergy_category     TEXT,
+  synergy_detail       TEXT,
+  created_at           TIMESTAMPTZ DEFAULT NOW(),
+  updated_at           TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_supports_name ON supports(name);
