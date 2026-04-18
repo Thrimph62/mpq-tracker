@@ -1,9 +1,22 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Support } from '../types'
-import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Search, X, Pencil, Trash2 } from 'lucide-react'
 
-const RESTRICTIONS = ['/', 'Héros', 'Vilains']
+// Effect columns shown in the table
+const EFFECT_COLS: { key: keyof Support; label: string; short: string }[] = [
+  { key: 'mp_bonus',           label: 'Bonus MP',          short: 'MP'    },
+  { key: 'degats_up',          label: '🡹 Dégâts',          short: '🡹Dég' },
+  { key: 'degats_ennemis',     label: '🢃 Dég. Ennemis',    short: '🢃Dég' },
+  { key: 'creation',           label: 'Création',           short: 'Créa'  },
+  { key: 'destruction_ennemi', label: 'Destruction',        short: 'Destr' },
+  { key: 'fortification',      label: 'Fortification',      short: 'Fort'  },
+  { key: 'sante',              label: 'Santé',              short: 'Santé' },
+  { key: 'autre',              label: 'Autre',              short: 'Autre' },
+  { key: 'synergie',           label: 'Synergie',           short: 'Syn'   },
+]
+
+const DEFAULT_RESTRICTIONS = ['/', 'Héros', 'Vilains']
 
 const EMPTY: Omit<Support, 'id' | 'created_at' | 'updated_at'> = {
   name: '', rang: 5, niveau: 250, restriction: '/',
@@ -13,48 +26,60 @@ const EMPTY: Omit<Support, 'id' | 'created_at' | 'updated_at'> = {
 }
 
 export default function Supports() {
-  const [supports, setSupports] = useState<Support[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [search, setSearch]     = useState('')
+  const [supports, setSupports]   = useState<Support[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [search, setSearch]       = useState('')
   const [filterRestr, setFilterRestr] = useState('')
-  const [expanded, setExpanded] = useState<string | null>(null)
-  const [modal, setModal]       = useState<'add' | 'edit' | null>(null)
-  const [form, setForm]         = useState<typeof EMPTY>(EMPTY)
-  const [editId, setEditId]     = useState<string | null>(null)
-  const [saving, setSaving]     = useState(false)
+  const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
+  const [form, setForm]           = useState<typeof EMPTY>(EMPTY)
+  const [editId, setEditId]       = useState<string | null>(null)
+  const [saving, setSaving]       = useState(false)
+  const [customRestr, setCustomRestr] = useState('')
 
   async function load() {
     const { data } = await supabase.from('supports').select('*').order('name')
     if (data) setSupports(data)
     setLoading(false)
   }
-
   useEffect(() => { load() }, [])
 
+  // Build restriction list from existing data + defaults
+  const allRestrictions = [
+    ...new Set([
+      ...DEFAULT_RESTRICTIONS,
+      ...supports.map(s => s.restriction).filter(Boolean) as string[],
+    ])
+  ].sort()
+
+  // Search across name + all effect fields
   const visible = supports.filter(s => {
-    const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
-      (s.synergie?.toLowerCase().includes(search.toLowerCase()) ?? false)
-    const matchRestr  = !filterRestr || s.restriction === filterRestr
-    return matchSearch && matchRestr
+    if (filterRestr && s.restriction !== filterRestr) return false
+    if (!search) return true
+    const q = search.toLowerCase()
+    return [
+      s.name, s.mp_bonus, s.degats_up, s.degats_ennemis, s.creation,
+      s.destruction_ennemi, s.fortification, s.sante, s.autre, s.synergie,
+      s.restriction,
+    ].some(v => v?.toLowerCase().includes(q))
   })
 
-  function openAdd()     { setForm(EMPTY); setEditId(null); setModal('add') }
+  function openAdd()  { setForm(EMPTY); setEditId(null); setModal('add') }
   function openEdit(s: Support) {
     const { id, created_at, updated_at, ...rest } = s
     setForm(rest); setEditId(s.id); setModal('edit')
   }
-  function closeModal()  { setModal(null); setEditId(null) }
+  function closeModal() { setModal(null); setEditId(null); setCustomRestr('') }
 
-  const f = (key: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm(prev => ({ ...prev, [key]: e.target.value || null }))
+  const f = (key: keyof typeof EMPTY) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setForm(prev => ({ ...prev, [key]: e.target.value || null }))
 
   async function save() {
     setSaving(true)
-    if (modal === 'add') {
-      await supabase.from('supports').insert([form])
-    } else if (editId) {
-      await supabase.from('supports').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
-    }
+    // Apply custom restriction if entered
+    const payload = { ...form, restriction: customRestr || form.restriction }
+    if (modal === 'add') await supabase.from('supports').insert([payload])
+    else if (editId) await supabase.from('supports').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId)
     await load(); closeModal(); setSaving(false)
   }
 
@@ -63,12 +88,6 @@ export default function Supports() {
     await supabase.from('supports').delete().eq('id', id)
     setSupports(prev => prev.filter(s => s.id !== id))
   }
-
-  const EFFECT_FIELDS: Array<[keyof Support, string]> = [
-    ['mp_bonus', 'Bonus MP'], ['degats_up', '🡹 Dégats'], ['degats_ennemis', '🢃 Dégats Ennemis'],
-    ['creation', 'Création'], ['destruction_ennemi', 'Destruction Ennemi'],
-    ['fortification', 'Fortification'], ['sante', 'Santé'], ['autre', 'Autre'],
-  ]
 
   return (
     <div className="space-y-4">
@@ -81,68 +100,89 @@ export default function Supports() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-48">
+        <div className="relative flex-1 min-w-56">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
-          <input className="input pl-9" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input
+            className="input pl-9"
+            placeholder="Rechercher nom, effet, synergie..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
         <select className="input w-auto" value={filterRestr} onChange={e => setFilterRestr(e.target.value)}>
           <option value="">Toutes restrictions</option>
-          {RESTRICTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+          {allRestrictions.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
       </div>
 
       <p className="text-sm text-[#8888AA]">{visible.length} support{visible.length !== 1 ? 's' : ''}</p>
 
+      {/* Table */}
       {loading ? <Spinner /> : (
-        <div className="space-y-2">
-          {visible.map(s => (
-            <div key={s.id} className="card">
-              <div className="flex items-center justify-between gap-4">
-                <button
-                  onClick={() => setExpanded(expanded === s.id ? null : s.id)}
-                  className="flex-1 text-left flex items-center gap-3 group"
-                >
-                  <div className="flex-1">
-                    <span className="font-semibold group-hover:text-marvel-gold transition-colors">{s.name}</span>
-                    <div className="flex gap-3 mt-0.5 text-xs text-[#8888AA]">
-                      {s.rang && <span>{s.rang}★</span>}
-                      {s.niveau && <span>Niv. {s.niveau}</span>}
-                      {s.restriction && s.restriction !== '/' && (
-                        <span className={s.restriction === 'Héros' ? 'text-blue-400' : 'text-red-400'}>
-                          {s.restriction}
+        <div className="card overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-[#2D2D4E] text-[#8888AA]">
+                <th className="text-left py-2 px-2 font-normal min-w-36">Nom</th>
+                <th className="text-center py-2 px-2 font-normal">★</th>
+                <th className="text-center py-2 px-2 font-normal">Niv.</th>
+                <th className="text-center py-2 px-2 font-normal">Restr.</th>
+                {EFFECT_COLS.map(c => (
+                  <th key={c.key} className="text-center py-2 px-1 font-normal min-w-20" title={c.label}>
+                    {c.short}
+                  </th>
+                ))}
+                <th className="text-right py-2 px-2 font-normal">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map(s => (
+                <tr key={s.id} className="border-b border-[#2D2D4E]/40 hover:bg-[#2D2D4E]/20">
+                  <td className="py-2 px-2 font-medium text-white">{s.name}</td>
+                  <td className="py-2 px-2 text-center text-yellow-400">{s.rang ? '★'.repeat(Math.min(s.rang, 5)) : '—'}</td>
+                  <td className="py-2 px-2 text-center text-[#8888AA]">{s.niveau ?? '—'}</td>
+                  <td className="py-2 px-2 text-center">
+                    {s.restriction && s.restriction !== '/' ? (
+                      <span className={`badge border text-xs ${
+                        s.restriction === 'Héros'
+                          ? 'bg-blue-900/40 text-blue-300 border-blue-700'
+                          : s.restriction === 'Vilains'
+                          ? 'bg-red-900/40 text-red-300 border-red-700'
+                          : 'bg-[#2D2D4E] text-[#8888AA] border-[#444]'
+                      }`}>{s.restriction}</span>
+                    ) : <span className="text-[#555]">—</span>}
+                  </td>
+                  {EFFECT_COLS.map(c => (
+                    <td key={c.key} className="py-2 px-1 text-center max-w-32">
+                      {s[c.key] ? (
+                        <span
+                          className="text-[#CCCCCC] leading-tight block truncate"
+                          title={String(s[c.key])}
+                        >
+                          {String(s[c.key])}
                         </span>
+                      ) : (
+                        <span className="text-[#333]">—</span>
                       )}
-                      {s.synergie && <span className="text-marvel-gold">⚡ {s.synergie}</span>}
+                    </td>
+                  ))}
+                  <td className="py-2 px-2 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => openEdit(s)} className="text-[#8888AA] hover:text-white transition-colors">
+                        <Pencil size={13} />
+                      </button>
+                      <button onClick={() => remove(s.id)} className="text-[#8888AA] hover:text-red-400 transition-colors">
+                        <Trash2 size={13} />
+                      </button>
                     </div>
-                  </div>
-                  {expanded === s.id ? <ChevronUp size={14} className="text-[#8888AA]" /> : <ChevronDown size={14} className="text-[#8888AA]" />}
-                </button>
-                <div className="flex gap-2 shrink-0">
-                  <button onClick={() => openEdit(s)} className="text-[#8888AA] hover:text-white p-1">
-                    <Pencil size={14} />
-                  </button>
-                  <button onClick={() => remove(s.id)} className="text-[#8888AA] hover:text-red-400 p-1">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-
-              {expanded === s.id && (
-                <div className="mt-3 pt-3 border-t border-[#2D2D4E] grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {EFFECT_FIELDS.map(([key, label]) =>
-                    s[key] ? (
-                      <div key={key} className="bg-[#0D0D0D] rounded-lg p-2">
-                        <p className="text-xs text-[#8888AA]">{label}</p>
-                        <p className="text-sm text-white mt-0.5">{String(s[key])}</p>
-                      </div>
-                    ) : null
-                  )}
-                  {s.mp_bonus && <div className="col-span-full text-xs text-marvel-gold mt-1">MP: {s.mp_bonus}</div>}
-                </div>
-              )}
-            </div>
-          ))}
-          {visible.length === 0 && <div className="card text-center text-[#8888AA] py-12">Aucun support trouvé</div>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {visible.length === 0 && (
+            <p className="text-center text-[#8888AA] py-8">Aucun support trouvé</p>
+          )}
         </div>
       )}
 
@@ -157,35 +197,50 @@ export default function Supports() {
               <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
             </div>
             <div className="space-y-3">
+              <div>
+                <label className="text-xs text-[#8888AA] mb-1 block">Nom *</label>
+                <input className="input" value={form.name} onChange={f('name')} />
+              </div>
               <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-3">
-                  <label className="text-xs text-[#8888AA] mb-1 block">Nom *</label>
-                  <input className="input" value={form.name} onChange={f('name')} />
-                </div>
                 <div>
                   <label className="text-xs text-[#8888AA] mb-1 block">Rang</label>
-                  <input type="number" className="input" value={form.rang ?? ''} onChange={e => setForm(p => ({...p, rang: Number(e.target.value) || null}))} />
+                  <input type="number" className="input" value={form.rang ?? ''}
+                    onChange={e => setForm(p => ({ ...p, rang: Number(e.target.value) || null }))} />
                 </div>
                 <div>
                   <label className="text-xs text-[#8888AA] mb-1 block">Niveau</label>
-                  <input type="number" className="input" value={form.niveau ?? ''} onChange={e => setForm(p => ({...p, niveau: Number(e.target.value) || null}))} />
+                  <input type="number" className="input" value={form.niveau ?? ''}
+                    onChange={e => setForm(p => ({ ...p, niveau: Number(e.target.value) || null }))} />
                 </div>
                 <div>
                   <label className="text-xs text-[#8888AA] mb-1 block">Restriction</label>
-                  <select className="input" value={form.restriction ?? '/'} onChange={f('restriction')}>
-                    {RESTRICTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                  <select className="input" value={customRestr ? '__custom__' : (form.restriction ?? '/')}
+                    onChange={e => {
+                      if (e.target.value === '__custom__') setCustomRestr(' ')
+                      else { setCustomRestr(''); setForm(p => ({ ...p, restriction: e.target.value })) }
+                    }}>
+                    {allRestrictions.map(r => <option key={r} value={r}>{r}</option>)}
+                    <option value="__custom__">+ Nouvelle restriction...</option>
                   </select>
                 </div>
               </div>
-              {EFFECT_FIELDS.map(([key, label]) => (
-                <div key={key}>
-                  <label className="text-xs text-[#8888AA] mb-1 block">{label}</label>
-                  <input className="input text-sm" value={String((form as Record<string, unknown>)[key] ?? '')} onChange={f(key as any)} />
+              {/* Custom restriction input */}
+              {(customRestr !== '') && (
+                <div>
+                  <label className="text-xs text-[#8888AA] mb-1 block">Nouvelle restriction</label>
+                  <input className="input" placeholder="Ex: Symbiote, Mutant..." value={customRestr.trim()}
+                    onChange={e => setCustomRestr(e.target.value)} />
                 </div>
-              ))}
-              <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Synergie (personnage)</label>
-                <input className="input text-sm" value={form.synergie ?? ''} onChange={f('synergie')} />
+              )}
+              {/* Effect fields */}
+              <div className="grid grid-cols-2 gap-2">
+                {EFFECT_COLS.map(c => (
+                  <div key={c.key}>
+                    <label className="text-xs text-[#8888AA] mb-1 block">{c.label}</label>
+                    <input className="input text-sm" value={String((form as Record<string, unknown>)[c.key] ?? '')}
+                      onChange={f(c.key as keyof typeof EMPTY)} />
+                  </div>
+                ))}
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
@@ -202,5 +257,7 @@ export default function Supports() {
 }
 
 function Spinner() {
-  return <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-2 border-marvel-red border-t-transparent rounded-full" /></div>
+  return <div className="flex justify-center py-12">
+    <div className="animate-spin w-8 h-8 border-2 border-marvel-red border-t-transparent rounded-full" />
+  </div>
 }
