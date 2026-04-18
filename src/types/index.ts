@@ -27,19 +27,16 @@ export interface Character {
 export interface CharacterPower {
   id: string
   character_id: string
-  couleur: PowerColor | null
+  power_name: string | null
+  couleur: string | null   // Bleu, Rouge, Vert, Noir, Jaune, Violet
   cout: number | null
-  mp: string | null
-  degats: string | null
-  creation: string | null
-  destruction: string | null
-  conversion_gemmes: string | null
-  paralysie: string | null
-  sante: string | null
-  fortification: string | null
-  autre: string | null
-  special_tile_icon: string | null
-  special_tile_name: string | null
+  effect_1_category: string | null; effect_1_detail: string | null
+  effect_2_category: string | null; effect_2_detail: string | null
+  effect_3_category: string | null; effect_3_detail: string | null
+  effect_4_category: string | null; effect_4_detail: string | null
+  effect_5_category: string | null; effect_5_detail: string | null
+  created_at: string
+  updated_at: string
 }
 
 export interface Support {

@@ -1,12 +1,13 @@
 import { Outlet, NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import {
-  LayoutDashboard, Users, Swords, Shield, Scroll, Puzzle, LogOut, Upload
+  LayoutDashboard, Users, Swords, Shield, Scroll, Puzzle, LogOut, Upload, Zap
 } from 'lucide-react'
 
 const NAV = [
   { to: '/',          icon: LayoutDashboard, label: 'Tableau de Bord' },
   { to: '/characters',icon: Users,           label: 'Personnages'     },
+  { to: '/powers',    icon: Zap,             label: 'Pouvoirs'        },
   { to: '/teams',     icon: Swords,          label: 'Équipes'         },
   { to: '/supports',  icon: Shield,          label: 'Supports'        },
   { to: '/quetes',    icon: Scroll,          label: 'Quêtes'          },

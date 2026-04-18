@@ -36,26 +36,26 @@ CREATE INDEX idx_characters_base_name ON characters(base_name);
 -- ────────────────────────────────────────────────
 -- CHARACTER POWERS
 -- ────────────────────────────────────────────────
+-- Un personnage peut avoir N pouvoirs
+-- Par couleur, plusieurs pouvoirs avec coûts différents (traités séparément)
 CREATE TABLE character_powers (
-  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  character_id        UUID REFERENCES characters(id) ON DELETE CASCADE,
-  couleur             TEXT,   -- Bleu, Rouge, Vert, Noir, Jaune, Violet
-  cout                INTEGER,
-  mp                  TEXT,
-  degats              TEXT,
-  creation            TEXT,
-  destruction         TEXT,
-  conversion_gemmes   TEXT,
-  paralysie           TEXT,
-  sante               TEXT,
-  fortification       TEXT,
-  autre               TEXT,
-  special_tile_icon   TEXT,
-  special_tile_name   TEXT,
-  created_at          TIMESTAMPTZ DEFAULT NOW()
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  character_id    UUID REFERENCES characters(id) ON DELETE CASCADE,
+  power_name      TEXT,
+  couleur         TEXT,   -- Bleu, Rouge, Vert, Noir, Jaune, Violet
+  cout            INTEGER,
+  -- Effets (même structure que supports)
+  effect_1_category TEXT, effect_1_detail TEXT,
+  effect_2_category TEXT, effect_2_detail TEXT,
+  effect_3_category TEXT, effect_3_detail TEXT,
+  effect_4_category TEXT, effect_4_detail TEXT,
+  effect_5_category TEXT, effect_5_detail TEXT,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_powers_character ON character_powers(character_id);
+CREATE INDEX idx_powers_couleur   ON character_powers(couleur);
 
 -- ────────────────────────────────────────────────
 -- SUPPORTS
