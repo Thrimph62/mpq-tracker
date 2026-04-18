@@ -61,34 +61,36 @@ const EMPTY: Omit<Support, 'id' | 'created_at' | 'updated_at'> = {
   synergy_restriction: null, synergy_category: null, synergy_detail: null,
 }
 
-// ── Combo input for category ──────────────────────────────────────────────────
-function CategoryCombo({ value, onChange, allCategories }: {
-  value: string
-  onChange: (v: string) => void
+// ── Category select — same pattern as restriction ─────────────────────────────
+function CategorySelect({ value, onChange, allCategories }: {
+  value: string | null
+  onChange: (v: string | null) => void
   allCategories: string[]
 }) {
-  const [open, setOpen] = useState(false)
-  const filtered = allCategories.filter(c => c.toLowerCase().includes(value.toLowerCase()) && c !== value)
+  const isNew = value !== null && !allCategories.includes(value)
 
   return (
-    <div className="relative">
-      <input
+    <div className="space-y-1">
+      <select
         className="input text-sm"
-        value={value}
-        placeholder="Catégorie..."
-        onChange={e => { onChange(e.target.value); setOpen(true) }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-      />
-      {open && filtered.length > 0 && (
-        <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-[#1A1A2E] border border-[#2D2D4E] rounded-lg shadow-xl max-h-40 overflow-y-auto">
-          {filtered.map(c => (
-            <button key={c} type="button" onMouseDown={() => { onChange(c); setOpen(false) }}
-              className="w-full text-left px-3 py-1.5 text-sm hover:bg-[#2D2D4E] text-[#CCCCCC]">
-              {c}
-            </button>
-          ))}
-        </div>
+        value={isNew ? '__new__' : (value ?? '')}
+        onChange={e => {
+          if (e.target.value === '__new__') onChange('') // triggers text input
+          else onChange(e.target.value || null)
+        }}
+      >
+        <option value="">— Aucune —</option>
+        {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+        <option value="__new__">+ Nouvelle catégorie...</option>
+      </select>
+      {(isNew || value === '') && (
+        <input
+          className="input text-sm"
+          placeholder="Nouvelle catégorie..."
+          autoFocus={value === ''}
+          value={value ?? ''}
+          onChange={e => onChange(e.target.value || null)}
+        />
       )}
     </div>
   )
@@ -382,9 +384,9 @@ export default function Supports() {
                     <div key={n} className="bg-[#0D0D0D] rounded-lg p-3 grid grid-cols-2 gap-2 items-start">
                       <div>
                         <label className="text-xs text-[#8888AA] mb-1 block">Effet {n} — Catégorie</label>
-                        <CategoryCombo
-                          value={form[`effect_${n}_category`] ?? ''}
-                          onChange={v => setEffect(n, 'category', v)}
+                        <CategorySelect
+                          value={form[`effect_${n}_category`]}
+                          onChange={v => setEffect(n, 'category', v ?? '')}
                           allCategories={allCategories}
                         />
                       </div>
@@ -416,9 +418,9 @@ export default function Supports() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="text-xs text-[#8888AA] mb-1 block">Catégorie</label>
-                      <CategoryCombo
-                        value={form.synergy_category ?? ''}
-                        onChange={v => setForm(f => ({ ...f, synergy_category: v || null }))}
+                      <CategorySelect
+                        value={form.synergy_category}
+                        onChange={v => setForm(f => ({ ...f, synergy_category: v }))}
                         allCategories={allCategories}
                       />
                     </div>
