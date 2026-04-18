@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Support } from '../types'
+import { StarBadge } from '../components/Badges'
 import { Plus, Search, X, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 
 // ── Effect categories ─────────────────────────────────────────────────────────
@@ -251,7 +252,9 @@ export default function Supports() {
               {visible.map(s => (
                 <tr key={s.id} className="border-b border-[#2D2D4E]/40 hover:bg-[#2D2D4E]/20 align-top">
                   <td className="py-2 px-2 font-medium text-white">{s.name}</td>
-                  <td className="py-2 px-2 text-center text-yellow-400">{s.rang ?? '—'}</td>
+                  <td className="py-2 px-2 text-center">
+                    {s.rang ? <StarBadge stars={Math.min(s.rang, 6) as 1|2|3|4|5|6} /> : <span className="text-[#555]">—</span>}
+                  </td>
                   <td className="py-2 px-2 text-center text-[#8888AA]">{s.niveau ?? '—'}</td>
                   <td className="py-2 px-2 text-center">
                     {s.restriction && s.restriction !== '/' ? (

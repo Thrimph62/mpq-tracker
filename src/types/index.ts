@@ -130,9 +130,10 @@ export interface PuzzleGauntlet {
 }
 
 export interface RosterSummary {
-  stars: Stars
-  max_champ:  number
-  champ:      number
-  rostered:   number
-  not_owned:  number
+  stars:     Stars
+  max_champ: number
+  champ:     number
+  rostered:  number
+  not_owned: number
+  ascended:  number   // indépendant du statut — cumul par tier
 }

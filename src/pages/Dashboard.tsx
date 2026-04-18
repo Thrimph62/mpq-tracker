@@ -4,6 +4,7 @@ import { Character, RosterSummary, Stars } from '../types'
 import { StarBadge } from '../components/Badges'
 
 const STAR_TIERS: Stars[] = [6, 5, 4, 3, 2, 1]
+
 const STATUS_COLS = ['max_champ', 'champ', 'rostered', 'not_owned'] as const
 type StatusCol = typeof STATUS_COLS[number]
 
@@ -25,11 +26,13 @@ export default function Dashboard() {
   const [summary, setSummary] = useState<RosterSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [recent, setRecent]   = useState<Character[]>([])
-  const [ascendedCount, setAscendedCount] = useState(0)
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.from('characters').select('stars, status, ascended')
+      const { data } = await supabase
+        .from('characters')
+        .select('stars, status, ascended')
+
       if (data) {
         const rows: RosterSummary[] = STAR_TIERS.map(s => ({
           stars:     s,
@@ -37,9 +40,9 @@ export default function Dashboard() {
           champ:     data.filter(c => c.stars === s && c.status === 'champ').length,
           rostered:  data.filter(c => c.stars === s && c.status === 'rostered').length,
           not_owned: data.filter(c => c.stars === s && c.status === 'not_owned').length,
+          ascended:  data.filter(c => c.stars === s && c.ascended).length,
         }))
         setSummary(rows)
-        setAscendedCount(data.filter(c => c.ascended).length)
       }
 
       const { data: rec } = await supabase
@@ -54,14 +57,15 @@ export default function Dashboard() {
 
   if (loading) return <LoadingSpinner />
 
-  const total = summary.reduce((acc, r) => acc + r.max_champ + r.champ + r.rostered, 0)
+  const totalAscended = summary.reduce((acc, r) => acc + r.ascended, 0)
+  const total         = summary.reduce((acc, r) => acc + r.max_champ + r.champ + r.rostered, 0)
 
   return (
     <div className="space-y-6">
       <h1 className="page-title">Tableau de Bord</h1>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {STATUS_COLS.map(s => (
           <div key={s} className="card text-center">
             <p className={`text-2xl font-bold ${STATUS_COLORS[s]}`}>
@@ -71,7 +75,7 @@ export default function Dashboard() {
           </div>
         ))}
         <div className="card text-center">
-          <p className="text-2xl font-bold text-cyan-400">{ascendedCount}</p>
+          <p className="text-2xl font-bold text-cyan-400">{totalAscended}</p>
           <p className="text-xs text-[#8888AA] mt-1">⬆ Ascended</p>
         </div>
       </div>
@@ -88,7 +92,7 @@ export default function Dashboard() {
                   {STATUS_LABELS[s]}
                 </th>
               ))}
-              <th className="text-center py-2 text-cyan-400 font-normal">⬆ Asc.</th>
+              <th className="text-center py-2 font-normal text-cyan-400">⬆ Ascended</th>
               <th className="text-center py-2 text-[#8888AA] font-normal">Total</th>
             </tr>
           </thead>
@@ -105,11 +109,16 @@ export default function Dashboard() {
                         : <span className="text-[#8888AA]">—</span>}
                     </td>
                   ))}
-                  <td className="text-center py-2.5 text-cyan-400/70 text-xs">—</td>
+                  <td className="text-center py-2.5">
+                    {row.ascended > 0
+                      ? <span className="text-cyan-400">{row.ascended}</span>
+                      : <span className="text-[#555]">—</span>}
+                  </td>
                   <td className="text-center py-2.5 text-white font-semibold">{rowTotal}</td>
                 </tr>
               )
             })}
+            {/* Totals row */}
             <tr className="border-t-2 border-[#2D2D4E] font-semibold">
               <td className="py-2.5 text-[#8888AA]">Total</td>
               {STATUS_COLS.map(s => (
@@ -117,7 +126,7 @@ export default function Dashboard() {
                   {summary.reduce((acc, r) => acc + r[s], 0)}
                 </td>
               ))}
-              <td className="text-center py-2.5 text-cyan-400">{ascendedCount}</td>
+              <td className="text-center py-2.5 text-cyan-400">{totalAscended}</td>
               <td className="text-center py-2.5 text-marvel-gold">{total}</td>
             </tr>
           </tbody>
@@ -133,7 +142,7 @@ export default function Dashboard() {
               <div key={c.id} className="flex items-center gap-3 text-sm">
                 <StarBadge stars={c.stars as Stars} />
                 <span className="flex-1">{c.name}</span>
-                {c.ascended && <span className="text-xs text-cyan-400">⬆</span>}
+                {c.ascended && <span className="text-xs text-cyan-400 badge border border-cyan-700 bg-cyan-900/30">⬆ Asc.</span>}
                 <span className="text-[#8888AA]">Niv. {c.level ?? '—'}</span>
               </div>
             ))}
