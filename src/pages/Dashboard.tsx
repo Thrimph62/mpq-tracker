@@ -5,15 +5,16 @@ import { StarBadge } from '../components/Badges'
 
 const STAR_TIERS: Stars[] = [6, 5, 4, 3, 2, 1]
 const STATUS_COLS = ['max_champ', 'champ', 'rostered', 'not_owned'] as const
+type StatusCol = typeof STATUS_COLS[number]
 
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS: Record<StatusCol, string> = {
   max_champ: 'Max Champ',
   champ:     'Champ',
   rostered:  'Roster',
   not_owned: 'Non Possédé',
 }
 
-const STATUS_COLORS: Record<string, string> = {
+const STATUS_COLORS: Record<StatusCol, string> = {
   max_champ: 'text-purple-400',
   champ:     'text-orange-400',
   rostered:  'text-green-400',
@@ -23,30 +24,27 @@ const STATUS_COLORS: Record<string, string> = {
 export default function Dashboard() {
   const [summary, setSummary] = useState<RosterSummary[]>([])
   const [loading, setLoading] = useState(true)
-  const [recent, setRecent] = useState<Character[]>([])
+  const [recent, setRecent]   = useState<Character[]>([])
+  const [ascendedCount, setAscendedCount] = useState(0)
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from('characters')
-        .select('stars, status')
-
+      const { data } = await supabase.from('characters').select('stars, status, ascended')
       if (data) {
         const rows: RosterSummary[] = STAR_TIERS.map(s => ({
-          stars: s,
-          max_champ:  data.filter(c => c.stars === s && c.status === 'max_champ').length,
-          champ:      data.filter(c => c.stars === s && c.status === 'champ').length,
-          rostered:   data.filter(c => c.stars === s && c.status === 'rostered').length,
-          not_owned:  data.filter(c => c.stars === s && c.status === 'not_owned').length,
+          stars:     s,
+          max_champ: data.filter(c => c.stars === s && c.status === 'max_champ').length,
+          champ:     data.filter(c => c.stars === s && c.status === 'champ').length,
+          rostered:  data.filter(c => c.stars === s && c.status === 'rostered').length,
+          not_owned: data.filter(c => c.stars === s && c.status === 'not_owned').length,
         }))
         setSummary(rows)
+        setAscendedCount(data.filter(c => c.ascended).length)
       }
 
       const { data: rec } = await supabase
-        .from('characters')
-        .select('*')
-        .order('updated_at', { ascending: false })
-        .limit(5)
+        .from('characters').select('*')
+        .order('updated_at', { ascending: false }).limit(5)
       if (rec) setRecent(rec)
 
       setLoading(false)
@@ -56,7 +54,7 @@ export default function Dashboard() {
 
   if (loading) return <LoadingSpinner />
 
-  const total = summary.reduce((acc, r) => acc + r.max_champed + r.champed + r.rostered + r.not_rostered, 0)
+  const total = summary.reduce((acc, r) => acc + r.max_champ + r.champ + r.rostered, 0)
 
   return (
     <div className="space-y-6">
@@ -72,6 +70,10 @@ export default function Dashboard() {
             <p className="text-xs text-[#8888AA] mt-1">{STATUS_LABELS[s]}</p>
           </div>
         ))}
+        <div className="card text-center">
+          <p className="text-2xl font-bold text-cyan-400">{ascendedCount}</p>
+          <p className="text-xs text-[#8888AA] mt-1">⬆ Ascended</p>
+        </div>
       </div>
 
       {/* Roster Table */}
@@ -86,24 +88,24 @@ export default function Dashboard() {
                   {STATUS_LABELS[s]}
                 </th>
               ))}
+              <th className="text-center py-2 text-cyan-400 font-normal">⬆ Asc.</th>
               <th className="text-center py-2 text-[#8888AA] font-normal">Total</th>
             </tr>
           </thead>
           <tbody>
             {summary.map(row => {
-              const rowTotal = row.max_champed + row.champed + row.rostered + row.not_rostered
+              const rowTotal = row.max_champ + row.champ + row.rostered
               return (
                 <tr key={row.stars} className="border-b border-[#2D2D4E]/50 hover:bg-[#2D2D4E]/20">
                   <td className="py-2.5"><StarBadge stars={row.stars} /></td>
                   {STATUS_COLS.map(s => (
                     <td key={s} className="text-center py-2.5">
-                      {row[s] > 0 ? (
-                        <span className={STATUS_COLORS[s]}>{row[s]}</span>
-                      ) : (
-                        <span className="text-[#8888AA]">—</span>
-                      )}
+                      {row[s] > 0
+                        ? <span className={STATUS_COLORS[s]}>{row[s]}</span>
+                        : <span className="text-[#8888AA]">—</span>}
                     </td>
                   ))}
+                  <td className="text-center py-2.5 text-cyan-400/70 text-xs">—</td>
                   <td className="text-center py-2.5 text-white font-semibold">{rowTotal}</td>
                 </tr>
               )
@@ -115,6 +117,7 @@ export default function Dashboard() {
                   {summary.reduce((acc, r) => acc + r[s], 0)}
                 </td>
               ))}
+              <td className="text-center py-2.5 text-cyan-400">{ascendedCount}</td>
               <td className="text-center py-2.5 text-marvel-gold">{total}</td>
             </tr>
           </tbody>
@@ -130,6 +133,7 @@ export default function Dashboard() {
               <div key={c.id} className="flex items-center gap-3 text-sm">
                 <StarBadge stars={c.stars as Stars} />
                 <span className="flex-1">{c.name}</span>
+                {c.ascended && <span className="text-xs text-cyan-400">⬆</span>}
                 <span className="text-[#8888AA]">Niv. {c.level ?? '—'}</span>
               </div>
             ))}
@@ -142,7 +146,7 @@ export default function Dashboard() {
 
 function LoadingSpinner() {
   return (
-    <div className="flex items-center justify-center h-64">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="animate-spin w-8 h-8 border-2 border-marvel-red border-t-transparent rounded-full" />
     </div>
   )

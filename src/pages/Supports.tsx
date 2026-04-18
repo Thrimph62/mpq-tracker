@@ -180,7 +180,7 @@ export default function Supports() {
               {EFFECT_FIELDS.map(([key, label]) => (
                 <div key={key}>
                   <label className="text-xs text-[#8888AA] mb-1 block">{label}</label>
-                  <input className="input text-sm" value={String(form[key] ?? '')} onChange={f(key as any)} />
+                  <input className="input text-sm" value={String((form as Record<string, unknown>)[key] ?? '')} onChange={f(key as any)} />
                 </div>
               ))}
               <div>
