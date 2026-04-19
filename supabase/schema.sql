@@ -24,7 +24,7 @@ CREATE TABLE characters (
   ascended    BOOLEAN NOT NULL DEFAULT FALSE,
   notes       TEXT,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_characters_stars     ON characters(stars);
