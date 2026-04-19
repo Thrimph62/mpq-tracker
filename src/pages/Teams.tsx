@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Team, TeamStatus, Character } from '../types'
+import { Team, Character, Support } from '../types'
 import { TeamSlot } from '../components/TeamSlot'
 import { OkBadge } from '../components/Badges'
+import { SearchDropdown, toCharacterOptions, toSupportOptions } from '../components/SearchDropdown'
 import { Plus, Search, X, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react'
 
 const EMPTY_FORM: Omit<Team, 'id' | 'created_at' | 'updated_at'> = {
@@ -14,63 +15,14 @@ const EMPTY_FORM: Omit<Team, 'id' | 'created_at' | 'updated_at'> = {
   all_3_non_boosted: null, note_additionnelle: null,
 }
 
-type Tab  = 'active' | 'to_test'
-type Pos  = 'left' | 'mid' | 'right'
-
+type Tab = 'active' | 'to_test'
+type Pos = 'left' | 'mid' | 'right'
 const POS_LABELS: Record<Pos, string> = { left: 'Gauche', mid: 'Milieu', right: 'Droite' }
 
-// ── Character search dropdown ─────────────────────────────────────────────────
-function CharacterSearch({ value, onChange, characters, placeholder }: {
-  value: string | null
-  onChange: (name: string | null) => void
-  characters: Character[]
-  placeholder?: string
-}) {
-  const [query, setQuery] = useState('')
-  const [open, setOpen]   = useState(false)
-
-  const filtered = characters.filter(c =>
-    c.name.toLowerCase().includes(query.toLowerCase()) ||
-    c.base_name.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 20)
-
-  return (
-    <div className="relative">
-      <input className="input text-sm" placeholder={placeholder ?? 'Personnage...'}
-        value={open ? query : (value ?? '')}
-        onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) onChange(null) }}
-        onFocus={() => { setQuery(value ?? ''); setOpen(true) }}
-        onBlur={() => setTimeout(() => setOpen(false), 150)} />
-      {open && (
-        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#1A1A2E] border border-[#2D2D4E] rounded-lg shadow-xl max-h-48 overflow-y-auto">
-          <button type="button" onMouseDown={() => { onChange(null); setOpen(false) }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-[#2D2D4E] text-[#8888AA]">
-            — Aucun —
-          </button>
-          {filtered.map(c => (
-            <button key={c.id} type="button"
-              onMouseDown={() => { onChange(c.name); setOpen(false) }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-[#2D2D4E] flex items-center gap-2">
-              <span className="text-yellow-400 text-xs">{'★'.repeat(c.stars)}</span>
-              <span className="text-white">{c.name}</span>
-            </button>
-          ))}
-          {filtered.length === 0 && query && (
-            <button type="button" onMouseDown={() => { onChange(query); setOpen(false) }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-[#2D2D4E] text-[#8888AA] italic">
-              Utiliser "{query}" (texte libre)
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── Main component ─────────────────────────────────────────────────────────────
 export default function Teams() {
   const [teams, setTeams]         = useState<Team[]>([])
   const [characters, setCharacters] = useState<Character[]>([])
+  const [supports, setSupports]   = useState<Support[]>([])
   const [loading, setLoading]     = useState(true)
   const [tab, setTab]             = useState<Tab>('active')
   const [search, setSearch]       = useState('')
@@ -81,31 +33,28 @@ export default function Teams() {
   const [saving, setSaving]       = useState(false)
 
   async function load() {
-    const [{ data: t }, { data: c }] = await Promise.all([
+    const [{ data: t }, { data: c }, { data: s }] = await Promise.all([
       supabase.from('teams').select('*').order('name'),
       supabase.from('characters').select('*').order('base_name').order('version'),
+      supabase.from('supports').select('*').order('name'),
     ])
     if (t) setTeams(t)
     if (c) setCharacters(c)
+    if (s) setSupports(s)
     setLoading(false)
   }
   useEffect(() => { load() }, [])
 
-  // Auto-generate team name from the 3 characters
   function autoName(f: typeof EMPTY_FORM): string {
-    const parts = [f.left_character, f.mid_character, f.right_character].filter(Boolean)
-    return parts.join(' / ')
+    return [f.left_character, f.mid_character, f.right_character].filter(Boolean).join(' / ')
   }
 
   function setSlot(pos: Pos, field: 'character' | 'build' | 'support' | 'boost', val: string | null) {
     setForm(prev => {
       const updated = { ...prev, [`${pos}_${field}`]: val }
-      // Auto-fill name whenever a character slot changes
       if (field === 'character') {
         const generated = autoName(updated)
-        if (!prev.name || prev.name === autoName(prev)) {
-          updated.name = generated
-        }
+        if (!prev.name || prev.name === autoName(prev)) updated.name = generated
       }
       return updated
     })
@@ -119,10 +68,7 @@ export default function Teams() {
     return matchTab && matchSearch
   })
 
-  function openAdd() {
-    setForm({ ...EMPTY_FORM, status: tab })
-    setEditId(null); setModal('add')
-  }
+  function openAdd() { setForm({ ...EMPTY_FORM, status: tab }); setEditId(null); setModal('add') }
   function openEdit(t: Team) {
     const { id, created_at, updated_at, ...rest } = t
     setForm(rest); setEditId(t.id); setModal('edit')
@@ -151,6 +97,9 @@ export default function Teams() {
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm(prev => ({ ...prev, [key]: e.target.value || null }))
 
+  const charOptions    = toCharacterOptions(characters)
+  const supportOptions = toSupportOptions(supports)
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -158,7 +107,6 @@ export default function Teams() {
         <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 bg-[#12122A] p-1 rounded-lg w-fit">
         {(['active', 'to_test'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
@@ -169,14 +117,12 @@ export default function Teams() {
         ))}
       </div>
 
-      {/* Search */}
       <div className="relative max-w-sm">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
         <input className="input pl-9" placeholder="Rechercher une équipe ou un perso..."
           value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      {/* List */}
       {loading ? <Spinner /> : (
         <div className="space-y-3">
           {visible.length === 0 && <div className="card text-center text-[#8888AA] py-12">Aucune équipe trouvée</div>}
@@ -245,40 +191,31 @@ export default function Teams() {
               <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
-
-              {/* Name — auto-filled but editable */}
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">
-                  Nom de l'équipe <span className="text-[#555]">(rempli automatiquement)</span>
-                </label>
-                <input className="input" value={form.name}
-                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="Perso 1 / Perso 2 / Perso 3" />
+                <label className="text-xs text-[#8888AA] mb-1 block">Nom de l'équipe <span className="text-[#555]">(rempli automatiquement)</span></label>
+                <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Perso 1 / Perso 2 / Perso 3" />
               </div>
 
-              {/* Status */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-[#8888AA] mb-1 block">Statut</label>
-                  <select className="input" value={form.status} onChange={f('status')}>
-                    <option value="active">Active</option>
-                    <option value="to_test">À Tester</option>
-                    <option value="archived">Archivée</option>
-                  </select>
-                </div>
+              <div>
+                <label className="text-xs text-[#8888AA] mb-1 block">Statut</label>
+                <select className="input w-auto" value={form.status} onChange={f('status')}>
+                  <option value="active">Active</option>
+                  <option value="to_test">À Tester</option>
+                  <option value="archived">Archivée</option>
+                </select>
               </div>
 
-              {/* Slots */}
               {(['left', 'mid', 'right'] as Pos[]).map(pos => (
                 <div key={pos} className="bg-[#0D0D0D] rounded-lg p-3 space-y-2">
                   <p className="text-xs font-semibold text-marvel-gold uppercase">{POS_LABELS[pos]}</p>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="text-xs text-[#8888AA] mb-1 block">Personnage</label>
-                      <CharacterSearch
+                      <SearchDropdown
                         value={form[`${pos}_character`]}
                         onChange={v => setSlot(pos, 'character', v)}
-                        characters={characters}
+                        options={charOptions}
+                        placeholder="Rechercher un personnage..."
                       />
                     </div>
                     <div>
@@ -289,9 +226,12 @@ export default function Teams() {
                     </div>
                     <div>
                       <label className="text-xs text-[#8888AA] mb-1 block">Support</label>
-                      <input className="input text-sm" placeholder="Nom du support"
-                        value={form[`${pos}_support`] ?? ''}
-                        onChange={e => setSlot(pos, 'support', e.target.value || null)} />
+                      <SearchDropdown
+                        value={form[`${pos}_support`]}
+                        onChange={v => setSlot(pos, 'support', v)}
+                        options={supportOptions}
+                        placeholder="Rechercher un support..."
+                      />
                     </div>
                     <div>
                       <label className="text-xs text-[#8888AA] mb-1 block">Boost</label>
@@ -306,7 +246,6 @@ export default function Teams() {
                 </div>
               ))}
 
-              {/* Strategy + results */}
               <div>
                 <label className="text-xs text-[#8888AA] mb-1 block">Stratégie</label>
                 <textarea className="input resize-none h-28" value={form.strategie ?? ''} onChange={f('strategie')} />
@@ -314,9 +253,7 @@ export default function Teams() {
               <div className="grid grid-cols-2 gap-3">
                 {(['ok_hard_nodes', 'ok_cn_node'] as const).map(key => (
                   <div key={key}>
-                    <label className="text-xs text-[#8888AA] mb-1 block">
-                      {key === 'ok_hard_nodes' ? 'Hard Nodes' : 'CN Node'}
-                    </label>
+                    <label className="text-xs text-[#8888AA] mb-1 block">{key === 'ok_hard_nodes' ? 'Hard Nodes' : 'CN Node'}</label>
                     <select className="input" value={form[key] ?? ''} onChange={f(key)}>
                       <option value="">—</option>
                       <option value="Oui">Oui</option>

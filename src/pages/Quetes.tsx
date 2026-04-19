@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Quete } from '../types'
+import { Quete, Character, Support } from '../types'
 import { TeamSlot } from '../components/TeamSlot'
+import { SearchDropdown, toCharacterOptions, toSupportOptions } from '../components/SearchDropdown'
 import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 
 const EMPTY: Omit<Quete, 'id' | 'created_at' | 'updated_at'> = {
@@ -12,22 +13,35 @@ const EMPTY: Omit<Quete, 'id' | 'created_at' | 'updated_at'> = {
   note: null,
 }
 
+const SLOTS = [
+  { pos: 'gauche', label: 'Gauche' },
+  { pos: 'milieu', label: 'Milieu' },
+  { pos: 'droite', label: 'Droite' },
+] as const
+
 export default function Quetes() {
-  const [quetes, setQuetes]   = useState<Quete[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch]   = useState('')
-  const [expanded, setExpanded] = useState<string | null>(null)
-  const [modal, setModal]     = useState<'add' | 'edit' | null>(null)
-  const [form, setForm]       = useState<typeof EMPTY>(EMPTY)
-  const [editId, setEditId]   = useState<string | null>(null)
-  const [saving, setSaving]   = useState(false)
+  const [quetes, setQuetes]       = useState<Quete[]>([])
+  const [characters, setCharacters] = useState<Character[]>([])
+  const [supports, setSupports]   = useState<Support[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [search, setSearch]       = useState('')
+  const [expanded, setExpanded]   = useState<string | null>(null)
+  const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
+  const [form, setForm]           = useState<typeof EMPTY>(EMPTY)
+  const [editId, setEditId]       = useState<string | null>(null)
+  const [saving, setSaving]       = useState(false)
 
   async function load() {
-    const { data } = await supabase.from('quetes').select('*').order('nom')
-    if (data) setQuetes(data)
+    const [{ data: q }, { data: c }, { data: s }] = await Promise.all([
+      supabase.from('quetes').select('*').order('nom'),
+      supabase.from('characters').select('*').order('base_name').order('version'),
+      supabase.from('supports').select('*').order('name'),
+    ])
+    if (q) setQuetes(q)
+    if (c) setCharacters(c)
+    if (s) setSupports(s)
     setLoading(false)
   }
-
   useEffect(() => { load() }, [])
 
   const visible = quetes.filter(q =>
@@ -43,16 +57,14 @@ export default function Quetes() {
   }
   function closeModal() { setModal(null); setEditId(null) }
 
-  const f = (key: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm(prev => ({ ...prev, [key]: e.target.value || null }))
+  function setSlot(pos: 'gauche' | 'milieu' | 'droite', field: 'personnage' | 'build' | 'support', val: string | null) {
+    setForm(f => ({ ...f, [`${pos}_${field}`]: val }))
+  }
 
   async function save() {
     setSaving(true)
-    if (modal === 'add') {
-      await supabase.from('quetes').insert([form])
-    } else if (editId) {
-      await supabase.from('quetes').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
-    }
+    if (modal === 'add') await supabase.from('quetes').insert([form])
+    else if (editId) await supabase.from('quetes').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
     await load(); closeModal(); setSaving(false)
   }
 
@@ -62,19 +74,14 @@ export default function Quetes() {
     setQuetes(prev => prev.filter(q => q.id !== id))
   }
 
-  const SLOTS = [
-    { pos: 'gauche', label: 'Gauche' },
-    { pos: 'milieu', label: 'Milieu' },
-    { pos: 'droite', label: 'Droite' },
-  ] as const
+  const charOptions    = toCharacterOptions(characters)
+  const supportOptions = toSupportOptions(supports)
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="page-title">Quêtes</h1>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> Ajouter
-        </button>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
       </div>
 
       <div className="relative max-w-sm">
@@ -89,10 +96,8 @@ export default function Quetes() {
           {visible.map(q => (
             <div key={q.id} className="card">
               <div className="flex items-center justify-between gap-4">
-                <button
-                  onClick={() => setExpanded(expanded === q.id ? null : q.id)}
-                  className="flex-1 text-left flex items-center gap-2 group"
-                >
+                <button onClick={() => setExpanded(expanded === q.id ? null : q.id)}
+                  className="flex-1 text-left flex items-center gap-2 group">
                   <span className="font-semibold group-hover:text-marvel-gold transition-colors">{q.nom}</span>
                   {expanded === q.id ? <ChevronUp size={14} className="text-[#8888AA]" /> : <ChevronDown size={14} className="text-[#8888AA]" />}
                 </button>
@@ -127,29 +132,53 @@ export default function Quetes() {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-xl my-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-marvel text-xl text-marvel-gold">
-                {modal === 'add' ? 'Nouvelle Quête' : 'Modifier Quête'}
-              </h2>
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouvelle Quête' : 'Modifier Quête'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
             </div>
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-[#8888AA] mb-1 block">Nom de la quête *</label>
-                <input className="input" value={form.nom} onChange={f('nom')} />
+                <input className="input" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
               </div>
+
               {SLOTS.map(({ pos, label }) => (
                 <div key={pos} className="bg-[#0D0D0D] rounded-lg p-3 space-y-2">
                   <p className="text-xs font-semibold text-marvel-gold">{label}</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <input className="input text-sm" placeholder="Personnage" value={form[`${pos}_personnage`] ?? ''} onChange={f(`${pos}_personnage`)} />
-                    <input className="input text-sm" placeholder="Build" value={form[`${pos}_build`] ?? ''} onChange={f(`${pos}_build`)} />
-                    <input className="input text-sm" placeholder="Support" value={form[`${pos}_support`] ?? ''} onChange={f(`${pos}_support`)} />
+                  <div className="grid grid-cols-1 gap-2">
+                    <div>
+                      <label className="text-xs text-[#8888AA] mb-1 block">Personnage</label>
+                      <SearchDropdown
+                        value={form[`${pos}_personnage`]}
+                        onChange={v => setSlot(pos, 'personnage', v)}
+                        options={charOptions}
+                        placeholder="Rechercher un personnage..."
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-[#8888AA] mb-1 block">Build</label>
+                        <input className="input text-sm" placeholder="5/3/5"
+                          value={form[`${pos}_build`] ?? ''}
+                          onChange={e => setSlot(pos, 'build', e.target.value || null)} />
+                      </div>
+                      <div>
+                        <label className="text-xs text-[#8888AA] mb-1 block">Support</label>
+                        <SearchDropdown
+                          value={form[`${pos}_support`]}
+                          onChange={v => setSlot(pos, 'support', v)}
+                          options={supportOptions}
+                          placeholder="Rechercher un support..."
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
+
               <div>
                 <label className="text-xs text-[#8888AA] mb-1 block">Note / Stratégie</label>
-                <textarea className="input resize-none h-24" value={form.note ?? ''} onChange={f('note')} />
+                <textarea className="input resize-none h-24" value={form.note ?? ''}
+                  onChange={e => setForm(f => ({ ...f, note: e.target.value || null }))} />
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
