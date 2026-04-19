@@ -4,52 +4,21 @@ import { Support } from '../types'
 import { StarBadge } from '../components/Badges'
 import { Plus, Search, X, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 
-// ── Effect categories ─────────────────────────────────────────────────────────
-// Predefined list — user can type anything else (free text combo)
+const EFFECTS = [1, 2, 3, 4, 5] as const
+type EffectNum = typeof EFFECTS[number]
+
+const EFFECT_COLS = EFFECTS.map(n => ({ key: `effect_${n}` as const, label: `Effet ${n}` }))
+
 const DEFAULT_CATEGORIES = [
-  'Gain MP',
-  'Dégâts Gemmes',
-  'Dégâts Pouvoirs',
-  'Dégâts Equipe Ennemie',
-  'Création Gemmes',
-  'Destruction Gemmes',
-  'Conversion Gemmes',
-  'Fortification Gemmes',
-  'Gemmes Spéciales',
-  'Santé',
-  'Paralysie',
-  'Passif',
-  'Autre',
+  'Gain MP', 'Dégâts Gemmes', 'Dégâts Pouvoirs', 'Dégâts Equipe Ennemie',
+  'Création Gemmes', 'Destruction Gemmes', 'Conversion Gemmes',
+  'Fortification Gemmes', 'Gemmes Spéciales', 'Santé', 'Paralysie', 'Passif', 'Autre',
 ]
-
-// Category badge colors (partial match)
-const CAT_COLORS: { match: string; className: string }[] = [
-  { match: 'Gain MP',       className: 'bg-blue-900/50   text-blue-300   border-blue-700'   },
-  { match: 'Dégâts',        className: 'bg-red-900/50    text-red-300    border-red-700'    },
-  { match: 'Création',      className: 'bg-green-900/50  text-green-300  border-green-700'  },
-  { match: 'Destruction',   className: 'bg-orange-900/50 text-orange-300 border-orange-700' },
-  { match: 'Conversion',    className: 'bg-yellow-900/50 text-yellow-300 border-yellow-700' },
-  { match: 'Fortification', className: 'bg-gray-700/50   text-gray-300   border-gray-500'   },
-  { match: 'Gemmes Spéc',   className: 'bg-purple-900/50 text-purple-300 border-purple-700' },
-  { match: 'Santé',         className: 'bg-teal-900/50   text-teal-300   border-teal-700'   },
-  { match: 'Paralysie',     className: 'bg-pink-900/50   text-pink-300   border-pink-700'   },
-  { match: 'Passif',        className: 'bg-[#2D2D4E]     text-[#8888AA]  border-[#444]'     },
-]
-
-function catColor(cat: string | null): string {
-  if (!cat) return 'bg-[#2D2D4E] text-[#8888AA] border-[#444]'
-  const found = CAT_COLORS.find(c => cat.includes(c.match))
-  return found?.className ?? 'bg-[#2D2D4E] text-[#8888AA] border-[#444]'
-}
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-type SortCol = 'name' | 'rang' | 'niveau' | 'restriction'
-type SortDir = 'asc' | 'desc'
 
 const DEFAULT_RESTRICTIONS = ['/', 'Héros', 'Vilains']
 
-const EFFECTS = [1, 2, 3, 4, 5] as const
-type EffectNum = typeof EFFECTS[number]
+type SortCol = 'name' | 'rang' | 'niveau' | 'restriction'
+type SortDir = 'asc' | 'desc'
 
 const EMPTY: Omit<Support, 'id' | 'created_at' | 'updated_at'> = {
   name: '', rang: 5, niveau: 250, restriction: '/',
@@ -61,53 +30,51 @@ const EMPTY: Omit<Support, 'id' | 'created_at' | 'updated_at'> = {
   synergy_restriction: null, synergy_category: null, synergy_detail: null,
 }
 
-// ── Category select — same pattern as restriction ─────────────────────────────
-function CategorySelect({ value, onChange, allCategories }: {
-  value: string | null
-  onChange: (v: string | null) => void
-  allCategories: string[]
-}) {
-  const isNew = value !== null && !allCategories.includes(value)
+function catColor(cat: string | null): string {
+  if (!cat) return 'bg-[#2D2D4E] text-[#8888AA] border-[#444]'
+  if (cat.includes('Gain MP'))       return 'bg-blue-900/50   text-blue-300   border-blue-700'
+  if (cat.includes('Dégâts'))        return 'bg-red-900/50    text-red-300    border-red-700'
+  if (cat.includes('Création'))      return 'bg-green-900/50  text-green-300  border-green-700'
+  if (cat.includes('Destruction'))   return 'bg-orange-900/50 text-orange-300 border-orange-700'
+  if (cat.includes('Conversion'))    return 'bg-yellow-900/50 text-yellow-300 border-yellow-700'
+  if (cat.includes('Fortification')) return 'bg-gray-700/50   text-gray-300   border-gray-500'
+  if (cat.includes('Gemmes Spéc'))   return 'bg-purple-900/50 text-purple-300 border-purple-700'
+  if (cat.includes('Santé'))         return 'bg-teal-900/50   text-teal-300   border-teal-700'
+  if (cat.includes('Paralysie'))     return 'bg-pink-900/50   text-pink-300   border-pink-700'
+  return 'bg-[#2D2D4E] text-[#8888AA] border-[#444]'
+}
 
+function CategorySelect({ value, onChange, allCategories }: {
+  value: string | null; onChange: (v: string | null) => void; allCategories: string[]
+}) {
+  const isNew = value !== null && value !== '' && !allCategories.includes(value)
   return (
     <div className="space-y-1">
-      <select
-        className="input text-sm"
+      <select className="input text-sm"
         value={isNew ? '__new__' : (value ?? '')}
-        onChange={e => {
-          if (e.target.value === '__new__') onChange('') // triggers text input
-          else onChange(e.target.value || null)
-        }}
-      >
+        onChange={e => { if (e.target.value === '__new__') onChange(''); else onChange(e.target.value || null) }}>
         <option value="">— Aucune —</option>
         {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
         <option value="__new__">+ Nouvelle catégorie...</option>
       </select>
       {(isNew || value === '') && (
-        <input
-          className="input text-sm"
-          placeholder="Nouvelle catégorie..."
-          autoFocus={value === ''}
-          value={value ?? ''}
-          onChange={e => onChange(e.target.value || null)}
-        />
+        <input className="input text-sm" placeholder="Nouvelle catégorie..." autoFocus={value === ''}
+          value={value ?? ''} onChange={e => onChange(e.target.value || null)} />
       )}
     </div>
   )
 }
 
-// ── Sort icon ─────────────────────────────────────────────────────────────────
 function SortIcon({ col, current, dir }: { col: SortCol; current: SortCol; dir: SortDir }) {
   if (col !== current) return <ArrowUpDown size={10} className="opacity-30" />
   return dir === 'asc' ? <ArrowUp size={10} className="text-marvel-gold" /> : <ArrowDown size={10} className="text-marvel-gold" />
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
 export default function Supports() {
   const [supports, setSupports]   = useState<Support[]>([])
   const [loading, setLoading]     = useState(true)
   const [search, setSearch]       = useState('')
-  const [filterRestr, setFilterRestr] = useState('')
+  const [filterEffect, setFilterEffect] = useState('')
   const [sortCol, setSortCol]     = useState<SortCol>('name')
   const [sortDir, setSortDir]     = useState<SortDir>('asc')
   const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
@@ -128,39 +95,33 @@ export default function Supports() {
     else { setSortCol(col); setSortDir('asc') }
   }
 
-  // Build category list from all existing data + defaults
-  const allCategories = [
-    ...new Set([
-      ...DEFAULT_CATEGORIES,
-      ...supports.flatMap(s => [
-        s.effect_1_category, s.effect_2_category, s.effect_3_category,
-        s.effect_4_category, s.effect_5_category, s.synergy_category,
-      ].filter(Boolean) as string[]),
-    ])
-  ].sort()
+  const allCategories = [...new Set([
+    ...DEFAULT_CATEGORIES,
+    ...supports.flatMap(s => [
+      s.effect_1_category, s.effect_2_category, s.effect_3_category,
+      s.effect_4_category, s.effect_5_category, s.synergy_category,
+    ].filter(Boolean) as string[]),
+  ])].sort()
 
-  const allRestrictions = [
-    ...new Set([
-      ...DEFAULT_RESTRICTIONS,
-      ...supports.map(s => s.restriction).filter(Boolean) as string[],
-    ])
-  ].sort()
+  const allRestrictions = [...new Set([
+    ...DEFAULT_RESTRICTIONS,
+    ...supports.map(s => s.restriction).filter(Boolean) as string[],
+  ])].sort()
 
-  // Search across name, all categories, all details, synergy
   const visible = supports
     .filter(s => {
-      if (filterRestr && s.restriction !== filterRestr) return false
-      if (!search) return true
-      const q = search.toLowerCase()
-      return [
+      const matchSearch = !search || [
         s.name, s.restriction,
-        s.effect_1_category, s.effect_1_detail,
-        s.effect_2_category, s.effect_2_detail,
-        s.effect_3_category, s.effect_3_detail,
-        s.effect_4_category, s.effect_4_detail,
+        s.effect_1_category, s.effect_1_detail, s.effect_2_category, s.effect_2_detail,
+        s.effect_3_category, s.effect_3_detail, s.effect_4_category, s.effect_4_detail,
         s.effect_5_category, s.effect_5_detail,
         s.synergy_restriction, s.synergy_category, s.synergy_detail,
-      ].some(v => v?.toLowerCase().includes(q))
+      ].some(v => v?.toLowerCase().includes(search.toLowerCase()))
+      const matchEffect = !filterEffect || [
+        s.effect_1_category, s.effect_2_category, s.effect_3_category,
+        s.effect_4_category, s.effect_5_category, s.synergy_category,
+      ].some(c => c === filterEffect)
+      return matchSearch && matchEffect
     })
     .sort((a, b) => {
       const va = (a[sortCol] ?? '') as string | number
@@ -193,11 +154,10 @@ export default function Supports() {
     setSupports(prev => prev.filter(s => s.id !== id))
   }
 
-  function setEffect(n: EffectNum, field: 'category' | 'detail', val: string) {
-    setForm(f => ({ ...f, [`effect_${n}_${field}`]: val || null }))
+  function setEffect(n: EffectNum, field: 'category' | 'detail', val: string | null) {
+    setForm(f => ({ ...f, [`effect_${n}_${field}`]: val }))
   }
 
-  // Sortable column header
   function Th({ col, label, align = 'center' }: { col: SortCol; label: string; align?: 'left' | 'center' }) {
     return (
       <th className={`py-2 px-2 font-normal text-${align}`}>
@@ -216,22 +176,21 @@ export default function Supports() {
         <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
       </div>
 
-      {/* Filters */}
+      {/* Filters — effect instead of restriction */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-56">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
           <input className="input pl-9" placeholder="Rechercher nom, catégorie, effet, synergie..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select className="input w-auto" value={filterRestr} onChange={e => setFilterRestr(e.target.value)}>
-          <option value="">Toutes restrictions</option>
-          {allRestrictions.map(r => <option key={r} value={r}>{r}</option>)}
+        <select className="input w-auto" value={filterEffect} onChange={e => setFilterEffect(e.target.value)}>
+          <option value="">Tous les effets</option>
+          {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
       <p className="text-sm text-[#8888AA]">{visible.length} support{visible.length !== 1 ? 's' : ''}</p>
 
-      {/* Table */}
       {loading ? <Spinner /> : (
         <div className="card overflow-x-auto">
           <table className="w-full text-xs">
@@ -242,9 +201,7 @@ export default function Supports() {
                 <Th col="niveau"      label="Niv."   />
                 <Th col="restriction" label="Restr." />
                 {EFFECTS.map(n => (
-                  <th key={n} className="py-2 px-1 font-normal text-center text-[#8888AA] min-w-24">
-                    Effet {n}
-                  </th>
+                  <th key={n} className="py-2 px-1 font-normal text-center text-[#8888AA] min-w-24">Effet {n}</th>
                 ))}
                 <th className="py-2 px-1 font-normal text-center text-[#8888AA] min-w-28">Synergie</th>
                 <th className="py-2 px-2 font-normal text-right text-[#8888AA]">Actions</th>
@@ -260,7 +217,7 @@ export default function Supports() {
                   <td className="py-2 px-2 text-center text-[#8888AA]">{s.niveau ?? '—'}</td>
                   <td className="py-2 px-2 text-center">
                     {s.restriction && s.restriction !== '/' ? (
-                      <span className={`badge border ${
+                      <span className={`badge border text-xs ${
                         s.restriction === 'Héros'   ? 'bg-blue-900/40 text-blue-300 border-blue-700' :
                         s.restriction === 'Vilains' ? 'bg-red-900/40  text-red-300  border-red-700'  :
                                                       'bg-[#2D2D4E]   text-[#8888AA] border-[#444]'
@@ -274,47 +231,26 @@ export default function Supports() {
                       <td key={n} className="py-2 px-1 text-center">
                         {cat || detail ? (
                           <div className="space-y-1">
-                            {cat && (
-                              <span className={`badge border text-xs block ${catColor(cat)}`} title={cat}>
-                                {cat}
-                              </span>
-                            )}
-                            {detail && (
-                              <span className="text-[#AAAAAA] block leading-tight truncate max-w-24" title={detail}>
-                                {detail}
-                              </span>
-                            )}
+                            {cat    && <span className={`badge border text-xs block ${catColor(cat)}`} title={cat}>{cat}</span>}
+                            {detail && <span className="text-[#AAAAAA] block leading-tight truncate max-w-24" title={detail}>{detail}</span>}
                           </div>
                         ) : <span className="text-[#333]">—</span>}
                       </td>
                     )
                   })}
-                  {/* Synergy column */}
                   <td className="py-2 px-1 text-center">
                     {(s.synergy_restriction || s.synergy_category || s.synergy_detail) ? (
                       <div className="space-y-1">
-                        {s.synergy_restriction && (
-                          <span className="badge border bg-marvel-red/20 text-red-300 border-red-800 block text-xs truncate max-w-28" title={s.synergy_restriction}>
-                            {s.synergy_restriction}
-                          </span>
-                        )}
-                        {s.synergy_category && (
-                          <span className={`badge border text-xs block ${catColor(s.synergy_category)}`} title={s.synergy_category}>
-                            {s.synergy_category}
-                          </span>
-                        )}
-                        {s.synergy_detail && (
-                          <span className="text-[#AAAAAA] block leading-tight truncate max-w-28" title={s.synergy_detail}>
-                            {s.synergy_detail}
-                          </span>
-                        )}
+                        {s.synergy_restriction && <span className="badge border bg-marvel-red/20 text-red-300 border-red-800 block text-xs truncate max-w-28" title={s.synergy_restriction}>{s.synergy_restriction}</span>}
+                        {s.synergy_category    && <span className={`badge border text-xs block ${catColor(s.synergy_category)}`}>{s.synergy_category}</span>}
+                        {s.synergy_detail      && <span className="text-[#AAAAAA] block leading-tight truncate max-w-28" title={s.synergy_detail}>{s.synergy_detail}</span>}
                       </div>
                     ) : <span className="text-[#333]">—</span>}
                   </td>
                   <td className="py-2 px-2 text-right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => openEdit(s)} className="text-[#8888AA] hover:text-white transition-colors"><Pencil size={13} /></button>
-                      <button onClick={() => remove(s.id)} className="text-[#8888AA] hover:text-red-400 transition-colors"><Trash2 size={13} /></button>
+                      <button onClick={() => openEdit(s)} className="text-[#8888AA] hover:text-white"><Pencil size={13} /></button>
+                      <button onClick={() => remove(s.id)} className="text-[#8888AA] hover:text-red-400"><Trash2 size={13} /></button>
                     </div>
                   </td>
                 </tr>
@@ -334,13 +270,10 @@ export default function Supports() {
               <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
-
-              {/* Base info */}
               <div className="grid grid-cols-4 gap-3">
                 <div className="col-span-2">
                   <label className="text-xs text-[#8888AA] mb-1 block">Nom *</label>
-                  <input className="input" value={form.name}
-                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+                  <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                 </div>
                 <div>
                   <label className="text-xs text-[#8888AA] mb-1 block">Rang ★</label>
@@ -353,8 +286,6 @@ export default function Supports() {
                     onChange={e => setForm(f => ({ ...f, niveau: Number(e.target.value) || null }))} />
                 </div>
               </div>
-
-              {/* Restriction */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-[#8888AA] mb-1 block">Restriction</label>
@@ -375,72 +306,48 @@ export default function Supports() {
                   </div>
                 )}
               </div>
-
-              {/* Effects 1–5 */}
               <div>
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Effets</p>
                 <div className="space-y-2">
                   {EFFECTS.map(n => (
-                    <div key={n} className="bg-[#0D0D0D] rounded-lg p-3 grid grid-cols-2 gap-2 items-start">
+                    <div key={n} className="bg-[#0D0D0D] rounded-lg p-3 grid grid-cols-2 gap-2">
                       <div>
                         <label className="text-xs text-[#8888AA] mb-1 block">Effet {n} — Catégorie</label>
-                        <CategorySelect
-                          value={form[`effect_${n}_category`]}
-                          onChange={v => setEffect(n, 'category', v ?? '')}
-                          allCategories={allCategories}
-                        />
+                        <CategorySelect value={form[`effect_${n}_category`]} onChange={v => setEffect(n, 'category', v)} allCategories={allCategories} />
                       </div>
                       <div>
                         <label className="text-xs text-[#8888AA] mb-1 block">Détail</label>
-                        <input className="input text-sm"
-                          value={form[`effect_${n}_detail`] ?? ''}
-                          onChange={e => setEffect(n, 'detail', e.target.value)}
-                          placeholder="Description libre..."
-                        />
+                        <input className="input text-sm" value={form[`effect_${n}_detail`] ?? ''}
+                          onChange={e => setEffect(n, 'detail', e.target.value || null)} placeholder="Description libre..." />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Synergy */}
               <div>
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Synergie</p>
                 <div className="bg-[#0D0D0D] rounded-lg p-3 space-y-2">
                   <div>
                     <label className="text-xs text-[#8888AA] mb-1 block">Avec (personnage / tag)</label>
-                    <input className="input text-sm"
-                      value={form.synergy_restriction ?? ''}
-                      onChange={e => setForm(f => ({ ...f, synergy_restriction: e.target.value || null }))}
-                      placeholder="Ex: Spider-Ham, Héros, Vilains..."
-                    />
+                    <input className="input text-sm" value={form.synergy_restriction ?? ''}
+                      onChange={e => setForm(f => ({ ...f, synergy_restriction: e.target.value || null }))} placeholder="Ex: Spider-Ham, Héros..." />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="text-xs text-[#8888AA] mb-1 block">Catégorie</label>
-                      <CategorySelect
-                        value={form.synergy_category}
-                        onChange={v => setForm(f => ({ ...f, synergy_category: v }))}
-                        allCategories={allCategories}
-                      />
+                      <CategorySelect value={form.synergy_category} onChange={v => setForm(f => ({ ...f, synergy_category: v }))} allCategories={allCategories} />
                     </div>
                     <div>
                       <label className="text-xs text-[#8888AA] mb-1 block">Détail</label>
-                      <input className="input text-sm"
-                        value={form.synergy_detail ?? ''}
-                        onChange={e => setForm(f => ({ ...f, synergy_detail: e.target.value || null }))}
-                        placeholder="Description libre..."
-                      />
+                      <input className="input text-sm" value={form.synergy_detail ?? ''}
+                        onChange={e => setForm(f => ({ ...f, synergy_detail: e.target.value || null }))} placeholder="Description libre..." />
                     </div>
                   </div>
                 </div>
               </div>
-
               <div className="flex gap-3 pt-2">
                 <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
-                <button onClick={save} disabled={saving || !form.name} className="btn-primary flex-1">
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-                </button>
+                <button onClick={save} disabled={saving || !form.name} className="btn-primary flex-1">{saving ? 'Sauvegarde...' : 'Sauvegarder'}</button>
               </div>
             </div>
           </div>
