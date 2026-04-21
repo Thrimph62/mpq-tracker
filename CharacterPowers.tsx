@@ -1,82 +1,136 @@
-import { useState } from 'react'
-import { Character, Support, Stars } from '../types'
+export type Stars = 1 | 2 | 3 | 4 | 5 | 6
 
-const STAR_COLORS: Record<Stars, string> = {
-  1: '#60A5FA',  // Bleu
-  2: '#4ADE80',  // Vert
-  3: '#B45309',  // Bronze
-  4: '#9CA3AF',  // Gris
-  5: '#FACC15',  // Or
-  6: '#C084FC',  // Violet
+export type CharacterStatus =
+  | 'max_champ'
+  | 'champ'
+  | 'rostered'
+  | 'not_owned'
+
+export type TeamStatus = 'active' | 'to_test' | 'archived'
+
+export type PowerColor = 'Bleu' | 'Rouge' | 'Vert' | 'Noir' | 'Jaune' | 'Violet'
+
+export interface Character {
+  id: string
+  name: string
+  base_name: string
+  version: string | null
+  stars: Stars
+  level: number | null
+  status: CharacterStatus | null
+  ascended: boolean   // indépendant du statut — un perso peut être ascended ET max_champ
+  notes: string | null
+  created_at: string
+  updated_at: string
 }
 
-// ── Generic search dropdown ───────────────────────────────────────────────────
-interface SearchDropdownProps {
-  value: string | null
-  onChange: (val: string | null) => void
-  options: { id: string; label: string; sublabel?: string; starColor?: string }[]
-  placeholder?: string
-  allowFreeText?: boolean
+export interface CharacterPower {
+  id: string
+  character_id: string
+  power_name: string | null
+  couleur: string | null   // Bleu, Rouge, Vert, Noir, Jaune, Violet
+  cout: number | null
+  effect_1_category: string | null; effect_1_detail: string | null
+  effect_2_category: string | null; effect_2_detail: string | null
+  effect_3_category: string | null; effect_3_detail: string | null
+  effect_4_category: string | null; effect_4_detail: string | null
+  effect_5_category: string | null; effect_5_detail: string | null
+  created_at: string
+  updated_at: string
 }
 
-export function SearchDropdown({ value, onChange, options, placeholder = 'Rechercher...', allowFreeText = true }: SearchDropdownProps) {
-  const [query, setQuery] = useState('')
-  const [open, setOpen]   = useState(false)
-
-  const filtered = options.filter(o =>
-    o.label.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 20)
-
-  return (
-    <div className="relative">
-      <input
-        className="input text-sm"
-        placeholder={placeholder}
-        value={open ? query : (value ?? '')}
-        onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) onChange(null) }}
-        onFocus={() => { setQuery(value ?? ''); setOpen(true) }}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-      />
-      {open && (
-        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#1A1A2E] border border-[#2D2D4E] rounded-lg shadow-xl max-h-52 overflow-y-auto">
-          <button type="button" onMouseDown={() => { onChange(null); setOpen(false) }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-[#2D2D4E] text-[#8888AA]">
-            — Aucun —
-          </button>
-          {filtered.map(o => (
-            <button key={o.id} type="button"
-              onMouseDown={() => { onChange(o.label); setOpen(false) }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-[#2D2D4E]">
-              <span className="text-white">{o.label}</span>
-              {o.sublabel && <span style={{ color: o.starColor }} className="ml-2 text-xs">{o.sublabel}</span>}
-            </button>
-          ))}
-          {allowFreeText && filtered.length === 0 && query && (
-            <button type="button" onMouseDown={() => { onChange(query); setOpen(false) }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-[#2D2D4E] text-[#8888AA] italic">
-              Utiliser "{query}" (texte libre)
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  )
+export interface Support {
+  id: string
+  name: string
+  rang: number | null
+  niveau: number | null
+  restriction: string | null
+  // Effects 1–5
+  effect_1_category: string | null
+  effect_1_detail: string | null
+  effect_2_category: string | null
+  effect_2_detail: string | null
+  effect_3_category: string | null
+  effect_3_detail: string | null
+  effect_4_category: string | null
+  effect_4_detail: string | null
+  effect_5_category: string | null
+  effect_5_detail: string | null
+  // Synergy
+  synergy_restriction: string | null
+  synergy_category: string | null
+  synergy_detail: string | null
+  created_at: string
+  updated_at: string
 }
 
-// ── Typed helpers ─────────────────────────────────────────────────────────────
-export function toCharacterOptions(characters: Character[]) {
-  return characters.map(c => ({
-    id: c.id,
-    label: c.name,
-    sublabel: '★'.repeat(c.stars),
-    starColor: STAR_COLORS[c.stars as Stars],
-  }))
+export interface Team {
+  id: string
+  name: string
+  left_character: string | null
+  left_build: string | null
+  left_support: string | null
+  left_boost: string | null
+  mid_character: string | null
+  mid_build: string | null
+  mid_support: string | null
+  mid_boost: string | null
+  right_character: string | null
+  right_build: string | null
+  right_support: string | null
+  right_boost: string | null
+  strategie: string | null
+  ok_hard_nodes: string | null
+  ok_cn_node: string | null
+  all_3_non_boosted: string | null
+  note_additionnelle: string | null
+  status: TeamStatus
+  created_at: string
+  updated_at: string
 }
 
-export function toSupportOptions(supports: Support[]) {
-  return supports.map(s => ({
-    id: s.id,
-    label: s.name,
-    sublabel: s.restriction && s.restriction !== '/' ? s.restriction : undefined,
-  }))
+export interface Quete {
+  id: string
+  nom: string
+  gauche_personnage: string | null
+  gauche_build: string | null
+  gauche_support: string | null
+  milieu_personnage: string | null
+  milieu_build: string | null
+  milieu_support: string | null
+  droite_personnage: string | null
+  droite_build: string | null
+  droite_support: string | null
+  note: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface PuzzleGauntlet {
+  id: string
+  categorie: string | null
+  node: string | null
+  condition_victoire: string | null
+  gauche_personnage: string | null
+  gauche_build: string | null
+  gauche_support: string | null
+  milieu_personnage: string | null
+  milieu_build: string | null
+  milieu_support: string | null
+  droite_personnage: string | null
+  droite_build: string | null
+  droite_support: string | null
+  equipe_utilisee: string | null
+  note: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface RosterSummary {
+  stars:     Stars
+  max_champ: number
+  champ:     number
+  rostered:  number
+  not_owned: number
+  ascended:  number   // indépendant du statut — cumul par tier
 }

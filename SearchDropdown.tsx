@@ -1,26 +1,7 @@
-import { useEffect, useState } from 'react'
-import { Session } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+/// <reference types="vite/client" />
+import { createClient } from '@supabase/supabase-js'
 
-export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setLoading(false)
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s)
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const signIn = (email: string, password: string) =>
-    supabase.auth.signInWithPassword({ email, password })
-
-  const signOut = () => supabase.auth.signOut()
-
-  return { session, loading, signIn, signOut }
-}
+export const supabase = createClient(supabaseUrl, supabaseKey)

@@ -1,199 +1,202 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
-import { Quete, Character, Support } from '../types'
-import { TeamSlot } from '../components/TeamSlot'
-import { SearchDropdown, toCharacterOptions, toSupportOptions } from '../components/SearchDropdown'
-import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+-- ============================================================
+-- MPQ TRACKER — Schéma Supabase
+-- ============================================================
 
-const EMPTY: Omit<Quete, 'id' | 'created_at' | 'updated_at'> = {
-  nom: '',
-  gauche_personnage: null, gauche_build: null, gauche_support: null,
-  milieu_personnage: null, milieu_build: null, milieu_support: null,
-  droite_personnage: null, droite_build: null, droite_support: null,
-  note: null,
-}
+-- Enable UUID
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-const SLOTS = [
-  { pos: 'gauche', label: 'Gauche' },
-  { pos: 'milieu', label: 'Milieu' },
-  { pos: 'droite', label: 'Droite' },
-] as const
+-- ────────────────────────────────────────────────
+-- CHARACTERS
+-- ────────────────────────────────────────────────
+-- name      = nom complet avec version, ex: "Spider-Man (Classic)"
+-- base_name = nom de base sans version, ex: "Spider-Man"
+-- version   = ce qui est entre parenthèses, ex: "Classic"
+-- ascended  = booléen indépendant du statut (un perso peut être ascended ET max_champ)
+--             l'ascension peut être n'importe quel tier → tier supérieur (2★→3★, 3★→4★, etc.)
+CREATE TABLE characters (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name        TEXT NOT NULL,
+  base_name   TEXT NOT NULL,
+  version     TEXT,
+  stars       INTEGER NOT NULL CHECK (stars BETWEEN 1 AND 6),
+  level       INTEGER,
+  status      TEXT CHECK (status IN ('max_champ','champ','rostered','not_owned')),
+  ascended    BOOLEAN NOT NULL DEFAULT FALSE,
+  notes       TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
 
-export default function Quetes() {
-  const [quetes, setQuetes]       = useState<Quete[]>([])
-  const [characters, setCharacters] = useState<Character[]>([])
-  const [supports, setSupports]   = useState<Support[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [search, setSearch]       = useState('')
-  const [expanded, setExpanded]   = useState<string | null>(null)
-  const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
-  const [form, setForm]           = useState<typeof EMPTY>(EMPTY)
-  const [editId, setEditId]       = useState<string | null>(null)
-  const [saving, setSaving]       = useState(false)
+CREATE INDEX idx_characters_stars     ON characters(stars);
+CREATE INDEX idx_characters_status    ON characters(status);
+CREATE INDEX idx_characters_ascended  ON characters(ascended);
+CREATE INDEX idx_characters_name      ON characters(name);
+CREATE INDEX idx_characters_base_name ON characters(base_name);
 
-  async function load() {
-    const [{ data: q }, { data: c }, { data: s }] = await Promise.all([
-      supabase.from('quetes').select('*').order('nom'),
-      supabase.from('characters').select('*').order('base_name').order('version'),
-      supabase.from('supports').select('*').order('name'),
-    ])
-    if (q) setQuetes(q)
-    if (c) setCharacters(c)
-    if (s) setSupports(s)
-    setLoading(false)
-  }
-  useEffect(() => { load() }, [])
+-- ────────────────────────────────────────────────
+-- CHARACTER POWERS
+-- ────────────────────────────────────────────────
+-- Un personnage peut avoir N pouvoirs
+-- Par couleur, plusieurs pouvoirs avec coûts différents (traités séparément)
+CREATE TABLE character_powers (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  character_id    UUID REFERENCES characters(id) ON DELETE CASCADE,
+  power_name      TEXT,
+  couleur         TEXT,   -- Bleu, Rouge, Vert, Noir, Jaune, Violet
+  cout            INTEGER,
+  -- Effets (même structure que supports)
+  effect_1_category TEXT, effect_1_detail TEXT,
+  effect_2_category TEXT, effect_2_detail TEXT,
+  effect_3_category TEXT, effect_3_detail TEXT,
+  effect_4_category TEXT, effect_4_detail TEXT,
+  effect_5_category TEXT, effect_5_detail TEXT,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
 
-  const visible = quetes.filter(q =>
-    q.nom.toLowerCase().includes(search.toLowerCase()) ||
-    [q.gauche_personnage, q.milieu_personnage, q.droite_personnage]
-      .some(c => c?.toLowerCase().includes(search.toLowerCase()))
-  )
+CREATE INDEX idx_powers_character ON character_powers(character_id);
+CREATE INDEX idx_powers_couleur   ON character_powers(couleur);
 
-  function openAdd()    { setForm(EMPTY); setEditId(null); setModal('add') }
-  function openEdit(q: Quete) {
-    const { id, created_at, updated_at, ...rest } = q
-    setForm(rest); setEditId(q.id); setModal('edit')
-  }
-  function closeModal() { setModal(null); setEditId(null) }
+-- ────────────────────────────────────────────────
+-- SUPPORTS
+-- ────────────────────────────────────────────────
+-- Each support has up to 5 effects, each with a category + free text detail.
+-- Synergy has: a restriction (who it synergises with) + same category+detail structure.
+-- Effect categories are stored as free text — no enum constraint so new ones can be added anytime.
+CREATE TABLE supports (
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name                 TEXT NOT NULL,
+  rang                 INTEGER,
+  niveau               INTEGER,
+  restriction          TEXT,          -- Héros, Vilains, / or custom
+  -- Effects 1–5
+  effect_1_category    TEXT,
+  effect_1_detail      TEXT,
+  effect_2_category    TEXT,
+  effect_2_detail      TEXT,
+  effect_3_category    TEXT,
+  effect_3_detail      TEXT,
+  effect_4_category    TEXT,
+  effect_4_detail      TEXT,
+  effect_5_category    TEXT,
+  effect_5_detail      TEXT,
+  -- Synergy
+  synergy_restriction  TEXT,          -- free text: character name, tag, etc.
+  synergy_category     TEXT,
+  synergy_detail       TEXT,
+  created_at           TIMESTAMPTZ DEFAULT NOW(),
+  updated_at           TIMESTAMPTZ DEFAULT NOW()
+);
 
-  function setSlot(pos: 'gauche' | 'milieu' | 'droite', field: 'personnage' | 'build' | 'support', val: string | null) {
-    setForm(f => ({ ...f, [`${pos}_${field}`]: val }))
-  }
+CREATE INDEX idx_supports_name ON supports(name);
 
-  async function save() {
-    setSaving(true)
-    if (modal === 'add') await supabase.from('quetes').insert([form])
-    else if (editId) await supabase.from('quetes').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
-    await load(); closeModal(); setSaving(false)
-  }
+-- ────────────────────────────────────────────────
+-- TEAMS
+-- ────────────────────────────────────────────────
+CREATE TABLE teams (
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name                  TEXT NOT NULL,
+  -- Personnage Gauche
+  left_character        TEXT,
+  left_build            TEXT,
+  left_support          TEXT,
+  left_boost            TEXT,
+  -- Personnage Milieu
+  mid_character         TEXT,
+  mid_build             TEXT,
+  mid_support           TEXT,
+  mid_boost             TEXT,
+  -- Personnage Droite
+  right_character       TEXT,
+  right_build           TEXT,
+  right_support         TEXT,
+  right_boost           TEXT,
+  -- Résultats & Stratégie
+  strategie             TEXT,
+  ok_hard_nodes         TEXT,
+  ok_cn_node            TEXT,
+  all_3_non_boosted     TEXT,
+  note_additionnelle    TEXT,
+  status                TEXT DEFAULT 'active' CHECK (status IN ('active','to_test','archived')),
+  created_at            TIMESTAMPTZ DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ DEFAULT NOW()
+);
 
-  async function remove(id: string) {
-    if (!confirm('Supprimer cette quête ?')) return
-    await supabase.from('quetes').delete().eq('id', id)
-    setQuetes(prev => prev.filter(q => q.id !== id))
-  }
+CREATE INDEX idx_teams_status ON teams(status);
 
-  const charOptions    = toCharacterOptions(characters)
-  const supportOptions = toSupportOptions(supports)
+-- ────────────────────────────────────────────────
+-- QUÊTES
+-- ────────────────────────────────────────────────
+CREATE TABLE quetes (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nom                 TEXT NOT NULL,
+  gauche_personnage   TEXT,
+  gauche_build        TEXT,
+  gauche_support      TEXT,
+  milieu_personnage   TEXT,
+  milieu_build        TEXT,
+  milieu_support      TEXT,
+  droite_personnage   TEXT,
+  droite_build        TEXT,
+  droite_support      TEXT,
+  note                TEXT,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="page-title">Quêtes</h1>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
-      </div>
+-- ────────────────────────────────────────────────
+-- PUZZLE GAUNTLET
+-- ────────────────────────────────────────────────
+CREATE TABLE puzzle_gauntlet (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  categorie           TEXT,
+  node                TEXT,
+  condition_victoire  TEXT,
+  gauche_personnage   TEXT,
+  gauche_build        TEXT,
+  gauche_support      TEXT,
+  milieu_personnage   TEXT,
+  milieu_build        TEXT,
+  milieu_support      TEXT,
+  droite_personnage   TEXT,
+  droite_build        TEXT,
+  droite_support      TEXT,
+  equipe_utilisee     TEXT,
+  note                TEXT,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
 
-      <div className="relative max-w-sm">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
-        <input className="input pl-9" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
-      </div>
+CREATE INDEX idx_gauntlet_categorie ON puzzle_gauntlet(categorie);
 
-      <p className="text-sm text-[#8888AA]">{visible.length} quête{visible.length !== 1 ? 's' : ''}</p>
+-- ────────────────────────────────────────────────
+-- ROW LEVEL SECURITY — Solo user (auth.uid check)
+-- ────────────────────────────────────────────────
+ALTER TABLE characters       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE character_powers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE supports         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teams            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quetes           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE puzzle_gauntlet  ENABLE ROW LEVEL SECURITY;
 
-      {loading ? <Spinner /> : (
-        <div className="space-y-2">
-          {visible.map(q => (
-            <div key={q.id} className="card">
-              <div className="flex items-center justify-between gap-4">
-                <button onClick={() => setExpanded(expanded === q.id ? null : q.id)}
-                  className="flex-1 text-left flex items-center gap-2 group">
-                  <span className="font-semibold group-hover:text-marvel-gold transition-colors">{q.nom}</span>
-                  {expanded === q.id ? <ChevronUp size={14} className="text-[#8888AA]" /> : <ChevronDown size={14} className="text-[#8888AA]" />}
-                </button>
-                <div className="flex gap-2 shrink-0">
-                  <button onClick={() => openEdit(q)} className="text-[#8888AA] hover:text-white p-1"><Pencil size={14} /></button>
-                  <button onClick={() => remove(q.id)} className="text-[#8888AA] hover:text-red-400 p-1"><Trash2 size={14} /></button>
-                </div>
-              </div>
+-- Allow full access only to authenticated users
+CREATE POLICY "auth_only" ON characters       FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON character_powers FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON supports         FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON teams            FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON quetes           FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON puzzle_gauntlet  FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
-              {expanded === q.id && (
-                <div className="mt-4 pt-4 border-t border-[#2D2D4E] space-y-4">
-                  <div className="grid grid-cols-3 gap-3">
-                    <TeamSlot character={q.gauche_personnage} build={q.gauche_build} support={q.gauche_support} />
-                    <TeamSlot character={q.milieu_personnage} build={q.milieu_build} support={q.milieu_support} />
-                    <TeamSlot character={q.droite_personnage} build={q.droite_build} support={q.droite_support} />
-                  </div>
-                  {q.note && (
-                    <div className="bg-[#0D0D0D] rounded-lg p-3">
-                      <p className="text-xs text-marvel-gold font-semibold mb-1">Note</p>
-                      <p className="text-sm text-[#CCCCCC] whitespace-pre-line leading-relaxed">{q.note}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-          {visible.length === 0 && <div className="card text-center text-[#8888AA] py-12">Aucune quête trouvée</div>}
-        </div>
-      )}
+-- ────────────────────────────────────────────────
+-- AUTO-UPDATE updated_at
+-- ────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
+$$ LANGUAGE plpgsql;
 
-      {modal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="card w-full max-w-xl my-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouvelle Quête' : 'Modifier Quête'}</h2>
-              <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Nom de la quête *</label>
-                <input className="input" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
-              </div>
-
-              {SLOTS.map(({ pos, label }) => (
-                <div key={pos} className="bg-[#0D0D0D] rounded-lg p-3 space-y-2">
-                  <p className="text-xs font-semibold text-marvel-gold">{label}</p>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Personnage</label>
-                      <SearchDropdown
-                        value={form[`${pos}_personnage`]}
-                        onChange={v => setSlot(pos, 'personnage', v)}
-                        options={charOptions}
-                        placeholder="Rechercher un personnage..."
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-xs text-[#8888AA] mb-1 block">Build</label>
-                        <input className="input text-sm" placeholder="5/3/5"
-                          value={form[`${pos}_build`] ?? ''}
-                          onChange={e => setSlot(pos, 'build', e.target.value || null)} />
-                      </div>
-                      <div>
-                        <label className="text-xs text-[#8888AA] mb-1 block">Support</label>
-                        <SearchDropdown
-                          value={form[`${pos}_support`]}
-                          onChange={v => setSlot(pos, 'support', v)}
-                          options={supportOptions}
-                          placeholder="Rechercher un support..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Note / Stratégie</label>
-                <textarea className="input resize-none h-24" value={form.note ?? ''}
-                  onChange={e => setForm(f => ({ ...f, note: e.target.value || null }))} />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
-                <button onClick={save} disabled={saving || !form.nom} className="btn-primary flex-1">
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function Spinner() {
-  return <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-2 border-marvel-red border-t-transparent rounded-full" /></div>
-}
+CREATE TRIGGER trg_characters       BEFORE UPDATE ON characters       FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_supports         BEFORE UPDATE ON supports         FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_teams            BEFORE UPDATE ON teams            FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_quetes           BEFORE UPDATE ON quetes           FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_puzzle_gauntlet  BEFORE UPDATE ON puzzle_gauntlet  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
