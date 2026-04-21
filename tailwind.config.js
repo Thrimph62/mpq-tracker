@@ -1,45 +1,33 @@
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  theme: {
-    extend: {
-      colors: {
-        marvel: {
-          red:    '#E62429',
-          gold:   '#F0A500',
-          dark:   '#0D0D0D',
-          card:   '#1A1A2E',
-          border: '#2D2D4E',
-          muted:  '#8888AA',
-        },
-        star: {
-          1: '#60A5FA',  // Bleu
-          2: '#4ADE80',  // Vert
-          3: '#92400E',  // Bronze
-          4: '#9CA3AF',  // Gris
-          5: '#FACC15',  // Or
-          6: '#C084FC',  // Violet
-        },
-        status: {
-          max_champed:  '#C084FC',
-          champed:      '#F97316',
-          rostered:     '#4ADE80',
-          not_rostered: '#9CA3AF',
-          not_owned:    '#374151',
-        },
-        power: {
-          Bleu:   '#3B82F6',
-          Rouge:  '#EF4444',
-          Vert:   '#22C55E',
-          Noir:   '#6B7280',
-          Jaune:  '#EAB308',
-          Violet: '#A855F7',
-        }
-      },
-      fontFamily: {
-        marvel: ['"Bebas Neue"', 'Impact', 'sans-serif'],
-      }
-    },
-  },
-  plugins: [],
-}
+-- ============================================================
+-- MIGRATION — Refonte table supports
+-- À exécuter dans Supabase SQL Editor si la table existe déjà
+-- ============================================================
+
+-- 1. Supprimer les anciennes colonnes d'effets
+ALTER TABLE supports
+  DROP COLUMN IF EXISTS mp_bonus,
+  DROP COLUMN IF EXISTS degats_up,
+  DROP COLUMN IF EXISTS degats_ennemis,
+  DROP COLUMN IF EXISTS creation,
+  DROP COLUMN IF EXISTS destruction_ennemi,
+  DROP COLUMN IF EXISTS fortification,
+  DROP COLUMN IF EXISTS sante,
+  DROP COLUMN IF EXISTS autre,
+  DROP COLUMN IF EXISTS synergie,
+  DROP COLUMN IF EXISTS for_filter;
+
+-- 2. Ajouter les nouvelles colonnes effets 1–5
+ALTER TABLE supports
+  ADD COLUMN IF NOT EXISTS effect_1_category   TEXT,
+  ADD COLUMN IF NOT EXISTS effect_1_detail     TEXT,
+  ADD COLUMN IF NOT EXISTS effect_2_category   TEXT,
+  ADD COLUMN IF NOT EXISTS effect_2_detail     TEXT,
+  ADD COLUMN IF NOT EXISTS effect_3_category   TEXT,
+  ADD COLUMN IF NOT EXISTS effect_3_detail     TEXT,
+  ADD COLUMN IF NOT EXISTS effect_4_category   TEXT,
+  ADD COLUMN IF NOT EXISTS effect_4_detail     TEXT,
+  ADD COLUMN IF NOT EXISTS effect_5_category   TEXT,
+  ADD COLUMN IF NOT EXISTS effect_5_detail     TEXT,
+  ADD COLUMN IF NOT EXISTS synergy_restriction TEXT,
+  ADD COLUMN IF NOT EXISTS synergy_category    TEXT,
+  ADD COLUMN IF NOT EXISTS synergy_detail      TEXT;

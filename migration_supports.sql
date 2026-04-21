@@ -1,356 +1,199 @@
-import { useState, useRef } from 'react'
-import * as XLSX from 'xlsx'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Upload, CheckSquare, Square, FileSpreadsheet, AlertCircle, CheckCircle, Loader } from 'lucide-react'
+import { Quete, Character, Support } from '../types'
+import { TeamSlot } from '../components/TeamSlot'
+import { SearchDropdown, toCharacterOptions, toSupportOptions } from '../components/SearchDropdown'
+import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface Section {
-  key: string
-  label: string
-  sheet: string
-  description: string
+const EMPTY: Omit<Quete, 'id' | 'created_at' | 'updated_at'> = {
+  nom: '',
+  gauche_personnage: null, gauche_build: null, gauche_support: null,
+  milieu_personnage: null, milieu_build: null, milieu_support: null,
+  droite_personnage: null, droite_build: null, droite_support: null,
+  note: null,
 }
 
-interface ImportResult {
-  section: string
-  inserted: number
-  skipped: number
-  error?: string
-}
+const SLOTS = [
+  { pos: 'gauche', label: 'Gauche' },
+  { pos: 'milieu', label: 'Milieu' },
+  { pos: 'droite', label: 'Droite' },
+] as const
 
-type ImportStatus = 'idle' | 'loading' | 'done' | 'error'
+export default function Quetes() {
+  const [quetes, setQuetes]       = useState<Quete[]>([])
+  const [characters, setCharacters] = useState<Character[]>([])
+  const [supports, setSupports]   = useState<Support[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [search, setSearch]       = useState('')
+  const [expanded, setExpanded]   = useState<string | null>(null)
+  const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
+  const [form, setForm]           = useState<typeof EMPTY>(EMPTY)
+  const [editId, setEditId]       = useState<string | null>(null)
+  const [saving, setSaving]       = useState(false)
 
-// ── Config ────────────────────────────────────────────────────────────────────
-
-const SECTIONS: Section[] = [
-  { key: 'characters',    label: 'Personnages',       sheet: 'Characters',     description: 'Nom, étoiles, niveau' },
-  { key: 'supports',      label: 'Supports',          sheet: 'Supports',       description: 'Nom, rang, niveau, effets' },
-  { key: 'teams',         label: 'Équipes (actives)', sheet: 'Teams Database', description: 'Compositions avec builds & supports' },
-  { key: 'teams_to_test', label: 'Équipes à tester',  sheet: 'Teams to Test',  description: 'Équipes communautaires' },
-  { key: 'quetes',        label: 'Quêtes',            sheet: 'Quetes',         description: 'Compositions par quête' },
-  { key: 'gauntlet',      label: 'Puzzle Gauntlet',   sheet: 'Puzzle Gauntlet',description: 'Solutions par node' },
-]
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function clean(val: unknown): string | null {
-  if (val === null || val === undefined) return null
-  const s = String(val).trim()
-  return s === '' || s === 'NaN' ? null : s
-}
-
-function parseBaseName(name: string): { base: string; version: string | null } {
-  const m = name.match(/^(.+?)\s*\((.+)\)$/)
-  return m ? { base: m[1].trim(), version: m[2].trim() } : { base: name, version: null }
-}
-
-function getRows(wb: XLSX.WorkBook, sheetName: string): unknown[][] | null {
-  const ws = wb.Sheets[sheetName]
-  if (!ws) return null
-  return XLSX.utils.sheet_to_json(ws, { header: 1, defval: null }) as unknown[][]
-}
-
-// ── Importers ─────────────────────────────────────────────────────────────────
-
-async function importCharacters(rows: unknown[][]): Promise<ImportResult> {
-  const records: object[] = []
-  for (const row of rows.slice(1)) {
-    const name  = clean(row[0])
-    const stars = row[1] ? Number(row[1]) : null
-    const level = row[2] ? Number(row[2]) : null
-    if (!name || name === 'Character' || !stars) continue
-    const { base, version } = parseBaseName(name)
-    records.push({ name, base_name: base, version, stars, level, status: 'rostered', ascended: false })
+  async function load() {
+    const [{ data: q }, { data: c }, { data: s }] = await Promise.all([
+      supabase.from('quetes').select('*').order('nom'),
+      supabase.from('characters').select('*').order('base_name').order('version'),
+      supabase.from('supports').select('*').order('name'),
+    ])
+    if (q) setQuetes(q)
+    if (c) setCharacters(c)
+    if (s) setSupports(s)
+    setLoading(false)
   }
-  let inserted = 0, skipped = 0
-  for (const rec of records) {
-    const { error } = await supabase.from('characters').insert([rec])
-    if (error) skipped++
-    else inserted++
-  }
-  return { section: 'Personnages', inserted, skipped }
-}
+  useEffect(() => { load() }, [])
 
-async function importSupports(rows: unknown[][]): Promise<ImportResult> {
-  const records: object[] = []
-  for (const row of rows.slice(1)) {
-    const name = clean(row[0])
-    if (!name || name === 'Support') continue
-    records.push({
-      name,
-      rang:               row[1] ? Number(row[1]) : null,
-      niveau:             row[2] ? Number(row[2]) : null,
-      restriction:        clean(row[3]),
-      mp_bonus:           clean(row[4]),
-      degats_up:          clean(row[5]),
-      degats_ennemis:     clean(row[6]),
-      creation:           clean(row[7]),
-      destruction_ennemi: clean(row[8]),
-      fortification:      clean(row[9]),
-      sante:              clean(row[10]),
-      autre:              clean(row[11]),
-      synergie:           clean(row[12]),
-    })
-  }
-  let inserted = 0, skipped = 0
-  for (const rec of records) {
-    const { error } = await supabase.from('supports').insert([rec])
-    if (error) skipped++
-    else inserted++
-  }
-  return { section: 'Supports', inserted, skipped }
-}
-
-async function importTeams(rows: unknown[][], isActive: boolean): Promise<ImportResult> {
-  const records: object[] = []
-  for (const row of rows.slice(1)) {
-    const name = clean(row[0])
-    if (!name || name === 'Team Name' || name === 'Team') continue
-    if (isActive) {
-      records.push({
-        name,
-        left_character: clean(row[1]),  left_build: clean(row[2]),
-        left_support:   clean(row[3]),  left_boost: clean(row[4]),
-        mid_character:  clean(row[5]),  mid_build:  clean(row[6]),
-        mid_support:    clean(row[7]),  mid_boost:  clean(row[8]),
-        right_character: clean(row[9]), right_build: clean(row[10]),
-        right_support:  clean(row[11]), right_boost: clean(row[12]),
-        strategie:          clean(row[13]),
-        ok_hard_nodes:      clean(row[14]),
-        ok_cn_node:         clean(row[15]),
-        all_3_non_boosted:  clean(row[16]),
-        note_additionnelle: clean(row[17]),
-        status: 'active',
-      })
-    } else {
-      records.push({ name, note_additionnelle: clean(row[1]), status: 'to_test' })
-    }
-  }
-  let inserted = 0, skipped = 0
-  for (const rec of records) {
-    const { error } = await supabase.from('teams').insert([rec])
-    if (error) skipped++
-    else inserted++
-  }
-  return { section: isActive ? 'Équipes actives' : 'Équipes à tester', inserted, skipped }
-}
-
-async function importQuetes(rows: unknown[][]): Promise<ImportResult> {
-  const records: object[] = []
-  for (const row of rows.slice(1)) {
-    const nom = clean(row[0])
-    if (!nom || nom === 'Quete') continue
-    const slot = (val: unknown) => {
-      const parts = (clean(val) ?? '').split('\n')
-      return { char: parts[0] || null, build: parts[1] || null, support: parts[2] || null }
-    }
-    const g = slot(row[1]), m = slot(row[2]), d = slot(row[3])
-    records.push({
-      nom,
-      gauche_personnage: g.char, gauche_build: g.build, gauche_support: g.support,
-      milieu_personnage: m.char, milieu_build: m.build, milieu_support: m.support,
-      droite_personnage: d.char, droite_build: d.build, droite_support: d.support,
-      note: clean(row[4]),
-    })
-  }
-  let inserted = 0, skipped = 0
-  for (const rec of records) {
-    const { error } = await supabase.from('quetes').insert([rec])
-    if (error) skipped++
-    else inserted++
-  }
-  return { section: 'Quêtes', inserted, skipped }
-}
-
-async function importGauntlet(rows: unknown[][]): Promise<ImportResult> {
-  const records: object[] = []
-  for (const row of rows.slice(1)) {
-    const cat = clean(row[0])
-    if (!cat || cat === 'Name') continue
-    const slot = (val: unknown) => {
-      const parts = (clean(val) ?? '').split('\n')
-      return { char: parts[0] || null, build: parts[1] || null, support: parts[2] || null }
-    }
-    const g = slot(row[3]), m = slot(row[4]), d = slot(row[5])
-    records.push({
-      categorie: cat, node: clean(row[1]), condition_victoire: clean(row[2]),
-      gauche_personnage: g.char, gauche_build: g.build, gauche_support: g.support,
-      milieu_personnage: m.char, milieu_build: m.build, milieu_support: m.support,
-      droite_personnage: d.char, droite_build: d.build, droite_support: d.support,
-      equipe_utilisee: clean(row[6]), note: clean(row[7]),
-    })
-  }
-  let inserted = 0, skipped = 0
-  for (const rec of records) {
-    const { error } = await supabase.from('puzzle_gauntlet').insert([rec])
-    if (error) skipped++
-    else inserted++
-  }
-  return { section: 'Puzzle Gauntlet', inserted, skipped }
-}
-
-// ── Component ─────────────────────────────────────────────────────────────────
-
-export default function Import() {
-  const [file, setFile]         = useState<File | null>(null)
-  const [selected, setSelected] = useState<Record<string, boolean>>(
-    Object.fromEntries(SECTIONS.map(s => [s.key, true]))
+  const visible = quetes.filter(q =>
+    q.nom.toLowerCase().includes(search.toLowerCase()) ||
+    [q.gauche_personnage, q.milieu_personnage, q.droite_personnage]
+      .some(c => c?.toLowerCase().includes(search.toLowerCase()))
   )
-  const [status, setStatus]     = useState<ImportStatus>('idle')
-  const [results, setResults]   = useState<ImportResult[]>([])
-  const [dragging, setDragging] = useState(false)
-  const inputRef                = useRef<HTMLInputElement>(null)
 
-  const allSelected = SECTIONS.every(s => selected[s.key])
-  const anySelected = SECTIONS.some(s => selected[s.key])
+  function openAdd()    { setForm(EMPTY); setEditId(null); setModal('add') }
+  function openEdit(q: Quete) {
+    const { id, created_at, updated_at, ...rest } = q
+    setForm(rest); setEditId(q.id); setModal('edit')
+  }
+  function closeModal() { setModal(null); setEditId(null) }
 
-  function toggleAll() {
-    setSelected(Object.fromEntries(SECTIONS.map(s => [s.key, !allSelected])))
+  function setSlot(pos: 'gauche' | 'milieu' | 'droite', field: 'personnage' | 'build' | 'support', val: string | null) {
+    setForm(f => ({ ...f, [`${pos}_${field}`]: val }))
   }
 
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setDragging(false)
-    const f = e.dataTransfer.files[0]
-    if (f?.name.endsWith('.xlsx')) setFile(f)
+  async function save() {
+    setSaving(true)
+    if (modal === 'add') await supabase.from('quetes').insert([form])
+    else if (editId) await supabase.from('quetes').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
+    await load(); closeModal(); setSaving(false)
   }
 
-  async function runImport() {
-    if (!file) return
-    setStatus('loading')
-    setResults([])
-
-    try {
-      const buffer = await file.arrayBuffer()
-      const wb = XLSX.read(buffer, { type: 'array' })
-      const res: ImportResult[] = []
-
-      const run = async (key: string, sheetName: string, fn: (rows: unknown[][]) => Promise<ImportResult>, label: string) => {
-        if (!selected[key]) return
-        const rows = getRows(wb, sheetName)
-        if (rows) res.push(await fn(rows))
-        else res.push({ section: label, inserted: 0, skipped: 0, error: `Feuille "${sheetName}" introuvable` })
-      }
-
-      await run('characters',    'Characters',     importCharacters,               'Personnages')
-      await run('supports',      'Supports',       importSupports,                 'Supports')
-      await run('teams',         'Teams Database', r => importTeams(r, true),      'Équipes actives')
-      await run('teams_to_test', 'Teams to Test',  r => importTeams(r, false),     'Équipes à tester')
-      await run('quetes',        'Quetes',         importQuetes,                   'Quêtes')
-      await run('gauntlet',      'Puzzle Gauntlet',importGauntlet,                 'Puzzle Gauntlet')
-
-      setResults(res)
-      setStatus('done')
-    } catch (err) {
-      setResults([{ section: 'Erreur générale', inserted: 0, skipped: 0, error: String(err) }])
-      setStatus('error')
-    }
+  async function remove(id: string) {
+    if (!confirm('Supprimer cette quête ?')) return
+    await supabase.from('quetes').delete().eq('id', id)
+    setQuetes(prev => prev.filter(q => q.id !== id))
   }
+
+  const charOptions    = toCharacterOptions(characters)
+  const supportOptions = toSupportOptions(supports)
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h1 className="page-title">Import Excel</h1>
-
-      {/* Drop zone */}
-      <div
-        onDragOver={e => { e.preventDefault(); setDragging(true) }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
-          dragging ? 'border-marvel-red bg-marvel-red/10'
-          : file   ? 'border-green-600 bg-green-900/10'
-                   : 'border-[#2D2D4E] hover:border-[#8888AA]'
-        }`}
-      >
-        <input ref={inputRef} type="file" accept=".xlsx" className="hidden"
-          onChange={e => e.target.files?.[0] && setFile(e.target.files[0])} />
-        {file ? (
-          <div className="space-y-1">
-            <FileSpreadsheet size={32} className="mx-auto text-green-400" />
-            <p className="font-semibold text-green-300">{file.name}</p>
-            <p className="text-xs text-[#8888AA]">{(file.size / 1024).toFixed(0)} KB · Cliquer pour changer</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <Upload size={32} className="mx-auto text-[#8888AA]" />
-            <p className="text-white font-medium">Glisser-déposer ton fichier Excel ici</p>
-            <p className="text-sm text-[#8888AA]">ou cliquer pour choisir · Format .xlsx uniquement</p>
-          </div>
-        )}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="page-title">Quêtes</h1>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
       </div>
 
-      {/* Section checkboxes */}
-      <div className="card space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-white">Sections à importer</h2>
-          <button onClick={toggleAll} className="text-xs text-[#8888AA] hover:text-white flex items-center gap-1 transition-colors">
-            {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
-            {allSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
-          </button>
-        </div>
-        <div className="space-y-1">
-          {SECTIONS.map(s => (
-            <button
-              key={s.key} type="button"
-              onClick={() => setSelected(prev => ({ ...prev, [s.key]: !prev[s.key] }))}
-              className="flex items-center gap-3 w-full text-left p-2 rounded-lg hover:bg-[#2D2D4E]/40 transition-colors"
-            >
-              <span className={`shrink-0 transition-colors ${selected[s.key] ? 'text-marvel-red' : 'text-[#555]'}`}>
-                {selected[s.key] ? <CheckSquare size={18} /> : <Square size={18} />}
-              </span>
-              <span className="flex-1">
-                <span className={`text-sm font-medium block ${selected[s.key] ? 'text-white' : 'text-[#8888AA]'}`}>
-                  {s.label}
-                </span>
-                <span className="text-xs text-[#555]">{s.description} · feuille «&nbsp;{s.sheet}&nbsp;»</span>
-              </span>
-            </button>
-          ))}
-        </div>
+      <div className="relative max-w-sm">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
+        <input className="input pl-9" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      {/* Launch button */}
-      <button
-        onClick={runImport}
-        disabled={!file || !anySelected || status === 'loading'}
-        className="btn-primary w-full flex items-center justify-center gap-2 py-3 disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        {status === 'loading'
-          ? <><Loader size={16} className="animate-spin" /> Import en cours...</>
-          : <><Upload size={16} /> Lancer l'import</>}
-      </button>
+      <p className="text-sm text-[#8888AA]">{visible.length} quête{visible.length !== 1 ? 's' : ''}</p>
 
-      {/* Results */}
-      {results.length > 0 && (
-        <div className="card space-y-3">
-          <h2 className="font-semibold text-white">Résultats</h2>
-          {results.map((r, i) => (
-            <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${
-              r.error ? 'bg-red-900/20 border border-red-800/40' : 'bg-[#0D0D0D]'
-            }`}>
-              {r.error
-                ? <AlertCircle size={16} className="text-red-400 mt-0.5 shrink-0" />
-                : <CheckCircle size={16} className="text-green-400 mt-0.5 shrink-0" />}
-              <div className="flex-1">
-                <p className="text-sm font-medium text-white">{r.section}</p>
-                {r.error
-                  ? <p className="text-xs text-red-400 mt-0.5">{r.error}</p>
-                  : <p className="text-xs text-[#8888AA] mt-0.5">
-                      <span className="text-green-400">{r.inserted} ajouté{r.inserted !== 1 ? 's' : ''}</span>
-                      {r.skipped > 0 && <span className="ml-2 text-[#555]">{r.skipped} ignoré{r.skipped !== 1 ? 's' : ''} (déjà existants)</span>}
-                    </p>}
+      {loading ? <Spinner /> : (
+        <div className="space-y-2">
+          {visible.map(q => (
+            <div key={q.id} className="card">
+              <div className="flex items-center justify-between gap-4">
+                <button onClick={() => setExpanded(expanded === q.id ? null : q.id)}
+                  className="flex-1 text-left flex items-center gap-2 group">
+                  <span className="font-semibold group-hover:text-marvel-gold transition-colors">{q.nom}</span>
+                  {expanded === q.id ? <ChevronUp size={14} className="text-[#8888AA]" /> : <ChevronDown size={14} className="text-[#8888AA]" />}
+                </button>
+                <div className="flex gap-2 shrink-0">
+                  <button onClick={() => openEdit(q)} className="text-[#8888AA] hover:text-white p-1"><Pencil size={14} /></button>
+                  <button onClick={() => remove(q.id)} className="text-[#8888AA] hover:text-red-400 p-1"><Trash2 size={14} /></button>
+                </div>
               </div>
+
+              {expanded === q.id && (
+                <div className="mt-4 pt-4 border-t border-[#2D2D4E] space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <TeamSlot character={q.gauche_personnage} build={q.gauche_build} support={q.gauche_support} />
+                    <TeamSlot character={q.milieu_personnage} build={q.milieu_build} support={q.milieu_support} />
+                    <TeamSlot character={q.droite_personnage} build={q.droite_build} support={q.droite_support} />
+                  </div>
+                  {q.note && (
+                    <div className="bg-[#0D0D0D] rounded-lg p-3">
+                      <p className="text-xs text-marvel-gold font-semibold mb-1">Note</p>
+                      <p className="text-sm text-[#CCCCCC] whitespace-pre-line leading-relaxed">{q.note}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
-          {status === 'done' && results.every(r => !r.error) && (
-            <p className="text-xs text-center text-[#8888AA] pt-1">
-              ✅ Import terminé — les données sont visibles dans les autres pages
-            </p>
-          )}
+          {visible.length === 0 && <div className="card text-center text-[#8888AA] py-12">Aucune quête trouvée</div>}
+        </div>
+      )}
+
+      {modal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="card w-full max-w-xl my-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouvelle Quête' : 'Modifier Quête'}</h2>
+              <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-[#8888AA] mb-1 block">Nom de la quête *</label>
+                <input className="input" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
+              </div>
+
+              {SLOTS.map(({ pos, label }) => (
+                <div key={pos} className="bg-[#0D0D0D] rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-semibold text-marvel-gold">{label}</p>
+                  <div className="grid grid-cols-1 gap-2">
+                    <div>
+                      <label className="text-xs text-[#8888AA] mb-1 block">Personnage</label>
+                      <SearchDropdown
+                        value={form[`${pos}_personnage`]}
+                        onChange={v => setSlot(pos, 'personnage', v)}
+                        options={charOptions}
+                        placeholder="Rechercher un personnage..."
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-[#8888AA] mb-1 block">Build</label>
+                        <input className="input text-sm" placeholder="5/3/5"
+                          value={form[`${pos}_build`] ?? ''}
+                          onChange={e => setSlot(pos, 'build', e.target.value || null)} />
+                      </div>
+                      <div>
+                        <label className="text-xs text-[#8888AA] mb-1 block">Support</label>
+                        <SearchDropdown
+                          value={form[`${pos}_support`]}
+                          onChange={v => setSlot(pos, 'support', v)}
+                          options={supportOptions}
+                          placeholder="Rechercher un support..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div>
+                <label className="text-xs text-[#8888AA] mb-1 block">Note / Stratégie</label>
+                <textarea className="input resize-none h-24" value={form.note ?? ''}
+                  onChange={e => setForm(f => ({ ...f, note: e.target.value || null }))} />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
+                <button onClick={save} disabled={saving || !form.nom} className="btn-primary flex-1">
+                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
   )
+}
+
+function Spinner() {
+  return <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-2 border-marvel-red border-t-transparent rounded-full" /></div>
 }

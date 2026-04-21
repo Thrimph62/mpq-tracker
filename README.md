@@ -1,182 +1,202 @@
-# MPQ Tracker 🦸
+-- ============================================================
+-- MPQ TRACKER — Schéma Supabase
+-- ============================================================
 
-Application web pour tracker ton roster, tes équipes, supports et stratégies Marvel Puzzle Quest.
+-- Enable UUID
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-**Stack :** React 18 + TypeScript + Vite · Supabase (BDD + Auth) · Tailwind CSS (dark Marvel theme)
+-- ────────────────────────────────────────────────
+-- CHARACTERS
+-- ────────────────────────────────────────────────
+-- name      = nom complet avec version, ex: "Spider-Man (Classic)"
+-- base_name = nom de base sans version, ex: "Spider-Man"
+-- version   = ce qui est entre parenthèses, ex: "Classic"
+-- ascended  = booléen indépendant du statut (un perso peut être ascended ET max_champ)
+--             l'ascension peut être n'importe quel tier → tier supérieur (2★→3★, 3★→4★, etc.)
+CREATE TABLE characters (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name        TEXT NOT NULL,
+  base_name   TEXT NOT NULL,
+  version     TEXT,
+  stars       INTEGER NOT NULL CHECK (stars BETWEEN 1 AND 6),
+  level       INTEGER,
+  status      TEXT CHECK (status IN ('max_champ','champ','rostered','not_owned')),
+  ascended    BOOLEAN NOT NULL DEFAULT FALSE,
+  notes       TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
 
----
+CREATE INDEX idx_characters_stars     ON characters(stars);
+CREATE INDEX idx_characters_status    ON characters(status);
+CREATE INDEX idx_characters_ascended  ON characters(ascended);
+CREATE INDEX idx_characters_name      ON characters(name);
+CREATE INDEX idx_characters_base_name ON characters(base_name);
 
-## 📁 Structure du projet
+-- ────────────────────────────────────────────────
+-- CHARACTER POWERS
+-- ────────────────────────────────────────────────
+-- Un personnage peut avoir N pouvoirs
+-- Par couleur, plusieurs pouvoirs avec coûts différents (traités séparément)
+CREATE TABLE character_powers (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  character_id    UUID REFERENCES characters(id) ON DELETE CASCADE,
+  power_name      TEXT,
+  couleur         TEXT,   -- Bleu, Rouge, Vert, Noir, Jaune, Violet
+  cout            INTEGER,
+  -- Effets (même structure que supports)
+  effect_1_category TEXT, effect_1_detail TEXT,
+  effect_2_category TEXT, effect_2_detail TEXT,
+  effect_3_category TEXT, effect_3_detail TEXT,
+  effect_4_category TEXT, effect_4_detail TEXT,
+  effect_5_category TEXT, effect_5_detail TEXT,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
 
-```
-mpq-tracker/
-├── supabase/
-│   └── schema.sql          ← Schéma SQL à coller dans Supabase
-├── scripts/
-│   └── import_excel.py     ← Import automatique depuis ton Excel
-├── src/
-│   ├── components/         ← Composants réutilisables
-│   ├── hooks/              ← useAuth
-│   ├── lib/                ← Client Supabase
-│   ├── pages/              ← Dashboard, Characters, Teams, Supports, Quêtes, Gauntlet
-│   └── types/              ← Types TypeScript
-├── .env.example
-├── package.json
-└── README.md
-```
+CREATE INDEX idx_powers_character ON character_powers(character_id);
+CREATE INDEX idx_powers_couleur   ON character_powers(couleur);
 
----
+-- ────────────────────────────────────────────────
+-- SUPPORTS
+-- ────────────────────────────────────────────────
+-- Each support has up to 5 effects, each with a category + free text detail.
+-- Synergy has: a restriction (who it synergises with) + same category+detail structure.
+-- Effect categories are stored as free text — no enum constraint so new ones can be added anytime.
+CREATE TABLE supports (
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name                 TEXT NOT NULL,
+  rang                 INTEGER,
+  niveau               INTEGER,
+  restriction          TEXT,          -- Héros, Vilains, / or custom
+  -- Effects 1–5
+  effect_1_category    TEXT,
+  effect_1_detail      TEXT,
+  effect_2_category    TEXT,
+  effect_2_detail      TEXT,
+  effect_3_category    TEXT,
+  effect_3_detail      TEXT,
+  effect_4_category    TEXT,
+  effect_4_detail      TEXT,
+  effect_5_category    TEXT,
+  effect_5_detail      TEXT,
+  -- Synergy
+  synergy_restriction  TEXT,          -- free text: character name, tag, etc.
+  synergy_category     TEXT,
+  synergy_detail       TEXT,
+  created_at           TIMESTAMPTZ DEFAULT NOW(),
+  updated_at           TIMESTAMPTZ DEFAULT NOW()
+);
 
-## 🚀 Mise en place — Étape par étape
+CREATE INDEX idx_supports_name ON supports(name);
 
-### Étape 1 — Créer ton projet Supabase
+-- ────────────────────────────────────────────────
+-- TEAMS
+-- ────────────────────────────────────────────────
+CREATE TABLE teams (
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name                  TEXT NOT NULL,
+  -- Personnage Gauche
+  left_character        TEXT,
+  left_build            TEXT,
+  left_support          TEXT,
+  left_boost            TEXT,
+  -- Personnage Milieu
+  mid_character         TEXT,
+  mid_build             TEXT,
+  mid_support           TEXT,
+  mid_boost             TEXT,
+  -- Personnage Droite
+  right_character       TEXT,
+  right_build           TEXT,
+  right_support         TEXT,
+  right_boost           TEXT,
+  -- Résultats & Stratégie
+  strategie             TEXT,
+  ok_hard_nodes         TEXT,
+  ok_cn_node            TEXT,
+  all_3_non_boosted     TEXT,
+  note_additionnelle    TEXT,
+  status                TEXT DEFAULT 'active' CHECK (status IN ('active','to_test','archived')),
+  created_at            TIMESTAMPTZ DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ DEFAULT NOW()
+);
 
-1. Va sur [supabase.com](https://supabase.com) → **New project**
-2. Donne-lui un nom (ex: `mpq-tracker`) et un mot de passe fort
-3. Attends que le projet démarre (~1 min)
+CREATE INDEX idx_teams_status ON teams(status);
 
-### Étape 2 — Créer le schéma de base de données
+-- ────────────────────────────────────────────────
+-- QUÊTES
+-- ────────────────────────────────────────────────
+CREATE TABLE quetes (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nom                 TEXT NOT NULL,
+  gauche_personnage   TEXT,
+  gauche_build        TEXT,
+  gauche_support      TEXT,
+  milieu_personnage   TEXT,
+  milieu_build        TEXT,
+  milieu_support      TEXT,
+  droite_personnage   TEXT,
+  droite_build        TEXT,
+  droite_support      TEXT,
+  note                TEXT,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
 
-1. Dans Supabase → **SQL Editor** → **New query**
-2. Copie-colle tout le contenu de `supabase/schema.sql`
-3. Clique **Run** — tu dois voir "Success"
-4. Vérifie dans **Table Editor** que les 6 tables sont créées :
-   - `characters`, `character_powers`, `supports`, `teams`, `quetes`, `puzzle_gauntlet`
+-- ────────────────────────────────────────────────
+-- PUZZLE GAUNTLET
+-- ────────────────────────────────────────────────
+CREATE TABLE puzzle_gauntlet (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  categorie           TEXT,
+  node                TEXT,
+  condition_victoire  TEXT,
+  gauche_personnage   TEXT,
+  gauche_build        TEXT,
+  gauche_support      TEXT,
+  milieu_personnage   TEXT,
+  milieu_build        TEXT,
+  milieu_support      TEXT,
+  droite_personnage   TEXT,
+  droite_build        TEXT,
+  droite_support      TEXT,
+  equipe_utilisee     TEXT,
+  note                TEXT,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
 
-### Étape 3 — Récupérer tes clés Supabase
+CREATE INDEX idx_gauntlet_categorie ON puzzle_gauntlet(categorie);
 
-1. Dans Supabase → **Settings** → **API**
-2. Copie :
-   - **Project URL** → `https://xxxx.supabase.co`
-   - **anon public key** → `eyJxxx...`
+-- ────────────────────────────────────────────────
+-- ROW LEVEL SECURITY — Solo user (auth.uid check)
+-- ────────────────────────────────────────────────
+ALTER TABLE characters       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE character_powers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE supports         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teams            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quetes           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE puzzle_gauntlet  ENABLE ROW LEVEL SECURITY;
 
-### Étape 4 — Configurer l'environnement
+-- Allow full access only to authenticated users
+CREATE POLICY "auth_only" ON characters       FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON character_powers FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON supports         FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON teams            FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON quetes           FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON puzzle_gauntlet  FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
-```bash
-cp .env.example .env
-```
+-- ────────────────────────────────────────────────
+-- AUTO-UPDATE updated_at
+-- ────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
+$$ LANGUAGE plpgsql;
 
-Édite `.env` avec tes clés :
-
-```
-VITE_SUPABASE_URL=https://TONPROJET.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJTACLÉPUBLIQUE
-```
-
-### Étape 5 — Créer ton compte utilisateur Supabase
-
-1. Dans Supabase → **Authentication** → **Users** → **Add user**
-2. Rentre ton email et un mot de passe
-3. C'est le compte que tu utiliseras pour te connecter à l'app
-
-### Étape 6 — Installer et lancer l'app
-
-```bash
-npm install
-npm run dev
-```
-
-Ouvre [http://localhost:5173](http://localhost:5173) — connecte-toi avec l'email/mot de passe créé à l'étape 5.
-
----
-
-## 📥 Import depuis ton Excel
-
-### Prérequis Python
-
-```bash
-pip install pandas openpyxl supabase python-dotenv
-```
-
-### Lancer l'import
-
-Assure-toi que ton `.env` est configuré, puis :
-
-```bash
-python scripts/import_excel.py MPQ.xlsx
-```
-
-L'import va charger automatiquement :
-- ✅ Tous tes personnages (Characters)
-- ✅ Tous tes supports (Supports)
-- ✅ Toutes tes équipes (Teams Database + Teams to Test)
-- ✅ Toutes tes quêtes (Quêtes)
-- ✅ Tous les nodes Puzzle Gauntlet
-
-> ⚠️ Les pouvoirs (Characters Powers) sont à saisir manuellement dans l'app car la structure du sheet est complexe.
-
----
-
-## 🌐 Déploiement
-
-### Option A — Vercel (recommandé, le plus simple)
-
-```bash
-npm install -g vercel
-vercel
-```
-
-Vercel détecte automatiquement Vite. Ajoute tes variables d'environnement dans **Settings → Environment Variables**.
-
-### Option B — Netlify
-
-```bash
-npm run build
-# Drag & drop le dossier dist/ sur netlify.com
-```
-
-Configure les variables d'environnement dans **Site settings → Environment variables**.
-
-### Option C — GitHub Pages
-
-1. Dans `vite.config.ts`, ajoute `base: '/nom-du-repo/'`
-2. Installe `gh-pages` : `npm install -D gh-pages`
-3. Ajoute dans `package.json` :
-   ```json
-   "scripts": {
-     "deploy": "npm run build && gh-pages -d dist"
-   }
-   ```
-4. Lance : `npm run deploy`
-
-> ⚠️ Avec GitHub Pages, crée un fichier `public/404.html` identique à `index.html` pour que le routing React fonctionne.
-
----
-
-## 📱 Pages & Fonctionnalités
-
-| Page | Fonctionnalités |
-|------|-----------------|
-| **Tableau de Bord** | Résumé roster par tier (★), KPIs, derniers modifiés |
-| **Personnages** | Liste filtrable (★, statut, recherche), CRUD complet |
-| **Équipes** | Tabs Actives / À Tester, affichage slots L/M/D, stratégies, CRUD |
-| **Supports** | Filtrable par restriction, détail effets, synergies, CRUD |
-| **Quêtes** | Compositions par quête avec stratégie, CRUD |
-| **Puzzle Gauntlet** | Groupé par catégorie, condition de victoire, stratégie, CRUD |
-
----
-
-## 🔮 Évolutions futures faciles à ajouter
-
-Grâce à la structure Supabase, tout est extensible :
-
-- **Nouveaux personnages** → Ajouter une ligne dans `characters`
-- **Nouveau mode de jeu** → Créer une nouvelle table + page React
-- **Statistiques** → Vue SQL ou page dédiée
-- **Partage alliance** → Ajouter un champ `shared: boolean` + RLS par `user_id`
-- **Images persos** → Supabase Storage pour les avatars
-- **Backup** → Export SQL depuis Supabase à tout moment
-
----
-
-## 🛠️ Commandes utiles
-
-```bash
-npm run dev      # Démarrer en local
-npm run build    # Build de production
-npm run preview  # Prévisualiser le build
-```
-
----
-
-*MPQ Tracker — Fait pour un joueur exigeant 🎮*
+CREATE TRIGGER trg_characters       BEFORE UPDATE ON characters       FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_supports         BEFORE UPDATE ON supports         FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_teams            BEFORE UPDATE ON teams            FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_quetes           BEFORE UPDATE ON quetes           FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_puzzle_gauntlet  BEFORE UPDATE ON puzzle_gauntlet  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
