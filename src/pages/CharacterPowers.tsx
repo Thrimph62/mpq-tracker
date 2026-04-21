@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { Character, CharacterPower } from '../types'
+import { Character, CharacterPower, Stars } from '../types'
+import { StarBadge } from '../components/Badges'
 import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp, List, LayoutGrid, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -133,7 +134,7 @@ function CharacterSearch({ value, onChange, characters }: {
             <button key={c.id} type="button"
               onMouseDown={() => { onChange(c.id); setLabel(c.name); setOpen(false) }}
               className="w-full text-left px-3 py-2 text-sm hover:bg-[#2D2D4E] flex items-center gap-2">
-              <span className="text-yellow-400 text-xs">{'★'.repeat(c.stars)}</span>
+              <StarBadge stars={c.stars as Stars} />
               <span className="text-white">{c.name}</span>
             </button>
           ))}
@@ -337,7 +338,7 @@ export default function CharacterPowers() {
                   className="flex items-center gap-3 w-full text-left group">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      {char && <span className="text-yellow-400 text-xs font-bold">{'★'.repeat(char.stars)}</span>}
+                      {char && <StarBadge stars={char.stars as Stars} />}
                       <span className="font-semibold text-white group-hover:text-marvel-gold transition-colors">
                         {char?.name ?? charId}
                       </span>

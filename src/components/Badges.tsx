@@ -1,17 +1,17 @@
 import { CharacterStatus, Stars } from '../types'
 
 const STAR_COLORS: Record<Stars, string> = {
-  1: 'text-gray-400',
-  2: 'text-blue-400',
-  3: 'text-green-400',
-  4: 'text-yellow-400',
-  5: 'text-orange-400',
-  6: 'text-purple-400',
+  1: '#60A5FA',  // Bleu
+  2: '#4ADE80',  // Vert
+  3: '#B45309',  // Bronze
+  4: '#9CA3AF',  // Gris
+  5: '#FACC15',  // Or
+  6: '#C084FC',  // Violet
 }
 
 export function StarBadge({ stars }: { stars: Stars }) {
   return (
-    <span className={`font-bold text-sm ${STAR_COLORS[stars]}`}>
+    <span style={{ color: STAR_COLORS[stars] }} className="font-bold text-sm">
       {'★'.repeat(stars)}
     </span>
   )

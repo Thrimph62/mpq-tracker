@@ -1,11 +1,20 @@
 import { useState } from 'react'
-import { Character, Support } from '../types'
+import { Character, Support, Stars } from '../types'
+
+const STAR_COLORS: Record<Stars, string> = {
+  1: '#60A5FA',  // Bleu
+  2: '#4ADE80',  // Vert
+  3: '#B45309',  // Bronze
+  4: '#9CA3AF',  // Gris
+  5: '#FACC15',  // Or
+  6: '#C084FC',  // Violet
+}
 
 // ── Generic search dropdown ───────────────────────────────────────────────────
 interface SearchDropdownProps {
   value: string | null
   onChange: (val: string | null) => void
-  options: { id: string; label: string; sublabel?: string }[]
+  options: { id: string; label: string; sublabel?: string; starColor?: string }[]
   placeholder?: string
   allowFreeText?: boolean
 }
@@ -39,7 +48,7 @@ export function SearchDropdown({ value, onChange, options, placeholder = 'Recher
               onMouseDown={() => { onChange(o.label); setOpen(false) }}
               className="w-full text-left px-3 py-2 text-sm hover:bg-[#2D2D4E]">
               <span className="text-white">{o.label}</span>
-              {o.sublabel && <span className="text-[#8888AA] ml-2 text-xs">{o.sublabel}</span>}
+              {o.sublabel && <span style={{ color: o.starColor }} className="ml-2 text-xs">{o.sublabel}</span>}
             </button>
           ))}
           {allowFreeText && filtered.length === 0 && query && (
@@ -60,6 +69,7 @@ export function toCharacterOptions(characters: Character[]) {
     id: c.id,
     label: c.name,
     sublabel: '★'.repeat(c.stars),
+    starColor: STAR_COLORS[c.stars as Stars],
   }))
 }
 
