@@ -13,12 +13,12 @@ export default {
           muted:  '#8888AA',
         },
         star: {
-          1: '#9CA3AF',
-          2: '#60A5FA',
-          3: '#4ADE80',
-          4: '#FACC15',
-          5: '#F97316',
-          6: '#C084FC',
+          1: '#60A5FA',  // Bleu
+          2: '#4ADE80',  // Vert
+          3: '#92400E',  // Bronze
+          4: '#9CA3AF',  // Gris
+          5: '#FACC15',  // Or
+          6: '#C084FC',  // Violet
         },
         status: {
           max_champed:  '#C084FC',
