@@ -6,8 +6,11 @@ import { Plus, Search, X, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from
 
 const EFFECTS = [1, 2, 3, 4, 5] as const
 type EffectNum = typeof EFFECTS[number]
+type EffectField = 'category' | 'trigger' | 'detail'
 
+// Separate lists — categories and triggers are independent
 const DEFAULT_CATEGORIES: string[] = []
+const DEFAULT_TRIGGERS: string[] = []
 
 const DEFAULT_RESTRICTIONS = ['/', 'Héros', 'Vilains']
 
@@ -16,12 +19,13 @@ type SortDir = 'asc' | 'desc'
 
 const EMPTY: Omit<Support, 'id' | 'created_at' | 'updated_at'> = {
   name: '', rang: 5, niveau: 250, restriction: '/',
-  effect_1_category: null, effect_1_detail: null,
-  effect_2_category: null, effect_2_detail: null,
-  effect_3_category: null, effect_3_detail: null,
-  effect_4_category: null, effect_4_detail: null,
-  effect_5_category: null, effect_5_detail: null,
-  synergy_restriction: null, synergy_category: null, synergy_detail: null,
+  effect_1_category: null, effect_1_trigger: null, effect_1_detail: null,
+  effect_2_category: null, effect_2_trigger: null, effect_2_detail: null,
+  effect_3_category: null, effect_3_trigger: null, effect_3_detail: null,
+  effect_4_category: null, effect_4_trigger: null, effect_4_detail: null,
+  effect_5_category: null, effect_5_trigger: null, effect_5_detail: null,
+  synergy_restriction: null,
+  synergy_category: null, synergy_trigger: null, synergy_detail: null,
 }
 
 function catColor(cat: string | null): string {
@@ -38,22 +42,31 @@ function catColor(cat: string | null): string {
   return 'bg-[#3D3D60] text-[#8888AA] border-[#555]'
 }
 
-function CategorySelect({ value, onChange, allCategories }: {
-  value: string | null; onChange: (v: string | null) => void; allCategories: string[]
+// Generic select with "add new" option — used for both category and trigger
+function DynamicSelect({ value, onChange, options, placeholder }: {
+  value: string | null
+  onChange: (v: string | null) => void
+  options: string[]
+  placeholder: string
 }) {
-  const isNew = value !== null && value !== '' && !allCategories.includes(value)
+  const isNew = value !== null && value !== '' && !options.includes(value)
   return (
     <div className="space-y-1">
       <select className="input text-sm"
         value={isNew ? '__new__' : (value ?? '')}
-        onChange={e => { if (e.target.value === '__new__') onChange(''); else onChange(e.target.value || null) }}>
-        <option value="">— Aucune —</option>
-        {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
-        <option value="__new__">+ Nouvelle catégorie...</option>
+        onChange={e => {
+          if (e.target.value === '__new__') onChange('')
+          else onChange(e.target.value || null)
+        }}>
+        <option value="">— Aucun —</option>
+        {options.map(c => <option key={c} value={c}>{c}</option>)}
+        <option value="__new__">+ Nouveau {placeholder.toLowerCase()}...</option>
       </select>
       {(isNew || value === '') && (
-        <input className="input text-sm" placeholder="Nouvelle catégorie..." autoFocus={value === ''}
-          value={value ?? ''} onChange={e => onChange(e.target.value || null)} />
+        <input className="input text-sm" placeholder={`Nouveau ${placeholder.toLowerCase()}...`}
+          autoFocus={value === ''}
+          value={value ?? ''}
+          onChange={e => onChange(e.target.value || null)} />
       )}
     </div>
   )
@@ -89,11 +102,20 @@ export default function Supports() {
     else { setSortCol(col); setSortDir('asc') }
   }
 
+  // Build separate lists from existing data
   const allCategories = [...new Set([
     ...DEFAULT_CATEGORIES,
     ...supports.flatMap(s => [
       s.effect_1_category, s.effect_2_category, s.effect_3_category,
       s.effect_4_category, s.effect_5_category, s.synergy_category,
+    ].filter(Boolean) as string[]),
+  ])].sort()
+
+  const allTriggers = [...new Set([
+    ...DEFAULT_TRIGGERS,
+    ...supports.flatMap(s => [
+      s.effect_1_trigger, s.effect_2_trigger, s.effect_3_trigger,
+      s.effect_4_trigger, s.effect_5_trigger, s.synergy_trigger,
     ].filter(Boolean) as string[]),
   ])].sort()
 
@@ -106,10 +128,12 @@ export default function Supports() {
     .filter(s => {
       const matchSearch = !search || [
         s.name, s.restriction,
-        s.effect_1_category, s.effect_1_detail, s.effect_2_category, s.effect_2_detail,
-        s.effect_3_category, s.effect_3_detail, s.effect_4_category, s.effect_4_detail,
-        s.effect_5_category, s.effect_5_detail,
-        s.synergy_restriction, s.synergy_category, s.synergy_detail,
+        s.effect_1_category, s.effect_1_trigger, s.effect_1_detail,
+        s.effect_2_category, s.effect_2_trigger, s.effect_2_detail,
+        s.effect_3_category, s.effect_3_trigger, s.effect_3_detail,
+        s.effect_4_category, s.effect_4_trigger, s.effect_4_detail,
+        s.effect_5_category, s.effect_5_trigger, s.effect_5_detail,
+        s.synergy_restriction, s.synergy_category, s.synergy_trigger, s.synergy_detail,
       ].some(v => v?.toLowerCase().includes(search.toLowerCase()))
       const matchEffect = !filterEffect || [
         s.effect_1_category, s.effect_2_category, s.effect_3_category,
@@ -134,7 +158,7 @@ export default function Supports() {
   }
   function closeModal() { setModal(null); setEditId(null); setCustomRestr('') }
 
-  function setEffect(n: EffectNum, field: 'category' | 'detail', val: string | null) {
+  function setEffect(n: EffectNum, field: EffectField, val: string | null) {
     setForm(f => ({ ...f, [`effect_${n}_${field}`]: val }))
   }
 
@@ -173,7 +197,7 @@ export default function Supports() {
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-56">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
-          <input className="input pl-9" placeholder="Rechercher nom, catégorie, effet, synergie..."
+          <input className="input pl-9" placeholder="Rechercher nom, catégorie, trigger, effet, synergie..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select className="input w-auto" value={filterEffect} onChange={e => setFilterEffect(e.target.value)}>
@@ -194,7 +218,7 @@ export default function Supports() {
                 <Th col="niveau"      label="Niv."   />
                 <Th col="restriction" label="Restr." />
                 {EFFECTS.map(n => (
-                  <th key={n} className="py-2 px-1 font-normal text-center text-[#8888AA] min-w-24">Effet {n}</th>
+                  <th key={n} className="py-2 px-1 font-normal text-center text-[#8888AA] min-w-28">Effet {n}</th>
                 ))}
                 <th className="py-2 px-1 font-normal text-center text-[#8888AA] min-w-28">Synergie</th>
                 <th className="py-2 px-2 font-normal text-center text-[#8888AA]">Actions</th>
@@ -218,25 +242,29 @@ export default function Supports() {
                     ) : <span className="text-[#555]">—</span>}
                   </td>
                   {EFFECTS.map(n => {
-                    const cat    = s[`effect_${n}_category`] as string | null
-                    const detail = s[`effect_${n}_detail`]   as string | null
+                    const cat     = s[`effect_${n}_category`] as string | null
+                    const trigger = s[`effect_${n}_trigger`]  as string | null
+                    const detail  = s[`effect_${n}_detail`]   as string | null
                     return (
                       <td key={n} className="py-2 px-1 text-center">
-                        {cat || detail ? (
+                        {cat || trigger || detail ? (
                           <div className="space-y-1 flex flex-col items-center">
-                            {cat    && <span className={`badge border text-xs ${catColor(cat)}`} title={cat}>{cat}</span>}
-                            {detail && <span className="text-[#AAAAAA] leading-tight truncate max-w-24" title={detail}>{detail}</span>}
+                            {cat     && <span className={`badge border text-xs ${catColor(cat)}`} title={cat}>{cat}</span>}
+                            {trigger && <span className="badge border text-xs bg-indigo-900/40 text-indigo-300 border-indigo-700" title={trigger}>{trigger}</span>}
+                            {detail  && <span className="text-[#AAAAAA] leading-tight truncate max-w-24" title={detail}>{detail}</span>}
                           </div>
                         ) : <span className="text-[#444]">—</span>}
                       </td>
                     )
                   })}
+                  {/* Synergy */}
                   <td className="py-2 px-1 text-center">
-                    {(s.synergy_restriction || s.synergy_category || s.synergy_detail) ? (
+                    {(s.synergy_restriction || s.synergy_category || s.synergy_trigger || s.synergy_detail) ? (
                       <div className="space-y-1 flex flex-col items-center">
-                        {s.synergy_restriction && <span className="badge border bg-marvel-red/20 text-red-300 border-red-800 text-xs truncate max-w-28" title={s.synergy_restriction}>{s.synergy_restriction}</span>}
+                        {s.synergy_restriction && <span className="badge border bg-marvel-red/20 text-red-300 border-red-800 text-xs truncate max-w-28">{s.synergy_restriction}</span>}
                         {s.synergy_category    && <span className={`badge border text-xs ${catColor(s.synergy_category)}`}>{s.synergy_category}</span>}
-                        {s.synergy_detail      && <span className="text-[#AAAAAA] leading-tight truncate max-w-28" title={s.synergy_detail}>{s.synergy_detail}</span>}
+                        {s.synergy_trigger     && <span className="badge border text-xs bg-indigo-900/40 text-indigo-300 border-indigo-700">{s.synergy_trigger}</span>}
+                        {s.synergy_detail      && <span className="text-[#AAAAAA] leading-tight truncate max-w-28">{s.synergy_detail}</span>}
                       </div>
                     ) : <span className="text-[#444]">—</span>}
                   </td>
@@ -254,6 +282,7 @@ export default function Supports() {
         </div>
       )}
 
+      {/* Modal */}
       {modal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-2xl my-4">
@@ -262,6 +291,8 @@ export default function Supports() {
               <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
+
+              {/* Base info */}
               <div className="grid grid-cols-4 gap-3">
                 <div className="col-span-2">
                   <label className="text-xs text-[#8888AA] mb-1 block">Nom *</label>
@@ -278,6 +309,8 @@ export default function Supports() {
                     onChange={e => setForm(f => ({ ...f, niveau: Number(e.target.value) || null }))} />
                 </div>
               </div>
+
+              {/* Restriction */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-[#8888AA] mb-1 block">Restriction</label>
@@ -298,48 +331,90 @@ export default function Supports() {
                   </div>
                 )}
               </div>
+
+              {/* Effects 1–5 */}
               <div>
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Effets</p>
                 <div className="space-y-2">
                   {EFFECTS.map(n => (
-                    <div key={n} className="bg-[#1C1C2E] rounded-lg p-3 grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-xs text-[#8888AA] mb-1 block">Effet {n} — Catégorie</label>
-                        <CategorySelect value={form[`effect_${n}_category`]} onChange={v => setEffect(n, 'category', v)} allCategories={allCategories} />
-                      </div>
-                      <div>
-                        <label className="text-xs text-[#8888AA] mb-1 block">Détail</label>
-                        <input className="input text-sm" value={form[`effect_${n}_detail`] ?? ''}
-                          onChange={e => setEffect(n, 'detail', e.target.value || null)} placeholder="Description libre..." />
+                    <div key={n} className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
+                      <p className="text-xs text-[#8888AA] font-medium">Effet {n}</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-xs text-[#8888AA] mb-1 block">Catégorie</label>
+                          <DynamicSelect
+                            value={form[`effect_${n}_category`]}
+                            onChange={v => setEffect(n, 'category', v)}
+                            options={allCategories}
+                            placeholder="Catégorie"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-[#8888AA] mb-1 block">Trigger</label>
+                          <DynamicSelect
+                            value={form[`effect_${n}_trigger`]}
+                            onChange={v => setEffect(n, 'trigger', v)}
+                            options={allTriggers}
+                            placeholder="Trigger"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-[#8888AA] mb-1 block">Détail</label>
+                          <input className="input text-sm h-full"
+                            value={form[`effect_${n}_detail`] ?? ''}
+                            onChange={e => setEffect(n, 'detail', e.target.value || null)}
+                            placeholder="Description libre..." />
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* Synergy */}
               <div>
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Synergie</p>
                 <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
                   <div>
                     <label className="text-xs text-[#8888AA] mb-1 block">Avec (personnage / tag)</label>
                     <input className="input text-sm" value={form.synergy_restriction ?? ''}
-                      onChange={e => setForm(f => ({ ...f, synergy_restriction: e.target.value || null }))} placeholder="Ex: Spider-Ham, Héros..." />
+                      onChange={e => setForm(f => ({ ...f, synergy_restriction: e.target.value || null }))}
+                      placeholder="Ex: Spider-Ham, Héros..." />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="text-xs text-[#8888AA] mb-1 block">Catégorie</label>
-                      <CategorySelect value={form.synergy_category} onChange={v => setForm(f => ({ ...f, synergy_category: v }))} allCategories={allCategories} />
+                      <DynamicSelect
+                        value={form.synergy_category}
+                        onChange={v => setForm(f => ({ ...f, synergy_category: v }))}
+                        options={allCategories}
+                        placeholder="Catégorie"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-[#8888AA] mb-1 block">Trigger</label>
+                      <DynamicSelect
+                        value={form.synergy_trigger}
+                        onChange={v => setForm(f => ({ ...f, synergy_trigger: v }))}
+                        options={allTriggers}
+                        placeholder="Trigger"
+                      />
                     </div>
                     <div>
                       <label className="text-xs text-[#8888AA] mb-1 block">Détail</label>
                       <input className="input text-sm" value={form.synergy_detail ?? ''}
-                        onChange={e => setForm(f => ({ ...f, synergy_detail: e.target.value || null }))} placeholder="Description libre..." />
+                        onChange={e => setForm(f => ({ ...f, synergy_detail: e.target.value || null }))}
+                        placeholder="Description libre..." />
                     </div>
                   </div>
                 </div>
               </div>
+
               <div className="flex gap-3 pt-2">
                 <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
-                <button onClick={save} disabled={saving || !form.name} className="btn-primary flex-1">{saving ? 'Sauvegarde...' : 'Sauvegarder'}</button>
+                <button onClick={save} disabled={saving || !form.name} className="btn-primary flex-1">
+                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                </button>
               </div>
             </div>
           </div>

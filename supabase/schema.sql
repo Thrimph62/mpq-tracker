@@ -71,18 +71,24 @@ CREATE TABLE supports (
   restriction          TEXT,          -- Héros, Vilains, / or custom
   -- Effects 1–5
   effect_1_category    TEXT,
+  effect_1_trigger     TEXT,
   effect_1_detail      TEXT,
   effect_2_category    TEXT,
+  effect_2_trigger     TEXT,
   effect_2_detail      TEXT,
   effect_3_category    TEXT,
+  effect_3_trigger     TEXT,
   effect_3_detail      TEXT,
   effect_4_category    TEXT,
+  effect_4_trigger     TEXT,
   effect_4_detail      TEXT,
   effect_5_category    TEXT,
+  effect_5_trigger     TEXT,
   effect_5_detail      TEXT,
   -- Synergy
-  synergy_restriction  TEXT,          -- free text: character name, tag, etc.
+  synergy_restriction  TEXT,
   synergy_category     TEXT,
+  synergy_trigger      TEXT,
   synergy_detail       TEXT,
   created_at           TIMESTAMPTZ DEFAULT NOW(),
   updated_at           TIMESTAMPTZ DEFAULT NOW()

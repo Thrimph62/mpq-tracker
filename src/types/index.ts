@@ -45,21 +45,15 @@ export interface Support {
   rang: number | null
   niveau: number | null
   restriction: string | null
-  // Effects 1–5
-  effect_1_category: string | null
-  effect_1_detail: string | null
-  effect_2_category: string | null
-  effect_2_detail: string | null
-  effect_3_category: string | null
-  effect_3_detail: string | null
-  effect_4_category: string | null
-  effect_4_detail: string | null
-  effect_5_category: string | null
-  effect_5_detail: string | null
+  // Effects 1–5 — each has category + trigger + detail
+  effect_1_category: string | null; effect_1_trigger: string | null; effect_1_detail: string | null
+  effect_2_category: string | null; effect_2_trigger: string | null; effect_2_detail: string | null
+  effect_3_category: string | null; effect_3_trigger: string | null; effect_3_detail: string | null
+  effect_4_category: string | null; effect_4_trigger: string | null; effect_4_detail: string | null
+  effect_5_category: string | null; effect_5_trigger: string | null; effect_5_detail: string | null
   // Synergy
   synergy_restriction: string | null
-  synergy_category: string | null
-  synergy_detail: string | null
+  synergy_category: string | null; synergy_trigger: string | null; synergy_detail: string | null
   created_at: string
   updated_at: string
 }
