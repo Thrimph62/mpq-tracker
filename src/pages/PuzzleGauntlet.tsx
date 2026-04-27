@@ -96,7 +96,7 @@ export default function PuzzleGauntlet() {
 
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
           <input className="input pl-9" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select className="input w-auto" value={filterCat} onChange={e => setFilterCat(e.target.value)}>
@@ -105,7 +105,7 @@ export default function PuzzleGauntlet() {
         </select>
       </div>
 
-      <p className="text-sm text-[#8888AA]">{visible.length} node{visible.length !== 1 ? 's' : ''}</p>
+      <p className="text-sm text-[#C8C8E0]">{visible.length} node{visible.length !== 1 ? 's' : ''}</p>
 
       {loading ? <Spinner /> : (
         <div className="space-y-6">
@@ -122,13 +122,13 @@ export default function PuzzleGauntlet() {
                           className="flex-1 text-left group">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold group-hover:text-marvel-gold transition-colors">{n.node}</span>
-                            {expanded === n.id ? <ChevronUp size={14} className="text-[#8888AA]" /> : <ChevronDown size={14} className="text-[#8888AA]" />}
+                            {expanded === n.id ? <ChevronUp size={14} className="text-[#C8C8E0]" /> : <ChevronDown size={14} className="text-[#C8C8E0]" />}
                           </div>
                           {n.condition_victoire && <p className="text-xs text-blue-300 mt-0.5">🎯 {n.condition_victoire}</p>}
                         </button>
                         <div className="flex gap-2 shrink-0">
-                          <button onClick={() => openEdit(n)} className="text-[#8888AA] hover:text-white p-1"><Pencil size={14} /></button>
-                          <button onClick={() => remove(n.id)} className="text-[#8888AA] hover:text-red-400 p-1"><Trash2 size={14} /></button>
+                          <button onClick={() => openEdit(n)} className="text-[#C8C8E0] hover:text-white p-1"><Pencil size={14} /></button>
+                          <button onClick={() => remove(n.id)} className="text-[#C8C8E0] hover:text-red-400 p-1"><Trash2 size={14} /></button>
                         </div>
                       </div>
 
@@ -148,7 +148,7 @@ export default function PuzzleGauntlet() {
                           {n.note && (
                             <div className="bg-[#383860] rounded-lg p-3">
                               <p className="text-xs text-marvel-gold font-semibold mb-1">Stratégie</p>
-                              <p className="text-sm text-[#CCCCCC] whitespace-pre-line leading-relaxed">{n.note}</p>
+                              <p className="text-sm text-[#E8E8F8] whitespace-pre-line leading-relaxed">{n.note}</p>
                             </div>
                           )}
                         </div>
@@ -159,7 +159,7 @@ export default function PuzzleGauntlet() {
               </div>
             )
           })}
-          {visible.length === 0 && <div className="card text-center text-[#8888AA] py-12">Aucun node trouvé</div>}
+          {visible.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">Aucun node trouvé</div>}
         </div>
       )}
 
@@ -168,22 +168,22 @@ export default function PuzzleGauntlet() {
           <div className="card w-full max-w-xl my-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouveau Node' : 'Modifier Node'}</h2>
-              <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
+              <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[#8888AA] mb-1 block">Catégorie</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Catégorie</label>
                   <input className="input text-sm" value={form.categorie ?? ''}
                     onChange={e => setForm(f => ({ ...f, categorie: e.target.value || null }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-[#8888AA] mb-1 block">Node</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Node</label>
                   <input className="input text-sm" value={form.node ?? ''}
                     onChange={e => setForm(f => ({ ...f, node: e.target.value || null }))} />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-xs text-[#8888AA] mb-1 block">Condition de victoire</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Condition de victoire</label>
                   <input className="input text-sm" value={form.condition_victoire ?? ''}
                     onChange={e => setForm(f => ({ ...f, condition_victoire: e.target.value || null }))} />
                 </div>
@@ -193,7 +193,7 @@ export default function PuzzleGauntlet() {
                 <div key={pos} className="bg-[#383860] rounded-lg p-3 space-y-2">
                   <p className="text-xs font-semibold text-marvel-gold">{label}</p>
                   <div>
-                    <label className="text-xs text-[#8888AA] mb-1 block">Personnage</label>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">Personnage</label>
                     <SearchDropdown
                       value={form[`${pos}_personnage`]}
                       onChange={v => setSlot(pos, 'personnage', v)}
@@ -203,13 +203,13 @@ export default function PuzzleGauntlet() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Build</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Build</label>
                       <input className="input text-sm" placeholder="5/3/5"
                         value={form[`${pos}_build`] ?? ''}
                         onChange={e => setSlot(pos, 'build', e.target.value || null)} />
                     </div>
                     <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Support</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Support</label>
                       <SearchDropdown
                         value={form[`${pos}_support`]}
                         onChange={v => setSlot(pos, 'support', v)}
@@ -222,12 +222,12 @@ export default function PuzzleGauntlet() {
               ))}
 
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Équipe utilisée</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Équipe utilisée</label>
                 <input className="input text-sm" value={form.equipe_utilisee ?? ''}
                   onChange={e => setForm(f => ({ ...f, equipe_utilisee: e.target.value || null }))} />
               </div>
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Stratégie / Note</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Stratégie / Note</label>
                 <textarea className="input resize-none h-24 text-sm" value={form.note ?? ''}
                   onChange={e => setForm(f => ({ ...f, note: e.target.value || null }))} />
               </div>

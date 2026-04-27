@@ -270,13 +270,13 @@ export default function Import() {
           <div className="space-y-1">
             <FileSpreadsheet size={32} className="mx-auto text-green-400" />
             <p className="font-semibold text-green-300">{file.name}</p>
-            <p className="text-xs text-[#8888AA]">{(file.size / 1024).toFixed(0)} KB · Cliquer pour changer</p>
+            <p className="text-xs text-[#C8C8E0]">{(file.size / 1024).toFixed(0)} KB · Cliquer pour changer</p>
           </div>
         ) : (
           <div className="space-y-2">
-            <Upload size={32} className="mx-auto text-[#8888AA]" />
+            <Upload size={32} className="mx-auto text-[#C8C8E0]" />
             <p className="text-white font-medium">Glisser-déposer ton fichier Excel ici</p>
-            <p className="text-sm text-[#8888AA]">ou cliquer pour choisir · Format .xlsx uniquement</p>
+            <p className="text-sm text-[#C8C8E0]">ou cliquer pour choisir · Format .xlsx uniquement</p>
           </div>
         )}
       </div>
@@ -285,7 +285,7 @@ export default function Import() {
       <div className="card space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-white">Sections à importer</h2>
-          <button onClick={toggleAll} className="text-xs text-[#8888AA] hover:text-white flex items-center gap-1 transition-colors">
+          <button onClick={toggleAll} className="text-xs text-[#C8C8E0] hover:text-white flex items-center gap-1 transition-colors">
             {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
             {allSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
           </button>
@@ -301,7 +301,7 @@ export default function Import() {
                 {selected[s.key] ? <CheckSquare size={18} /> : <Square size={18} />}
               </span>
               <span className="flex-1">
-                <span className={`text-sm font-medium block ${selected[s.key] ? 'text-white' : 'text-[#8888AA]'}`}>
+                <span className={`text-sm font-medium block ${selected[s.key] ? 'text-white' : 'text-[#C8C8E0]'}`}>
                   {s.label}
                 </span>
                 <span className="text-xs text-[#555]">{s.description} · feuille «&nbsp;{s.sheet}&nbsp;»</span>
@@ -337,7 +337,7 @@ export default function Import() {
                 <p className="text-sm font-medium text-white">{r.section}</p>
                 {r.error
                   ? <p className="text-xs text-red-400 mt-0.5">{r.error}</p>
-                  : <p className="text-xs text-[#8888AA] mt-0.5">
+                  : <p className="text-xs text-[#C8C8E0] mt-0.5">
                       <span className="text-green-400">{r.inserted} ajouté{r.inserted !== 1 ? 's' : ''}</span>
                       {r.skipped > 0 && <span className="ml-2 text-[#555]">{r.skipped} ignoré{r.skipped !== 1 ? 's' : ''} (déjà existants)</span>}
                     </p>}
@@ -345,7 +345,7 @@ export default function Import() {
             </div>
           ))}
           {status === 'done' && results.every(r => !r.error) && (
-            <p className="text-xs text-center text-[#8888AA] pt-1">
+            <p className="text-xs text-center text-[#C8C8E0] pt-1">
               ✅ Import terminé — les données sont visibles dans les autres pages
             </p>
           )}

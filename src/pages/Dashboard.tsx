@@ -57,12 +57,12 @@ export default function Dashboard() {
             <p className={`text-2xl font-bold ${STATUS_COLORS[s]}`}>
               {summary.reduce((acc, r) => acc + r[s], 0)}
             </p>
-            <p className="text-xs text-[#8888AA] mt-1">{STATUS_LABELS[s]}</p>
+            <p className="text-xs text-[#C8C8E0] mt-1">{STATUS_LABELS[s]}</p>
           </div>
         ))}
         <div className="card text-center">
           <p className="text-2xl font-bold text-cyan-400">{totalAscended}</p>
-          <p className="text-xs text-[#8888AA] mt-1">⬆ Ascended</p>
+          <p className="text-xs text-[#C8C8E0] mt-1">⬆ Ascended</p>
         </div>
       </div>
 
@@ -72,14 +72,14 @@ export default function Dashboard() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#6A6A95]">
-              <th className="text-center py-2 text-[#8888AA] font-normal">Tier</th>
+              <th className="text-center py-2 text-[#C8C8E0] font-normal">Tier</th>
               {STATUS_COLS.map(s => (
                 <th key={s} className={`text-center py-2 font-normal ${STATUS_COLORS[s]}`}>
                   {STATUS_LABELS[s]}
                 </th>
               ))}
               <th className="text-center py-2 font-normal text-cyan-400">⬆ Ascended</th>
-              <th className="text-center py-2 text-[#8888AA] font-normal">Total</th>
+              <th className="text-center py-2 text-[#C8C8E0] font-normal">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -92,7 +92,7 @@ export default function Dashboard() {
                     <td key={s} className="text-center py-2.5">
                       {row[s] > 0
                         ? <span className={STATUS_COLORS[s]}>{row[s]}</span>
-                        : <span className="text-[#8888AA]">—</span>}
+                        : <span className="text-[#C8C8E0]">—</span>}
                     </td>
                   ))}
                   <td className="text-center py-2.5">
@@ -105,7 +105,7 @@ export default function Dashboard() {
               )
             })}
             <tr className="border-t-2 border-[#6A6A95] font-semibold">
-              <td className="py-2.5 text-center text-[#8888AA]">Total</td>
+              <td className="py-2.5 text-center text-[#C8C8E0]">Total</td>
               {STATUS_COLS.map(s => (
                 <td key={s} className={`text-center py-2.5 ${STATUS_COLORS[s]}`}>
                   {summary.reduce((acc, r) => acc + r[s], 0)}
@@ -128,7 +128,7 @@ export default function Dashboard() {
                 <StarBadge stars={c.stars as Stars} />
                 <span className="flex-1">{c.name}</span>
                 {c.ascended && <span className="text-xs text-cyan-400 badge border border-cyan-700 bg-cyan-900/30">⬆ Asc.</span>}
-                <span className="text-[#8888AA]">Niv. {c.level ?? '—'}</span>
+                <span className="text-[#C8C8E0]">Niv. {c.level ?? '—'}</span>
               </div>
             ))}
           </div>

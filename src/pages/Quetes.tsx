@@ -85,11 +85,11 @@ export default function Quetes() {
       </div>
 
       <div className="relative max-w-sm">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
         <input className="input pl-9" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      <p className="text-sm text-[#8888AA]">{visible.length} quête{visible.length !== 1 ? 's' : ''}</p>
+      <p className="text-sm text-[#C8C8E0]">{visible.length} quête{visible.length !== 1 ? 's' : ''}</p>
 
       {loading ? <Spinner /> : (
         <div className="space-y-2">
@@ -99,11 +99,11 @@ export default function Quetes() {
                 <button onClick={() => setExpanded(expanded === q.id ? null : q.id)}
                   className="flex-1 text-left flex items-center gap-2 group">
                   <span className="font-semibold group-hover:text-marvel-gold transition-colors">{q.nom}</span>
-                  {expanded === q.id ? <ChevronUp size={14} className="text-[#8888AA]" /> : <ChevronDown size={14} className="text-[#8888AA]" />}
+                  {expanded === q.id ? <ChevronUp size={14} className="text-[#C8C8E0]" /> : <ChevronDown size={14} className="text-[#C8C8E0]" />}
                 </button>
                 <div className="flex gap-2 shrink-0">
-                  <button onClick={() => openEdit(q)} className="text-[#8888AA] hover:text-white p-1"><Pencil size={14} /></button>
-                  <button onClick={() => remove(q.id)} className="text-[#8888AA] hover:text-red-400 p-1"><Trash2 size={14} /></button>
+                  <button onClick={() => openEdit(q)} className="text-[#C8C8E0] hover:text-white p-1"><Pencil size={14} /></button>
+                  <button onClick={() => remove(q.id)} className="text-[#C8C8E0] hover:text-red-400 p-1"><Trash2 size={14} /></button>
                 </div>
               </div>
 
@@ -117,14 +117,14 @@ export default function Quetes() {
                   {q.note && (
                     <div className="bg-[#383860] rounded-lg p-3">
                       <p className="text-xs text-marvel-gold font-semibold mb-1">Note</p>
-                      <p className="text-sm text-[#CCCCCC] whitespace-pre-line leading-relaxed">{q.note}</p>
+                      <p className="text-sm text-[#E8E8F8] whitespace-pre-line leading-relaxed">{q.note}</p>
                     </div>
                   )}
                 </div>
               )}
             </div>
           ))}
-          {visible.length === 0 && <div className="card text-center text-[#8888AA] py-12">Aucune quête trouvée</div>}
+          {visible.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">Aucune quête trouvée</div>}
         </div>
       )}
 
@@ -133,11 +133,11 @@ export default function Quetes() {
           <div className="card w-full max-w-xl my-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouvelle Quête' : 'Modifier Quête'}</h2>
-              <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
+              <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Nom de la quête *</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Nom de la quête *</label>
                 <input className="input" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
               </div>
 
@@ -146,7 +146,7 @@ export default function Quetes() {
                   <p className="text-xs font-semibold text-marvel-gold">{label}</p>
                   <div className="grid grid-cols-1 gap-2">
                     <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Personnage</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Personnage</label>
                       <SearchDropdown
                         value={form[`${pos}_personnage`]}
                         onChange={v => setSlot(pos, 'personnage', v)}
@@ -156,13 +156,13 @@ export default function Quetes() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-xs text-[#8888AA] mb-1 block">Build</label>
+                        <label className="text-xs text-[#C8C8E0] mb-1 block">Build</label>
                         <input className="input text-sm" placeholder="5/3/5"
                           value={form[`${pos}_build`] ?? ''}
                           onChange={e => setSlot(pos, 'build', e.target.value || null)} />
                       </div>
                       <div>
-                        <label className="text-xs text-[#8888AA] mb-1 block">Support</label>
+                        <label className="text-xs text-[#C8C8E0] mb-1 block">Support</label>
                         <SearchDropdown
                           value={form[`${pos}_support`]}
                           onChange={v => setSlot(pos, 'support', v)}
@@ -176,7 +176,7 @@ export default function Quetes() {
               ))}
 
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Note / Stratégie</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Note / Stratégie</label>
                 <textarea className="input resize-none h-24" value={form.note ?? ''}
                   onChange={e => setForm(f => ({ ...f, note: e.target.value || null }))} />
               </div>

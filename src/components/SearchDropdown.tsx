@@ -40,7 +40,7 @@ export function SearchDropdown({ value, onChange, options, placeholder = 'Recher
       {open && (
         <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#424270] border border-[#6A6A95] rounded-lg shadow-xl max-h-52 overflow-y-auto">
           <button type="button" onMouseDown={() => { onChange(null); setOpen(false) }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-[#6A6A95] text-[#8888AA]">
+            className="w-full text-left px-3 py-2 text-sm hover:bg-[#6A6A95] text-[#C8C8E0]">
             — Aucun —
           </button>
           {filtered.map(o => (
@@ -53,7 +53,7 @@ export function SearchDropdown({ value, onChange, options, placeholder = 'Recher
           ))}
           {allowFreeText && filtered.length === 0 && query && (
             <button type="button" onMouseDown={() => { onChange(query); setOpen(false) }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-[#6A6A95] text-[#8888AA] italic">
+              className="w-full text-left px-3 py-2 text-sm hover:bg-[#6A6A95] text-[#C8C8E0] italic">
               Utiliser "{query}" (texte libre)
             </button>
           )}

@@ -23,14 +23,14 @@ export default function Layout() {
       <aside className="w-56 bg-[#363660] border-r border-[#6A6A95] flex flex-col">
         <div className="p-5 border-b border-[#6A6A95]">
           <h1 className="font-marvel text-2xl tracking-widest text-marvel-gold">MPQ</h1>
-          <p className="text-xs text-[#8888AA] mt-0.5">Tracker</p>
+          <p className="text-xs text-[#C8C8E0] mt-0.5">Tracker</p>
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {NAV.map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} end={to === '/'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                  isActive ? 'bg-marvel-red text-white font-semibold' : 'text-[#8888AA] hover:bg-[#424270] hover:text-white'
+                  isActive ? 'bg-marvel-red text-white font-semibold' : 'text-[#C8C8E0] hover:bg-[#424270] hover:text-white'
                 }`}>
               <Icon size={16} />{label}
             </NavLink>
@@ -38,7 +38,7 @@ export default function Layout() {
         </nav>
         <div className="p-3 border-t border-[#6A6A95]">
           <button onClick={signOut}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#8888AA] hover:bg-[#424270] hover:text-white transition-all w-full">
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#C8C8E0] hover:bg-[#424270] hover:text-white transition-all w-full">
             <LogOut size={16} />Déconnexion
           </button>
         </div>

@@ -110,7 +110,7 @@ export default function Teams() {
       <div className="flex gap-1 bg-[#363660] p-1 rounded-lg w-fit">
         {(['active', 'to_test'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === t ? 'bg-marvel-red text-white' : 'text-[#8888AA] hover:text-white'}`}>
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === t ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'}`}>
             {t === 'active' ? 'Équipes Actives' : 'À Tester'}
             <span className="ml-2 text-xs opacity-70">({teams.filter(x => x.status === t).length})</span>
           </button>
@@ -118,14 +118,14 @@ export default function Teams() {
       </div>
 
       <div className="relative max-w-sm">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
         <input className="input pl-9" placeholder="Rechercher une équipe ou un perso..."
           value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       {loading ? <Spinner /> : (
         <div className="space-y-3">
-          {visible.length === 0 && <div className="card text-center text-[#8888AA] py-12">Aucune équipe trouvée</div>}
+          {visible.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">Aucune équipe trouvée</div>}
           {visible.map(team => (
             <div key={team.id} className="card">
               <div className="flex items-start justify-between gap-4">
@@ -134,11 +134,11 @@ export default function Teams() {
                     className="text-left w-full group">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors">{team.name}</h3>
-                      {expanded === team.id ? <ChevronUp size={14} className="text-[#8888AA]" /> : <ChevronDown size={14} className="text-[#8888AA]" />}
+                      {expanded === team.id ? <ChevronUp size={14} className="text-[#C8C8E0]" /> : <ChevronDown size={14} className="text-[#C8C8E0]" />}
                     </div>
                   </button>
                   {tab === 'active' && (
-                    <div className="flex gap-3 mt-1 text-xs text-[#8888AA]">
+                    <div className="flex gap-3 mt-1 text-xs text-[#C8C8E0]">
                       <span>Hard Nodes: <OkBadge value={team.ok_hard_nodes} /></span>
                       <span>CN Node: <OkBadge value={team.ok_cn_node} /></span>
                     </div>
@@ -151,8 +151,8 @@ export default function Teams() {
                       ✓ Testé
                     </button>
                   )}
-                  <button onClick={() => openEdit(team)} className="text-[#8888AA] hover:text-white p-1"><Pencil size={14} /></button>
-                  <button onClick={() => remove(team.id)} className="text-[#8888AA] hover:text-red-400 p-1"><Trash2 size={14} /></button>
+                  <button onClick={() => openEdit(team)} className="text-[#C8C8E0] hover:text-white p-1"><Pencil size={14} /></button>
+                  <button onClick={() => remove(team.id)} className="text-[#C8C8E0] hover:text-red-400 p-1"><Trash2 size={14} /></button>
                 </div>
               </div>
 
@@ -166,13 +166,13 @@ export default function Teams() {
                   {team.strategie && (
                     <div className="bg-[#383860] rounded-lg p-3">
                       <p className="text-xs text-marvel-gold font-semibold mb-1">Stratégie</p>
-                      <p className="text-sm text-[#CCCCCC] whitespace-pre-line leading-relaxed">{team.strategie}</p>
+                      <p className="text-sm text-[#E8E8F8] whitespace-pre-line leading-relaxed">{team.strategie}</p>
                     </div>
                   )}
                   {team.note_additionnelle && (
                     <div className="bg-[#383860] rounded-lg p-3">
-                      <p className="text-xs text-[#8888AA] font-semibold mb-1">Note</p>
-                      <p className="text-sm text-[#CCCCCC] whitespace-pre-line">{team.note_additionnelle}</p>
+                      <p className="text-xs text-[#C8C8E0] font-semibold mb-1">Note</p>
+                      <p className="text-sm text-[#E8E8F8] whitespace-pre-line">{team.note_additionnelle}</p>
                     </div>
                   )}
                 </div>
@@ -188,16 +188,16 @@ export default function Teams() {
           <div className="card w-full max-w-2xl my-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouvelle Équipe' : 'Modifier Équipe'}</h2>
-              <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
+              <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Nom de l'équipe <span className="text-[#555]">(rempli automatiquement)</span></label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Nom de l'équipe <span className="text-[#555]">(rempli automatiquement)</span></label>
                 <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Perso 1 / Perso 2 / Perso 3" />
               </div>
 
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Statut</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Statut</label>
                 <select className="input w-auto" value={form.status} onChange={f('status')}>
                   <option value="active">Active</option>
                   <option value="to_test">À Tester</option>
@@ -210,7 +210,7 @@ export default function Teams() {
                   <p className="text-xs font-semibold text-marvel-gold uppercase">{POS_LABELS[pos]}</p>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Personnage</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Personnage</label>
                       <SearchDropdown
                         value={form[`${pos}_character`]}
                         onChange={v => setSlot(pos, 'character', v)}
@@ -219,13 +219,13 @@ export default function Teams() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Build (ex: 5/3/5)</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Build (ex: 5/3/5)</label>
                       <input className="input text-sm" placeholder="5/3/5"
                         value={form[`${pos}_build`] ?? ''}
                         onChange={e => setSlot(pos, 'build', e.target.value || null)} />
                     </div>
                     <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Support</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Support</label>
                       <SearchDropdown
                         value={form[`${pos}_support`]}
                         onChange={v => setSlot(pos, 'support', v)}
@@ -234,7 +234,7 @@ export default function Teams() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Boost</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Boost</label>
                       <select className="input text-sm"
                         value={form[`${pos}_boost`] ?? 'Not Required'}
                         onChange={e => setSlot(pos, 'boost', e.target.value)}>
@@ -247,13 +247,13 @@ export default function Teams() {
               ))}
 
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Stratégie</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Stratégie</label>
                 <textarea className="input resize-none h-28" value={form.strategie ?? ''} onChange={f('strategie')} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {(['ok_hard_nodes', 'ok_cn_node'] as const).map(key => (
                   <div key={key}>
-                    <label className="text-xs text-[#8888AA] mb-1 block">{key === 'ok_hard_nodes' ? 'Hard Nodes' : 'CN Node'}</label>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">{key === 'ok_hard_nodes' ? 'Hard Nodes' : 'CN Node'}</label>
                     <select className="input" value={form[key] ?? ''} onChange={f(key)}>
                       <option value="">—</option>
                       <option value="Oui">Oui</option>
@@ -264,7 +264,7 @@ export default function Teams() {
                 ))}
               </div>
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Note additionnelle</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Note additionnelle</label>
                 <textarea className="input resize-none h-16" value={form.note_additionnelle ?? ''} onChange={f('note_additionnelle')} />
               </div>
 

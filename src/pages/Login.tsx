@@ -30,12 +30,12 @@ export default function Login() {
       <div className="card w-full max-w-sm relative">
         <div className="text-center mb-8">
           <h1 className="font-marvel text-5xl tracking-widest text-marvel-gold">MPQ</h1>
-          <p className="text-[#8888AA] mt-1 text-sm">Marvel Puzzle Quest Tracker</p>
+          <p className="text-[#C8C8E0] mt-1 text-sm">Marvel Puzzle Quest Tracker</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs text-[#8888AA] mb-1 block">Email</label>
+            <label className="text-xs text-[#C8C8E0] mb-1 block">Email</label>
             <input
               type="email"
               value={email}
@@ -46,7 +46,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="text-xs text-[#8888AA] mb-1 block">Mot de passe</label>
+            <label className="text-xs text-[#C8C8E0] mb-1 block">Mot de passe</label>
             <input
               type="password"
               value={password}

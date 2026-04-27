@@ -29,7 +29,7 @@ const EMPTY: Omit<Support, 'id' | 'created_at' | 'updated_at'> = {
 }
 
 function catColor(cat: string | null): string {
-  if (!cat) return 'bg-[#6A6A95] text-[#8888AA] border-[#555]'
+  if (!cat) return 'bg-[#6A6A95] text-[#C8C8E0] border-[#555]'
   if (cat.includes('Gain MP'))       return 'bg-blue-900/50   text-blue-300   border-blue-700'
   if (cat.includes('Dégâts'))        return 'bg-red-900/50    text-red-300    border-red-700'
   if (cat.includes('Création'))      return 'bg-green-900/50  text-green-300  border-green-700'
@@ -39,7 +39,7 @@ function catColor(cat: string | null): string {
   if (cat.includes('Gemmes Spéc'))   return 'bg-purple-900/50 text-purple-300 border-purple-700'
   if (cat.includes('Santé'))         return 'bg-teal-900/50   text-teal-300   border-teal-700'
   if (cat.includes('Paralysie'))     return 'bg-pink-900/50   text-pink-300   border-pink-700'
-  return 'bg-[#6A6A95] text-[#8888AA] border-[#555]'
+  return 'bg-[#6A6A95] text-[#C8C8E0] border-[#555]'
 }
 
 // Generic select with "add new" option — used for both category and trigger
@@ -180,7 +180,7 @@ export default function Supports() {
     return (
       <th className="py-2 px-2 font-normal text-center">
         <button onClick={() => toggleSort(col)}
-          className={`flex items-center gap-0.5 mx-auto hover:text-white transition-colors ${sortCol === col ? 'text-marvel-gold' : 'text-[#8888AA]'}`}>
+          className={`flex items-center gap-0.5 mx-auto hover:text-white transition-colors ${sortCol === col ? 'text-marvel-gold' : 'text-[#C8C8E0]'}`}>
           {label}<SortIcon col={col} current={sortCol} dir={sortDir} />
         </button>
       </th>
@@ -196,7 +196,7 @@ export default function Supports() {
 
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-56">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
           <input className="input pl-9" placeholder="Rechercher nom, catégorie, trigger, effet, synergie..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
@@ -206,7 +206,7 @@ export default function Supports() {
         </select>
       </div>
 
-      <p className="text-sm text-[#8888AA]">{visible.length} support{visible.length !== 1 ? 's' : ''}</p>
+      <p className="text-sm text-[#C8C8E0]">{visible.length} support{visible.length !== 1 ? 's' : ''}</p>
 
       {loading ? <Spinner /> : (
         <div className="card overflow-x-auto">
@@ -218,10 +218,10 @@ export default function Supports() {
                 <Th col="niveau"      label="Niv."   />
                 <Th col="restriction" label="Restr." />
                 {EFFECTS.map(n => (
-                  <th key={n} className="py-2 px-1 font-normal text-center text-[#8888AA] min-w-28">Effet {n}</th>
+                  <th key={n} className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Effet {n}</th>
                 ))}
-                <th className="py-2 px-1 font-normal text-center text-[#8888AA] min-w-28">Synergie</th>
-                <th className="py-2 px-2 font-normal text-center text-[#8888AA]">Actions</th>
+                <th className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Synergie</th>
+                <th className="py-2 px-2 font-normal text-center text-[#C8C8E0]">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -231,13 +231,13 @@ export default function Supports() {
                   <td className="py-2 px-2 text-center">
                     {s.rang ? <StarBadge stars={Math.min(s.rang, 6) as 1|2|3|4|5|6} /> : <span className="text-[#555]">—</span>}
                   </td>
-                  <td className="py-2 px-2 text-center text-[#8888AA]">{s.niveau ?? '—'}</td>
+                  <td className="py-2 px-2 text-center text-[#C8C8E0]">{s.niveau ?? '—'}</td>
                   <td className="py-2 px-2 text-center">
                     {s.restriction && s.restriction !== '/' ? (
                       <span className={`badge border text-xs ${
                         s.restriction === 'Héros'   ? 'bg-blue-900/40 text-blue-300 border-blue-700' :
                         s.restriction === 'Vilains' ? 'bg-red-900/40  text-red-300  border-red-700'  :
-                                                      'bg-[#6A6A95]   text-[#8888AA] border-[#555]'
+                                                      'bg-[#6A6A95]   text-[#C8C8E0] border-[#555]'
                       }`}>{s.restriction}</span>
                     ) : <span className="text-[#555]">—</span>}
                   </td>
@@ -250,8 +250,8 @@ export default function Supports() {
                         {cat || trigger || detail ? (
                           <div className="space-y-1 flex flex-col items-center">
                             {cat     && <span className={`badge border text-xs ${catColor(cat)}`} title={cat}>{cat}</span>}
-                            {detail  && <span className="text-[#AAAAAA] leading-tight truncate max-w-24" title={detail}>{detail}</span>}
-                            {trigger && <span className="text-[#AAAAAA] leading-tight truncate max-w-24 italic" title={trigger}>{trigger}</span>}
+                            {detail  && <span className="text-[#D8D8EE] leading-tight truncate max-w-24" title={detail}>{detail}</span>}
+                            {trigger && <span className="text-[#D8D8EE] leading-tight truncate max-w-24 italic" title={trigger}>{trigger}</span>}
                           </div>
                         ) : <span className="text-[#444]">—</span>}
                       </td>
@@ -263,22 +263,22 @@ export default function Supports() {
                       <div className="space-y-1 flex flex-col items-center">
                         {s.synergy_restriction && <span className="badge border bg-marvel-red/20 text-red-300 border-red-800 text-xs truncate max-w-28">{s.synergy_restriction}</span>}
                         {s.synergy_category    && <span className={`badge border text-xs ${catColor(s.synergy_category)}`}>{s.synergy_category}</span>}
-                        {s.synergy_detail      && <span className="text-[#AAAAAA] leading-tight truncate max-w-28">{s.synergy_detail}</span>}
-                        {s.synergy_trigger     && <span className="text-[#AAAAAA] leading-tight truncate max-w-28 italic">{s.synergy_trigger}</span>}
+                        {s.synergy_detail      && <span className="text-[#D8D8EE] leading-tight truncate max-w-28">{s.synergy_detail}</span>}
+                        {s.synergy_trigger     && <span className="text-[#D8D8EE] leading-tight truncate max-w-28 italic">{s.synergy_trigger}</span>}
                       </div>
                     ) : <span className="text-[#444]">—</span>}
                   </td>
                   <td className="py-2 px-2 text-center">
                     <div className="flex justify-center gap-2">
-                      <button onClick={() => openEdit(s)} className="text-[#8888AA] hover:text-white"><Pencil size={13} /></button>
-                      <button onClick={() => remove(s.id)} className="text-[#8888AA] hover:text-red-400"><Trash2 size={13} /></button>
+                      <button onClick={() => openEdit(s)} className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
+                      <button onClick={() => remove(s.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {visible.length === 0 && <p className="text-center text-[#8888AA] py-8">Aucun support trouvé</p>}
+          {visible.length === 0 && <p className="text-center text-[#C8C8E0] py-8">Aucun support trouvé</p>}
         </div>
       )}
 
@@ -288,23 +288,23 @@ export default function Supports() {
           <div className="card w-full max-w-2xl my-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouveau Support' : 'Modifier Support'}</h2>
-              <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
+              <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
 
               {/* Base info */}
               <div className="grid grid-cols-4 gap-3">
                 <div className="col-span-2">
-                  <label className="text-xs text-[#8888AA] mb-1 block">Nom *</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Nom *</label>
                   <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-[#8888AA] mb-1 block">Rang ★</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Rang ★</label>
                   <input type="number" className="input" value={form.rang ?? ''}
                     onChange={e => setForm(f => ({ ...f, rang: Number(e.target.value) || null }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-[#8888AA] mb-1 block">Niveau</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Niveau</label>
                   <input type="number" className="input" value={form.niveau ?? ''}
                     onChange={e => setForm(f => ({ ...f, niveau: Number(e.target.value) || null }))} />
                 </div>
@@ -313,7 +313,7 @@ export default function Supports() {
               {/* Restriction */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[#8888AA] mb-1 block">Restriction</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Restriction</label>
                   <select className="input" value={customRestr ? '__custom__' : (form.restriction ?? '/')}
                     onChange={e => {
                       if (e.target.value === '__custom__') setCustomRestr(' ')
@@ -325,7 +325,7 @@ export default function Supports() {
                 </div>
                 {customRestr !== '' && (
                   <div>
-                    <label className="text-xs text-[#8888AA] mb-1 block">Nouvelle restriction</label>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">Nouvelle restriction</label>
                     <input className="input" placeholder="Ex: Symbiote, Mutant..."
                       value={customRestr.trim()} onChange={e => setCustomRestr(e.target.value)} />
                   </div>
@@ -338,10 +338,10 @@ export default function Supports() {
                 <div className="space-y-2">
                   {EFFECTS.map(n => (
                     <div key={n} className="bg-[#383860] rounded-lg p-3 space-y-2">
-                      <p className="text-xs text-[#8888AA] font-medium">Effet {n}</p>
+                      <p className="text-xs text-[#C8C8E0] font-medium">Effet {n}</p>
                       <div className="grid grid-cols-3 gap-2">
                         <div>
-                          <label className="text-xs text-[#8888AA] mb-1 block">Catégorie</label>
+                          <label className="text-xs text-[#C8C8E0] mb-1 block">Catégorie</label>
                           <DynamicSelect
                             value={form[`effect_${n}_category`]}
                             onChange={v => setEffect(n, 'category', v)}
@@ -350,7 +350,7 @@ export default function Supports() {
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-[#8888AA] mb-1 block">Trigger</label>
+                          <label className="text-xs text-[#C8C8E0] mb-1 block">Trigger</label>
                           <DynamicSelect
                             value={form[`effect_${n}_trigger`]}
                             onChange={v => setEffect(n, 'trigger', v)}
@@ -359,7 +359,7 @@ export default function Supports() {
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-[#8888AA] mb-1 block">Détail</label>
+                          <label className="text-xs text-[#C8C8E0] mb-1 block">Détail</label>
                           <input className="input text-sm h-full"
                             value={form[`effect_${n}_detail`] ?? ''}
                             onChange={e => setEffect(n, 'detail', e.target.value || null)}
@@ -376,14 +376,14 @@ export default function Supports() {
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Synergie</p>
                 <div className="bg-[#383860] rounded-lg p-3 space-y-2">
                   <div>
-                    <label className="text-xs text-[#8888AA] mb-1 block">Avec (personnage / tag)</label>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">Avec (personnage / tag)</label>
                     <input className="input text-sm" value={form.synergy_restriction ?? ''}
                       onChange={e => setForm(f => ({ ...f, synergy_restriction: e.target.value || null }))}
                       placeholder="Ex: Spider-Ham, Héros..." />
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Catégorie</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Catégorie</label>
                       <DynamicSelect
                         value={form.synergy_category}
                         onChange={v => setForm(f => ({ ...f, synergy_category: v }))}
@@ -392,7 +392,7 @@ export default function Supports() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Trigger</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Trigger</label>
                       <DynamicSelect
                         value={form.synergy_trigger}
                         onChange={v => setForm(f => ({ ...f, synergy_trigger: v }))}
@@ -401,7 +401,7 @@ export default function Supports() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-[#8888AA] mb-1 block">Détail</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Détail</label>
                       <input className="input text-sm" value={form.synergy_detail ?? ''}
                         onChange={e => setForm(f => ({ ...f, synergy_detail: e.target.value || null }))}
                         placeholder="Description libre..." />

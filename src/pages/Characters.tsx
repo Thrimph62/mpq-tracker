@@ -50,7 +50,7 @@ function InlineLevelCell({ id, level, onSave }: {
   )
   return (
     <button onClick={startEdit} title="Cliquer pour modifier le niveau"
-      className="text-[#8888AA] hover:text-white hover:bg-[#6A6A95] rounded px-2 py-0.5 transition-all min-w-8 text-center">
+      className="text-[#C8C8E0] hover:text-white hover:bg-[#6A6A95] rounded px-2 py-0.5 transition-all min-w-8 text-center">
       {level ?? '—'}
     </button>
   )
@@ -61,7 +61,7 @@ function SortBtn({ field, current, dir, onClick }: {
 }) {
   const active = field === current
   return (
-    <button onClick={onClick} className={`flex items-center gap-1 text-xs font-medium transition-colors ${active ? 'text-marvel-gold' : 'text-[#8888AA] hover:text-white'}`}>
+    <button onClick={onClick} className={`flex items-center gap-1 text-xs font-medium transition-colors ${active ? 'text-marvel-gold' : 'text-[#C8C8E0] hover:text-white'}`}>
       {field === 'base_name' ? 'Nom' : field === 'stars' ? 'Étoiles' : 'Niveau'}
       {active ? (dir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
     </button>
@@ -172,7 +172,7 @@ export default function Characters() {
 
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
           <input className="input pl-9" placeholder="Rechercher par nom ou version..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
@@ -195,7 +195,7 @@ export default function Characters() {
         </button>
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-[#8888AA]">
+      <div className="flex items-center gap-2 text-xs text-[#C8C8E0]">
         <span>Trier par :</span>
         <div className="flex gap-3 bg-[#363660] px-3 py-1.5 rounded-lg">
           {(['base_name', 'stars', 'level'] as SortField[]).map(f => (
@@ -209,7 +209,7 @@ export default function Characters() {
         <div className="card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#6A6A95] text-[#8888AA]">
+              <tr className="border-b border-[#6A6A95] text-[#C8C8E0]">
                 <th className="text-center py-2 font-normal">
                   <button onClick={() => toggleSort('base_name')} className="flex items-center gap-1 mx-auto hover:text-white transition-colors">
                     Personnage {sortField === 'base_name' ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
@@ -235,7 +235,7 @@ export default function Characters() {
               {filtered.map(c => (
                 <tr key={c.id} className="border-b border-[#6A6A95]/40 hover:bg-[#6A6A95]/20">
                   <td className="py-2 text-center font-medium">{c.base_name || parseBaseName(c.name).base}</td>
-                  <td className="py-2 text-center text-xs text-[#8888AA]">
+                  <td className="py-2 text-center text-xs text-[#C8C8E0]">
                     {c.version && <span className="bg-[#6A6A95] px-1.5 py-0.5 rounded">{c.version}</span>}
                   </td>
                   <td className="py-2 text-center"><StarBadge stars={c.stars as Stars} /></td>
@@ -250,15 +250,15 @@ export default function Characters() {
                   </td>
                   <td className="py-2 text-center">
                     <div className="flex justify-center gap-2">
-                      <button onClick={() => openEdit(c)} className="text-[#8888AA] hover:text-white transition-colors"><Pencil size={14} /></button>
-                      <button onClick={() => remove(c.id)} className="text-[#8888AA] hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                      <button onClick={() => openEdit(c)} className="text-[#C8C8E0] hover:text-white transition-colors"><Pencil size={14} /></button>
+                      <button onClick={() => remove(c.id)} className="text-[#C8C8E0] hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {filtered.length === 0 && <p className="text-center text-[#8888AA] py-8">Aucun personnage trouvé</p>}
+          {filtered.length === 0 && <p className="text-center text-[#C8C8E0] py-8">Aucun personnage trouvé</p>}
         </div>
       ) : (
         <div className="space-y-2">
@@ -266,26 +266,26 @@ export default function Characters() {
             <div key={baseName} className="card">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-white">{baseName}</h3>
-                <span className="text-xs text-[#8888AA]">{versions.length} version{versions.length > 1 ? 's' : ''}</span>
+                <span className="text-xs text-[#C8C8E0]">{versions.length} version{versions.length > 1 ? 's' : ''}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {versions.map(c => (
                   <div key={c.id} className="flex items-center gap-2 bg-[#383860] rounded-lg px-3 py-2 group">
                     <StarBadge stars={c.stars as Stars} />
-                    {c.version && <span className="text-xs text-[#8888AA]">{c.version}</span>}
+                    {c.version && <span className="text-xs text-[#C8C8E0]">{c.version}</span>}
                     <InlineLevelCell id={c.id} level={c.level} onSave={updateLevel} />
                     <InlineStatusBadge status={c.status as CharacterStatus} onChange={s => updateStatus(c.id, s)} />
                     <InlineAscendedBadge ascended={c.ascended} onChange={a => updateAscended(c.id, a)} />
                     <div className="flex gap-1 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(c)} className="text-[#8888AA] hover:text-white"><Pencil size={12} /></button>
-                      <button onClick={() => remove(c.id)} className="text-[#8888AA] hover:text-red-400"><Trash2 size={12} /></button>
+                      <button onClick={() => openEdit(c)} className="text-[#C8C8E0] hover:text-white"><Pencil size={12} /></button>
+                      <button onClick={() => remove(c.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={12} /></button>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           ))}
-          {Object.keys(grouped).length === 0 && <div className="card text-center text-[#8888AA] py-8">Aucun personnage trouvé</div>}
+          {Object.keys(grouped).length === 0 && <div className="card text-center text-[#C8C8E0] py-8">Aucun personnage trouvé</div>}
         </div>
       )}
 
@@ -294,51 +294,51 @@ export default function Characters() {
           <div className="card w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Ajouter un personnage' : 'Modifier'}</h2>
-              <button onClick={closeModal}><X size={18} className="text-[#8888AA] hover:text-white" /></button>
+              <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Nom complet <span className="text-[#555]">(ex: Spider-Man (Classic))</span></label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Nom complet <span className="text-[#555]">(ex: Spider-Man (Classic))</span></label>
                 <input className="input" value={form.name} onChange={e => handleNameChange(e.target.value)} placeholder="Personnage (Version)" />
               </div>
               {form.base_name && (
                 <div className="bg-[#383860] rounded-lg px-3 py-2 flex gap-4 text-xs">
-                  <span className="text-[#8888AA]">Base: <span className="text-white">{form.base_name}</span></span>
-                  {form.version && <span className="text-[#8888AA]">Version: <span className="text-marvel-gold">{form.version}</span></span>}
+                  <span className="text-[#C8C8E0]">Base: <span className="text-white">{form.base_name}</span></span>
+                  {form.version && <span className="text-[#C8C8E0]">Version: <span className="text-marvel-gold">{form.version}</span></span>}
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[#8888AA] mb-1 block">Étoiles</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Étoiles</label>
                   <select className="input" value={form.stars} onChange={e => setForm(f => ({ ...f, stars: Number(e.target.value) as Stars }))}>
                     {STARS_OPTIONS.map(s => <option key={s} value={s}>{s}★</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-[#8888AA] mb-1 block">Niveau</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Niveau</label>
                   <input type="number" className="input" value={form.level ?? ''}
                     onChange={e => setForm(f => ({ ...f, level: e.target.value ? Number(e.target.value) : null }))} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[#8888AA] mb-1 block">Statut</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Statut</label>
                   <select className="input" value={form.status ?? 'rostered'} onChange={e => setForm(f => ({ ...f, status: e.target.value as CharacterStatus }))}>
                     {STATUSES.map(s => <option key={s} value={s}>{STATUS_FR[s]}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-[#8888AA] mb-1 block">Ascended</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Ascended</label>
                   <button type="button" onClick={() => setForm(f => ({ ...f, ascended: !f.ascended }))}
                     className={`w-full py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
-                      form.ascended ? 'bg-cyan-900/60 border-cyan-600 text-cyan-300' : 'bg-[#383860] border-[#6A6A95] text-[#8888AA] hover:border-cyan-600/50'
+                      form.ascended ? 'bg-cyan-900/60 border-cyan-600 text-cyan-300' : 'bg-[#383860] border-[#6A6A95] text-[#C8C8E0] hover:border-cyan-600/50'
                     }`}>
                     {form.ascended ? '⬆ Ascended' : '⬆ Non ascended'}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="text-xs text-[#8888AA] mb-1 block">Notes</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Notes</label>
                 <textarea className="input resize-none h-20" value={form.notes ?? ''}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value || null }))} />
               </div>

@@ -21,7 +21,7 @@ export const STATUS_CONFIG: Record<CharacterStatus, { label: string; className: 
   max_champ: { label: 'Max Champ', className: 'bg-purple-900/60 text-purple-300 border-purple-700' },
   champ:     { label: 'Champ',     className: 'bg-orange-900/60 text-orange-300 border-orange-700' },
   rostered:  { label: 'Roster',    className: 'bg-green-900/60  text-green-300  border-green-700'  },
-  not_owned: { label: 'Non Possédé', className: 'bg-[#424270]  text-[#8888AA]  border-[#6A6A95]'  },
+  not_owned: { label: 'Non Possédé', className: 'bg-[#424270]  text-[#C8C8E0]  border-[#6A6A95]'  },
 }
 
 export function StatusBadge({ status }: { status: CharacterStatus | null }) {
@@ -96,7 +96,7 @@ export function PowerColorDot({ couleur }: { couleur: string | null }) {
 }
 
 export function OkBadge({ value }: { value: string | null }) {
-  if (!value) return <span className="text-[#8888AA] text-xs">—</span>
+  if (!value) return <span className="text-[#C8C8E0] text-xs">—</span>
   const isOk = value.toLowerCase().includes('oui') || value.toLowerCase().includes('yes')
   return (
     <span className={`badge ${isOk ? 'bg-green-900/60 text-green-300' : 'bg-red-900/60 text-red-300'}`}>

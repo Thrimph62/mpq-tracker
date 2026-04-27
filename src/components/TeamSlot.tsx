@@ -7,7 +7,7 @@ interface TeamSlotProps {
 
 export function TeamSlot({ character, build, support, boost }: TeamSlotProps) {
   if (!character) return (
-    <div className="card flex items-center justify-center text-[#8888AA] text-sm h-24">—</div>
+    <div className="card flex items-center justify-center text-[#C8C8E0] text-sm h-24">—</div>
   )
   return (
     <div className="card space-y-1">
