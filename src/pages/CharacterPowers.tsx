@@ -369,8 +369,14 @@ export default function CharacterPowers() {
               {/* Character */}
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Personnage *</label>
-                <SearchDropdown value={form.character_id} onChange={id => setForm(f => ({ ...f, character_id: id ?? '' }))}
-                  options={charOptions} placeholder="Rechercher un personnage..." />
+                <SearchDropdown
+                  value={form.character_id ? (characters.find(c => c.id === form.character_id)?.name ?? '') : ''}
+                  onChange={() => {}}
+                  onSelectId={id => setForm(f => ({ ...f, character_id: id ?? '' }))}
+                  options={charOptions}
+                  placeholder="Rechercher un personnage..."
+                  allowFreeText={false}
+                />
               </div>
 
               {/* Name + Color + Cost */}

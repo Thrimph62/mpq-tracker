@@ -14,12 +14,13 @@ const STAR_COLORS: Record<Stars, string> = {
 interface SearchDropdownProps {
   value: string | null
   onChange: (val: string | null) => void
+  onSelectId?: (id: string | null) => void
   options: { id: string; label: string; sublabel?: string; starColor?: string }[]
   placeholder?: string
   allowFreeText?: boolean
 }
 
-export function SearchDropdown({ value, onChange, options, placeholder = 'Rechercher...', allowFreeText = true }: SearchDropdownProps) {
+export function SearchDropdown({ value, onChange, onSelectId, options, placeholder = 'Rechercher...', allowFreeText = true }: SearchDropdownProps) {
   const [query, setQuery] = useState('')
   const [open, setOpen]   = useState(false)
 
@@ -33,26 +34,26 @@ export function SearchDropdown({ value, onChange, options, placeholder = 'Recher
         className="input text-sm"
         placeholder={placeholder}
         value={open ? query : (value ?? '')}
-        onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) onChange(null) }}
+        onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) { onChange(null); onSelectId?.(null) } }}
         onFocus={() => { setQuery(value ?? ''); setOpen(true) }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
       />
       {open && (
         <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#252540] border border-[#3D3D60] rounded-lg shadow-xl max-h-52 overflow-y-auto">
-          <button type="button" onMouseDown={() => { onChange(null); setOpen(false) }}
+          <button type="button" onMouseDown={() => { onChange(null); onSelectId?.(null); setOpen(false) }}
             className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60] text-[#C8C8E0]">
             — Aucun —
           </button>
           {filtered.map(o => (
             <button key={o.id} type="button"
-              onMouseDown={() => { onChange(o.label); setOpen(false) }}
+              onMouseDown={() => { onChange(o.label); onSelectId?.(o.id); setOpen(false) }}
               className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60]">
               <span className="text-white">{o.label}</span>
               {o.sublabel && <span style={{ color: o.starColor }} className="ml-2 text-xs">{o.sublabel}</span>}
             </button>
           ))}
           {allowFreeText && filtered.length === 0 && query && (
-            <button type="button" onMouseDown={() => { onChange(query); setOpen(false) }}
+            <button type="button" onMouseDown={() => { onChange(query); onSelectId?.(null); setOpen(false) }}
               className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60] text-[#C8C8E0] italic">
               Utiliser "{query}" (texte libre)
             </button>
