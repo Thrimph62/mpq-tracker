@@ -38,22 +38,22 @@ export function SearchDropdown({ value, onChange, options, placeholder = 'Recher
         onBlur={() => setTimeout(() => setOpen(false), 150)}
       />
       {open && (
-        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#252540] border border-[#3D3D60] rounded-lg shadow-xl max-h-52 overflow-y-auto">
+        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#32325A] border border-[#52527A] rounded-lg shadow-xl max-h-52 overflow-y-auto">
           <button type="button" onMouseDown={() => { onChange(null); setOpen(false) }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60] text-[#8888AA]">
+            className="w-full text-left px-3 py-2 text-sm hover:bg-[#52527A] text-[#8888AA]">
             — Aucun —
           </button>
           {filtered.map(o => (
             <button key={o.id} type="button"
               onMouseDown={() => { onChange(o.label); setOpen(false) }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60]">
+              className="w-full text-left px-3 py-2 text-sm hover:bg-[#52527A]">
               <span className="text-white">{o.label}</span>
               {o.sublabel && <span style={{ color: o.starColor }} className="ml-2 text-xs">{o.sublabel}</span>}
             </button>
           ))}
           {allowFreeText && filtered.length === 0 && query && (
             <button type="button" onMouseDown={() => { onChange(query); setOpen(false) }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60] text-[#8888AA] italic">
+              className="w-full text-left px-3 py-2 text-sm hover:bg-[#52527A] text-[#8888AA] italic">
               Utiliser "{query}" (texte libre)
             </button>
           )}

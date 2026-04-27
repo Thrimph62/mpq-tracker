@@ -71,7 +71,7 @@ export default function Dashboard() {
         <h2 className="font-marvel text-xl text-marvel-gold mb-4">Suivi Roster</h2>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#3D3D60]">
+            <tr className="border-b border-[#52527A]">
               <th className="text-center py-2 text-[#8888AA] font-normal">Tier</th>
               {STATUS_COLS.map(s => (
                 <th key={s} className={`text-center py-2 font-normal ${STATUS_COLORS[s]}`}>
@@ -86,7 +86,7 @@ export default function Dashboard() {
             {summary.map(row => {
               const rowTotal = row.max_champ + row.champ + row.rostered
               return (
-                <tr key={row.stars} className="border-b border-[#3D3D60]/50 hover:bg-[#3D3D60]/20">
+                <tr key={row.stars} className="border-b border-[#52527A]/50 hover:bg-[#52527A]/20">
                   <td className="py-2.5 text-center"><StarBadge stars={row.stars} /></td>
                   {STATUS_COLS.map(s => (
                     <td key={s} className="text-center py-2.5">
@@ -104,7 +104,7 @@ export default function Dashboard() {
                 </tr>
               )
             })}
-            <tr className="border-t-2 border-[#3D3D60] font-semibold">
+            <tr className="border-t-2 border-[#52527A] font-semibold">
               <td className="py-2.5 text-center text-[#8888AA]">Total</td>
               {STATUS_COLS.map(s => (
                 <td key={s} className={`text-center py-2.5 ${STATUS_COLORS[s]}`}>

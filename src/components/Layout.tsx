@@ -20,8 +20,8 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="w-56 bg-[#1E1E38] border-r border-[#3D3D60] flex flex-col">
-        <div className="p-5 border-b border-[#3D3D60]">
+      <aside className="w-56 bg-[#28284A] border-r border-[#52527A] flex flex-col">
+        <div className="p-5 border-b border-[#52527A]">
           <h1 className="font-marvel text-2xl tracking-widest text-marvel-gold">MPQ</h1>
           <p className="text-xs text-[#8888AA] mt-0.5">Tracker</p>
         </div>
@@ -30,15 +30,15 @@ export default function Layout() {
             <NavLink key={to} to={to} end={to === '/'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                  isActive ? 'bg-marvel-red text-white font-semibold' : 'text-[#8888AA] hover:bg-[#252540] hover:text-white'
+                  isActive ? 'bg-marvel-red text-white font-semibold' : 'text-[#8888AA] hover:bg-[#32325A] hover:text-white'
                 }`}>
               <Icon size={16} />{label}
             </NavLink>
           ))}
         </nav>
-        <div className="p-3 border-t border-[#3D3D60]">
+        <div className="p-3 border-t border-[#52527A]">
           <button onClick={signOut}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#8888AA] hover:bg-[#252540] hover:text-white transition-all w-full">
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#8888AA] hover:bg-[#32325A] hover:text-white transition-all w-full">
             <LogOut size={16} />Déconnexion
           </button>
         </div>

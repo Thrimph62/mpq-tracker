@@ -133,7 +133,7 @@ export default function PuzzleGauntlet() {
                       </div>
 
                       {expanded === n.id && (
-                        <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
+                        <div className="mt-4 pt-4 border-t border-[#52527A] space-y-4">
                           <div className="grid grid-cols-3 gap-3">
                             <TeamSlot character={n.gauche_personnage} build={n.gauche_build} support={n.gauche_support} />
                             <TeamSlot character={n.milieu_personnage} build={n.milieu_build} support={n.milieu_support} />
@@ -146,7 +146,7 @@ export default function PuzzleGauntlet() {
                             </div>
                           )}
                           {n.note && (
-                            <div className="bg-[#1C1C2E] rounded-lg p-3">
+                            <div className="bg-[#2A2A45] rounded-lg p-3">
                               <p className="text-xs text-marvel-gold font-semibold mb-1">Stratégie</p>
                               <p className="text-sm text-[#CCCCCC] whitespace-pre-line leading-relaxed">{n.note}</p>
                             </div>
@@ -190,7 +190,7 @@ export default function PuzzleGauntlet() {
               </div>
 
               {SLOTS.map(({ pos, label }) => (
-                <div key={pos} className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
+                <div key={pos} className="bg-[#2A2A45] rounded-lg p-3 space-y-2">
                   <p className="text-xs font-semibold text-marvel-gold">{label}</p>
                   <div>
                     <label className="text-xs text-[#8888AA] mb-1 block">Personnage</label>

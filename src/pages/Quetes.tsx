@@ -108,14 +108,14 @@ export default function Quetes() {
               </div>
 
               {expanded === q.id && (
-                <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
+                <div className="mt-4 pt-4 border-t border-[#52527A] space-y-4">
                   <div className="grid grid-cols-3 gap-3">
                     <TeamSlot character={q.gauche_personnage} build={q.gauche_build} support={q.gauche_support} />
                     <TeamSlot character={q.milieu_personnage} build={q.milieu_build} support={q.milieu_support} />
                     <TeamSlot character={q.droite_personnage} build={q.droite_build} support={q.droite_support} />
                   </div>
                   {q.note && (
-                    <div className="bg-[#1C1C2E] rounded-lg p-3">
+                    <div className="bg-[#2A2A45] rounded-lg p-3">
                       <p className="text-xs text-marvel-gold font-semibold mb-1">Note</p>
                       <p className="text-sm text-[#CCCCCC] whitespace-pre-line leading-relaxed">{q.note}</p>
                     </div>
@@ -142,7 +142,7 @@ export default function Quetes() {
               </div>
 
               {SLOTS.map(({ pos, label }) => (
-                <div key={pos} className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
+                <div key={pos} className="bg-[#2A2A45] rounded-lg p-3 space-y-2">
                   <p className="text-xs font-semibold text-marvel-gold">{label}</p>
                   <div className="grid grid-cols-1 gap-2">
                     <div>
