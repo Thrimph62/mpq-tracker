@@ -66,12 +66,21 @@ export function SearchDropdown({ value, onChange, onSelectId, options, placehold
 
 // ── Typed helpers ─────────────────────────────────────────────────────────────
 export function toCharacterOptions(characters: Character[]) {
-  return characters.map(c => ({
-    id: c.id,
-    label: c.name,
-    sublabel: '★'.repeat(c.stars),
-    starColor: STAR_COLORS[c.stars as Stars],
-  }))
+  // Deduplicate by name — same name can appear multiple times (different levels/copies)
+  // but we only need it once in the dropdown for powers
+  const seen = new Set<string>()
+  return characters
+    .filter(c => {
+      if (seen.has(c.name)) return false
+      seen.add(c.name)
+      return true
+    })
+    .map(c => ({
+      id: c.id,
+      label: c.name,
+      sublabel: '★'.repeat(c.stars),
+      starColor: STAR_COLORS[c.stars as Stars],
+    }))
 }
 
 export function toSupportOptions(supports: Support[]) {
