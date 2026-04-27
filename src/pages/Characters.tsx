@@ -8,8 +8,7 @@ const STATUSES: CharacterStatus[] = ['max_champ', 'champ', 'rostered', 'not_owne
 const STARS_OPTIONS: Stars[] = [6, 5, 4, 3, 2, 1]
 
 const STATUS_FR: Record<CharacterStatus, string> = {
-  max_champ: 'Max Champ', champ: 'Champ',
-  rostered: 'Roster', not_owned: 'Non Possédé',
+  max_champ: 'Max Champ', champ: 'Champ', rostered: 'Roster', not_owned: 'Non Possédé',
 }
 
 function parseBaseName(name: string): { base: string; version: string | null } {
@@ -26,7 +25,6 @@ type ViewMode  = 'list' | 'grouped'
 type SortField = 'base_name' | 'stars' | 'level'
 type SortDir   = 'asc' | 'desc'
 
-// ── Inline level cell ─────────────────────────────────────────────────────────
 function InlineLevelCell({ id, level, onSave }: {
   id: string; level: number | null; onSave: (id: string, val: number | null) => void
 }) {
@@ -34,47 +32,30 @@ function InlineLevelCell({ id, level, onSave }: {
   const [val, setVal]         = useState(String(level ?? ''))
   const inputRef              = useRef<HTMLInputElement>(null)
 
-  function startEdit() {
-    setVal(String(level ?? ''))
-    setEditing(true)
-    setTimeout(() => inputRef.current?.select(), 0)
-  }
-
+  function startEdit() { setVal(String(level ?? '')); setEditing(true); setTimeout(() => inputRef.current?.select(), 0) }
   function commit() {
     setEditing(false)
     const n = val === '' ? null : Number(val)
     if (n !== level) onSave(id, n)
   }
-
   function handleKey(e: React.KeyboardEvent) {
     if (e.key === 'Enter') commit()
     if (e.key === 'Escape') { setEditing(false); setVal(String(level ?? '')) }
   }
 
   if (editing) return (
-    <input
-      ref={inputRef}
-      type="number"
-      value={val}
-      onChange={e => setVal(e.target.value)}
-      onBlur={commit}
-      onKeyDown={handleKey}
-      className="w-16 bg-[#0D0D0D] border border-marvel-red rounded px-1 py-0.5 text-center text-white text-xs outline-none"
-    />
+    <input ref={inputRef} type="number" value={val}
+      onChange={e => setVal(e.target.value)} onBlur={commit} onKeyDown={handleKey}
+      className="w-16 bg-[#1C1C2E] border border-marvel-red rounded px-1 py-0.5 text-center text-white text-xs outline-none" />
   )
-
   return (
-    <button
-      onClick={startEdit}
-      title="Cliquer pour modifier le niveau"
-      className="text-[#8888AA] hover:text-white hover:bg-[#2D2D4E] rounded px-2 py-0.5 transition-all min-w-8 text-center"
-    >
+    <button onClick={startEdit} title="Cliquer pour modifier le niveau"
+      className="text-[#8888AA] hover:text-white hover:bg-[#3D3D60] rounded px-2 py-0.5 transition-all min-w-8 text-center">
       {level ?? '—'}
     </button>
   )
 }
 
-// ── Sort button ───────────────────────────────────────────────────────────────
 function SortBtn({ field, current, dir, onClick }: {
   field: SortField; current: SortField; dir: SortDir; onClick: () => void
 }) {
@@ -87,11 +68,10 @@ function SortBtn({ field, current, dir, onClick }: {
   )
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
 export default function Characters() {
-  const [chars, setChars]       = useState<Character[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [search, setSearch]     = useState('')
+  const [chars, setChars]     = useState<Character[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch]   = useState('')
   const [filterStars, setFilterStars]       = useState<Stars | 0>(0)
   const [filterStatus, setFilterStatus]     = useState<CharacterStatus | ''>('')
   const [filterAscended, setFilterAscended] = useState<'all' | 'yes' | 'no'>('all')
@@ -104,11 +84,8 @@ export default function Characters() {
   const [saving, setSaving]       = useState(false)
 
   async function load() {
-    const { data } = await supabase
-      .from('characters').select('*')
-      .order('base_name')
-      .order('version')
-      .order('level', { ascending: false })
+    const { data } = await supabase.from('characters').select('*')
+      .order('base_name').order('version').order('level', { ascending: false })
     if (data) setChars(data)
     setLoading(false)
   }
@@ -128,28 +105,13 @@ export default function Characters() {
       return matchSearch && matchStars && matchStatus && matchAscended
     })
     .sort((a, b) => {
-      // Primary sort
       const va = sortField === 'base_name' ? a.base_name.toLowerCase() : sortField === 'stars' ? a.stars : (a.level ?? -1)
       const vb = sortField === 'base_name' ? b.base_name.toLowerCase() : sortField === 'stars' ? b.stars : (b.level ?? -1)
       if (va < vb) return sortDir === 'asc' ? -1 : 1
       if (va > vb) return sortDir === 'asc' ? 1 : -1
-      // Tie-breakers: always name → version → level
-      if (sortField !== 'base_name') {
-        const na = a.base_name.toLowerCase(), nb = b.base_name.toLowerCase()
-        if (na < nb) return -1
-        if (na > nb) return 1
-      }
-      if (sortField !== 'base_name') {
-        const va2 = a.version?.toLowerCase() ?? '', vb2 = b.version?.toLowerCase() ?? ''
-        if (va2 < vb2) return -1
-        if (va2 > vb2) return 1
-      }
       if (sortField === 'base_name') {
-        // secondary: version
         const va2 = a.version?.toLowerCase() ?? '', vb2 = b.version?.toLowerCase() ?? ''
-        if (va2 < vb2) return -1
-        if (va2 > vb2) return 1
-        // tertiary: level desc
+        if (va2 < vb2) return -1; if (va2 > vb2) return 1
         return (b.level ?? -1) - (a.level ?? -1)
       }
       return (b.level ?? -1) - (a.level ?? -1)
@@ -196,7 +158,6 @@ export default function Characters() {
     setChars(prev => prev.map(c => c.id === id ? { ...c, ascended } : c))
   }
 
-  // Inline level save — updates DB + local state instantly
   async function updateLevel(id: string, level: number | null) {
     await supabase.from('characters').update({ level, updated_at: new Date().toISOString() }).eq('id', id)
     setChars(prev => prev.map(c => c.id === id ? { ...c, level } : c))
@@ -209,7 +170,6 @@ export default function Characters() {
         <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
@@ -229,18 +189,15 @@ export default function Characters() {
           <option value="yes">Ascended uniquement</option>
           <option value="no">Non ascended</option>
         </select>
-        <button
-          onClick={() => setViewMode(v => v === 'list' ? 'grouped' : 'list')}
-          className={`btn-secondary flex items-center gap-2 ${viewMode === 'grouped' ? 'bg-marvel-red/20 border-marvel-red/40 text-white' : ''}`}
-        >
+        <button onClick={() => setViewMode(v => v === 'list' ? 'grouped' : 'list')}
+          className={`btn-secondary flex items-center gap-2 ${viewMode === 'grouped' ? 'bg-marvel-red/20 border-marvel-red/40 text-white' : ''}`}>
           <Layers size={14} /> {viewMode === 'grouped' ? 'Groupé' : 'Liste'}
         </button>
       </div>
 
-      {/* Sort bar */}
       <div className="flex items-center gap-2 text-xs text-[#8888AA]">
         <span>Trier par :</span>
-        <div className="flex gap-3 bg-[#12122A] px-3 py-1.5 rounded-lg">
+        <div className="flex gap-3 bg-[#1E1E38] px-3 py-1.5 rounded-lg">
           {(['base_name', 'stars', 'level'] as SortField[]).map(f => (
             <SortBtn key={f} field={f} current={sortField} dir={sortDir} onClick={() => toggleSort(f)} />
           ))}
@@ -249,17 +206,16 @@ export default function Characters() {
       </div>
 
       {loading ? <Spinner /> : viewMode === 'list' ? (
-        /* ── LIST VIEW ── */
         <div className="card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#2D2D4E] text-[#8888AA]">
-                <th className="text-left py-2 font-normal">
-                  <button onClick={() => toggleSort('base_name')} className="flex items-center gap-1 hover:text-white transition-colors">
+              <tr className="border-b border-[#3D3D60] text-[#8888AA]">
+                <th className="text-center py-2 font-normal">
+                  <button onClick={() => toggleSort('base_name')} className="flex items-center gap-1 mx-auto hover:text-white transition-colors">
                     Personnage {sortField === 'base_name' ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
                   </button>
                 </th>
-                <th className="text-left py-2 font-normal text-xs">Version</th>
+                <th className="text-center py-2 font-normal text-xs">Version</th>
                 <th className="text-center py-2 font-normal">
                   <button onClick={() => toggleSort('stars')} className="flex items-center gap-1 mx-auto hover:text-white transition-colors">
                     ★ {sortField === 'stars' ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
@@ -272,15 +228,15 @@ export default function Characters() {
                 </th>
                 <th className="text-center py-2 font-normal">Statut <span className="text-[#555] text-xs">(clic)</span></th>
                 <th className="text-center py-2 font-normal">Asc. <span className="text-[#555] text-xs">(clic)</span></th>
-                <th className="text-right py-2 font-normal">Actions</th>
+                <th className="text-center py-2 font-normal">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(c => (
-                <tr key={c.id} className="border-b border-[#2D2D4E]/40 hover:bg-[#2D2D4E]/20">
-                  <td className="py-2 font-medium">{c.base_name || parseBaseName(c.name).base}</td>
-                  <td className="py-2 text-xs text-[#8888AA]">
-                    {c.version && <span className="bg-[#2D2D4E] px-1.5 py-0.5 rounded">{c.version}</span>}
+                <tr key={c.id} className="border-b border-[#3D3D60]/40 hover:bg-[#3D3D60]/20">
+                  <td className="py-2 text-center font-medium">{c.base_name || parseBaseName(c.name).base}</td>
+                  <td className="py-2 text-center text-xs text-[#8888AA]">
+                    {c.version && <span className="bg-[#3D3D60] px-1.5 py-0.5 rounded">{c.version}</span>}
                   </td>
                   <td className="py-2 text-center"><StarBadge stars={c.stars as Stars} /></td>
                   <td className="py-2 text-center">
@@ -292,8 +248,8 @@ export default function Characters() {
                   <td className="py-2 text-center">
                     <InlineAscendedBadge ascended={c.ascended} onChange={a => updateAscended(c.id, a)} />
                   </td>
-                  <td className="py-2 text-right">
-                    <div className="flex justify-end gap-2">
+                  <td className="py-2 text-center">
+                    <div className="flex justify-center gap-2">
                       <button onClick={() => openEdit(c)} className="text-[#8888AA] hover:text-white transition-colors"><Pencil size={14} /></button>
                       <button onClick={() => remove(c.id)} className="text-[#8888AA] hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
                     </div>
@@ -305,7 +261,6 @@ export default function Characters() {
           {filtered.length === 0 && <p className="text-center text-[#8888AA] py-8">Aucun personnage trouvé</p>}
         </div>
       ) : (
-        /* ── GROUPED VIEW ── */
         <div className="space-y-2">
           {Object.entries(grouped).map(([baseName, versions]) => (
             <div key={baseName} className="card">
@@ -315,7 +270,7 @@ export default function Characters() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {versions.map(c => (
-                  <div key={c.id} className="flex items-center gap-2 bg-[#0D0D0D] rounded-lg px-3 py-2 group">
+                  <div key={c.id} className="flex items-center gap-2 bg-[#1C1C2E] rounded-lg px-3 py-2 group">
                     <StarBadge stars={c.stars as Stars} />
                     {c.version && <span className="text-xs text-[#8888AA]">{c.version}</span>}
                     <InlineLevelCell id={c.id} level={c.level} onSave={updateLevel} />
@@ -334,7 +289,6 @@ export default function Characters() {
         </div>
       )}
 
-      {/* Modal */}
       {modal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="card w-full max-w-md">
@@ -348,7 +302,7 @@ export default function Characters() {
                 <input className="input" value={form.name} onChange={e => handleNameChange(e.target.value)} placeholder="Personnage (Version)" />
               </div>
               {form.base_name && (
-                <div className="bg-[#0D0D0D] rounded-lg px-3 py-2 flex gap-4 text-xs">
+                <div className="bg-[#1C1C2E] rounded-lg px-3 py-2 flex gap-4 text-xs">
                   <span className="text-[#8888AA]">Base: <span className="text-white">{form.base_name}</span></span>
                   {form.version && <span className="text-[#8888AA]">Version: <span className="text-marvel-gold">{form.version}</span></span>}
                 </div>
@@ -377,7 +331,7 @@ export default function Characters() {
                   <label className="text-xs text-[#8888AA] mb-1 block">Ascended</label>
                   <button type="button" onClick={() => setForm(f => ({ ...f, ascended: !f.ascended }))}
                     className={`w-full py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
-                      form.ascended ? 'bg-cyan-900/60 border-cyan-600 text-cyan-300' : 'bg-[#0D0D0D] border-[#2D2D4E] text-[#8888AA] hover:border-cyan-600/50'
+                      form.ascended ? 'bg-cyan-900/60 border-cyan-600 text-cyan-300' : 'bg-[#1C1C2E] border-[#3D3D60] text-[#8888AA] hover:border-cyan-600/50'
                     }`}>
                     {form.ascended ? '⬆ Ascended' : '⬆ Non ascended'}
                   </button>

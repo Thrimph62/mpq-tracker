@@ -7,9 +7,9 @@ export default {
         marvel: {
           red:    '#E62429',
           gold:   '#F0A500',
-          dark:   '#0D0D0D',
-          card:   '#1A1A2E',
-          border: '#2D2D4E',
+          dark:   '#1C1C2E',
+          card:   '#252540',
+          border: '#3D3D60',
           muted:  '#8888AA',
         },
         star: {

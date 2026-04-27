@@ -7,8 +7,6 @@ import { Plus, Search, X, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from
 const EFFECTS = [1, 2, 3, 4, 5] as const
 type EffectNum = typeof EFFECTS[number]
 
-const EFFECT_COLS = EFFECTS.map(n => ({ key: `effect_${n}` as const, label: `Effet ${n}` }))
-
 const DEFAULT_CATEGORIES = [
   'Gain MP', 'Dégâts Gemmes', 'Dégâts Pouvoirs', 'Dégâts Equipe Ennemie',
   'Création Gemmes', 'Destruction Gemmes', 'Conversion Gemmes',
@@ -31,7 +29,7 @@ const EMPTY: Omit<Support, 'id' | 'created_at' | 'updated_at'> = {
 }
 
 function catColor(cat: string | null): string {
-  if (!cat) return 'bg-[#2D2D4E] text-[#8888AA] border-[#444]'
+  if (!cat) return 'bg-[#3D3D60] text-[#8888AA] border-[#555]'
   if (cat.includes('Gain MP'))       return 'bg-blue-900/50   text-blue-300   border-blue-700'
   if (cat.includes('Dégâts'))        return 'bg-red-900/50    text-red-300    border-red-700'
   if (cat.includes('Création'))      return 'bg-green-900/50  text-green-300  border-green-700'
@@ -41,7 +39,7 @@ function catColor(cat: string | null): string {
   if (cat.includes('Gemmes Spéc'))   return 'bg-purple-900/50 text-purple-300 border-purple-700'
   if (cat.includes('Santé'))         return 'bg-teal-900/50   text-teal-300   border-teal-700'
   if (cat.includes('Paralysie'))     return 'bg-pink-900/50   text-pink-300   border-pink-700'
-  return 'bg-[#2D2D4E] text-[#8888AA] border-[#444]'
+  return 'bg-[#3D3D60] text-[#8888AA] border-[#555]'
 }
 
 function CategorySelect({ value, onChange, allCategories }: {
@@ -140,6 +138,10 @@ export default function Supports() {
   }
   function closeModal() { setModal(null); setEditId(null); setCustomRestr('') }
 
+  function setEffect(n: EffectNum, field: 'category' | 'detail', val: string | null) {
+    setForm(f => ({ ...f, [`effect_${n}_${field}`]: val }))
+  }
+
   async function save() {
     setSaving(true)
     const payload = { ...form, restriction: customRestr.trim() || form.restriction }
@@ -154,15 +156,11 @@ export default function Supports() {
     setSupports(prev => prev.filter(s => s.id !== id))
   }
 
-  function setEffect(n: EffectNum, field: 'category' | 'detail', val: string | null) {
-    setForm(f => ({ ...f, [`effect_${n}_${field}`]: val }))
-  }
-
-  function Th({ col, label, align = 'center' }: { col: SortCol; label: string; align?: 'left' | 'center' }) {
+  function Th({ col, label }: { col: SortCol; label: string }) {
     return (
-      <th className={`py-2 px-2 font-normal text-${align}`}>
+      <th className="py-2 px-2 font-normal text-center">
         <button onClick={() => toggleSort(col)}
-          className={`flex items-center gap-0.5 ${align === 'center' ? 'mx-auto' : ''} hover:text-white transition-colors ${sortCol === col ? 'text-marvel-gold' : 'text-[#8888AA]'}`}>
+          className={`flex items-center gap-0.5 mx-auto hover:text-white transition-colors ${sortCol === col ? 'text-marvel-gold' : 'text-[#8888AA]'}`}>
           {label}<SortIcon col={col} current={sortCol} dir={sortDir} />
         </button>
       </th>
@@ -176,7 +174,6 @@ export default function Supports() {
         <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
       </div>
 
-      {/* Filters — effect instead of restriction */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-56">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888AA]" />
@@ -195,8 +192,8 @@ export default function Supports() {
         <div className="card overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-[#2D2D4E]">
-                <Th col="name"        label="Nom"    align="left" />
+              <tr className="border-b border-[#3D3D60]">
+                <Th col="name"        label="Nom"    />
                 <Th col="rang"        label="★"      />
                 <Th col="niveau"      label="Niv."   />
                 <Th col="restriction" label="Restr." />
@@ -204,13 +201,13 @@ export default function Supports() {
                   <th key={n} className="py-2 px-1 font-normal text-center text-[#8888AA] min-w-24">Effet {n}</th>
                 ))}
                 <th className="py-2 px-1 font-normal text-center text-[#8888AA] min-w-28">Synergie</th>
-                <th className="py-2 px-2 font-normal text-right text-[#8888AA]">Actions</th>
+                <th className="py-2 px-2 font-normal text-center text-[#8888AA]">Actions</th>
               </tr>
             </thead>
             <tbody>
               {visible.map(s => (
-                <tr key={s.id} className="border-b border-[#2D2D4E]/40 hover:bg-[#2D2D4E]/20 align-top">
-                  <td className="py-2 px-2 font-medium text-white">{s.name}</td>
+                <tr key={s.id} className="border-b border-[#3D3D60]/40 hover:bg-[#3D3D60]/20 align-top">
+                  <td className="py-2 px-2 font-medium text-white text-center">{s.name}</td>
                   <td className="py-2 px-2 text-center">
                     {s.rang ? <StarBadge stars={Math.min(s.rang, 6) as 1|2|3|4|5|6} /> : <span className="text-[#555]">—</span>}
                   </td>
@@ -220,7 +217,7 @@ export default function Supports() {
                       <span className={`badge border text-xs ${
                         s.restriction === 'Héros'   ? 'bg-blue-900/40 text-blue-300 border-blue-700' :
                         s.restriction === 'Vilains' ? 'bg-red-900/40  text-red-300  border-red-700'  :
-                                                      'bg-[#2D2D4E]   text-[#8888AA] border-[#444]'
+                                                      'bg-[#3D3D60]   text-[#8888AA] border-[#555]'
                       }`}>{s.restriction}</span>
                     ) : <span className="text-[#555]">—</span>}
                   </td>
@@ -230,25 +227,25 @@ export default function Supports() {
                     return (
                       <td key={n} className="py-2 px-1 text-center">
                         {cat || detail ? (
-                          <div className="space-y-1">
-                            {cat    && <span className={`badge border text-xs block ${catColor(cat)}`} title={cat}>{cat}</span>}
-                            {detail && <span className="text-[#AAAAAA] block leading-tight truncate max-w-24" title={detail}>{detail}</span>}
+                          <div className="space-y-1 flex flex-col items-center">
+                            {cat    && <span className={`badge border text-xs ${catColor(cat)}`} title={cat}>{cat}</span>}
+                            {detail && <span className="text-[#AAAAAA] leading-tight truncate max-w-24" title={detail}>{detail}</span>}
                           </div>
-                        ) : <span className="text-[#333]">—</span>}
+                        ) : <span className="text-[#444]">—</span>}
                       </td>
                     )
                   })}
                   <td className="py-2 px-1 text-center">
                     {(s.synergy_restriction || s.synergy_category || s.synergy_detail) ? (
-                      <div className="space-y-1">
-                        {s.synergy_restriction && <span className="badge border bg-marvel-red/20 text-red-300 border-red-800 block text-xs truncate max-w-28" title={s.synergy_restriction}>{s.synergy_restriction}</span>}
-                        {s.synergy_category    && <span className={`badge border text-xs block ${catColor(s.synergy_category)}`}>{s.synergy_category}</span>}
-                        {s.synergy_detail      && <span className="text-[#AAAAAA] block leading-tight truncate max-w-28" title={s.synergy_detail}>{s.synergy_detail}</span>}
+                      <div className="space-y-1 flex flex-col items-center">
+                        {s.synergy_restriction && <span className="badge border bg-marvel-red/20 text-red-300 border-red-800 text-xs truncate max-w-28" title={s.synergy_restriction}>{s.synergy_restriction}</span>}
+                        {s.synergy_category    && <span className={`badge border text-xs ${catColor(s.synergy_category)}`}>{s.synergy_category}</span>}
+                        {s.synergy_detail      && <span className="text-[#AAAAAA] leading-tight truncate max-w-28" title={s.synergy_detail}>{s.synergy_detail}</span>}
                       </div>
-                    ) : <span className="text-[#333]">—</span>}
+                    ) : <span className="text-[#444]">—</span>}
                   </td>
-                  <td className="py-2 px-2 text-right">
-                    <div className="flex justify-end gap-2">
+                  <td className="py-2 px-2 text-center">
+                    <div className="flex justify-center gap-2">
                       <button onClick={() => openEdit(s)} className="text-[#8888AA] hover:text-white"><Pencil size={13} /></button>
                       <button onClick={() => remove(s.id)} className="text-[#8888AA] hover:text-red-400"><Trash2 size={13} /></button>
                     </div>
@@ -261,7 +258,6 @@ export default function Supports() {
         </div>
       )}
 
-      {/* Modal */}
       {modal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-2xl my-4">
@@ -310,7 +306,7 @@ export default function Supports() {
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Effets</p>
                 <div className="space-y-2">
                   {EFFECTS.map(n => (
-                    <div key={n} className="bg-[#0D0D0D] rounded-lg p-3 grid grid-cols-2 gap-2">
+                    <div key={n} className="bg-[#1C1C2E] rounded-lg p-3 grid grid-cols-2 gap-2">
                       <div>
                         <label className="text-xs text-[#8888AA] mb-1 block">Effet {n} — Catégorie</label>
                         <CategorySelect value={form[`effect_${n}_category`]} onChange={v => setEffect(n, 'category', v)} allCategories={allCategories} />
@@ -326,7 +322,7 @@ export default function Supports() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Synergie</p>
-                <div className="bg-[#0D0D0D] rounded-lg p-3 space-y-2">
+                <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
                   <div>
                     <label className="text-xs text-[#8888AA] mb-1 block">Avec (personnage / tag)</label>
                     <input className="input text-sm" value={form.synergy_restriction ?? ''}

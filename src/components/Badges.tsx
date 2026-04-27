@@ -21,7 +21,7 @@ export const STATUS_CONFIG: Record<CharacterStatus, { label: string; className: 
   max_champ: { label: 'Max Champ', className: 'bg-purple-900/60 text-purple-300 border-purple-700' },
   champ:     { label: 'Champ',     className: 'bg-orange-900/60 text-orange-300 border-orange-700' },
   rostered:  { label: 'Roster',    className: 'bg-green-900/60  text-green-300  border-green-700'  },
-  not_owned: { label: 'Non Possédé', className: 'bg-[#1A1A2E]  text-[#8888AA]  border-[#2D2D4E]'  },
+  not_owned: { label: 'Non Possédé', className: 'bg-[#252540]  text-[#8888AA]  border-[#3D3D60]'  },
 }
 
 export function StatusBadge({ status }: { status: CharacterStatus | null }) {

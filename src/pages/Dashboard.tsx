@@ -4,22 +4,15 @@ import { Character, RosterSummary, Stars } from '../types'
 import { StarBadge } from '../components/Badges'
 
 const STAR_TIERS: Stars[] = [6, 5, 4, 3, 2, 1]
-
 const STATUS_COLS = ['max_champ', 'champ', 'rostered', 'not_owned'] as const
 type StatusCol = typeof STATUS_COLS[number]
 
 const STATUS_LABELS: Record<StatusCol, string> = {
-  max_champ: 'Max Champ',
-  champ:     'Champ',
-  rostered:  'Roster',
-  not_owned: 'Non Possédé',
+  max_champ: 'Max Champ', champ: 'Champ', rostered: 'Roster', not_owned: 'Non Possédé',
 }
-
 const STATUS_COLORS: Record<StatusCol, string> = {
-  max_champ: 'text-purple-400',
-  champ:     'text-orange-400',
-  rostered:  'text-green-400',
-  not_owned: 'text-gray-400',
+  max_champ: 'text-purple-400', champ: 'text-orange-400',
+  rostered: 'text-green-400', not_owned: 'text-gray-400',
 }
 
 export default function Dashboard() {
@@ -29,27 +22,20 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from('characters')
-        .select('stars, status, ascended')
-
+      const { data } = await supabase.from('characters').select('stars, status, ascended')
       if (data) {
-        const rows: RosterSummary[] = STAR_TIERS.map(s => ({
+        setSummary(STAR_TIERS.map(s => ({
           stars:     s,
           max_champ: data.filter(c => c.stars === s && c.status === 'max_champ').length,
           champ:     data.filter(c => c.stars === s && c.status === 'champ').length,
           rostered:  data.filter(c => c.stars === s && c.status === 'rostered').length,
           not_owned: data.filter(c => c.stars === s && c.status === 'not_owned').length,
           ascended:  data.filter(c => c.stars === s && c.ascended).length,
-        }))
-        setSummary(rows)
+        })))
       }
-
-      const { data: rec } = await supabase
-        .from('characters').select('*')
+      const { data: rec } = await supabase.from('characters').select('*')
         .order('updated_at', { ascending: false }).limit(5)
       if (rec) setRecent(rec)
-
       setLoading(false)
     }
     load()
@@ -85,8 +71,8 @@ export default function Dashboard() {
         <h2 className="font-marvel text-xl text-marvel-gold mb-4">Suivi Roster</h2>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#2D2D4E]">
-              <th className="text-left py-2 text-[#8888AA] font-normal">Tier</th>
+            <tr className="border-b border-[#3D3D60]">
+              <th className="text-center py-2 text-[#8888AA] font-normal">Tier</th>
               {STATUS_COLS.map(s => (
                 <th key={s} className={`text-center py-2 font-normal ${STATUS_COLORS[s]}`}>
                   {STATUS_LABELS[s]}
@@ -100,8 +86,8 @@ export default function Dashboard() {
             {summary.map(row => {
               const rowTotal = row.max_champ + row.champ + row.rostered
               return (
-                <tr key={row.stars} className="border-b border-[#2D2D4E]/50 hover:bg-[#2D2D4E]/20">
-                  <td className="py-2.5"><StarBadge stars={row.stars} /></td>
+                <tr key={row.stars} className="border-b border-[#3D3D60]/50 hover:bg-[#3D3D60]/20">
+                  <td className="py-2.5 text-center"><StarBadge stars={row.stars} /></td>
                   {STATUS_COLS.map(s => (
                     <td key={s} className="text-center py-2.5">
                       {row[s] > 0
@@ -118,9 +104,8 @@ export default function Dashboard() {
                 </tr>
               )
             })}
-            {/* Totals row */}
-            <tr className="border-t-2 border-[#2D2D4E] font-semibold">
-              <td className="py-2.5 text-[#8888AA]">Total</td>
+            <tr className="border-t-2 border-[#3D3D60] font-semibold">
+              <td className="py-2.5 text-center text-[#8888AA]">Total</td>
               {STATUS_COLS.map(s => (
                 <td key={s} className={`text-center py-2.5 ${STATUS_COLORS[s]}`}>
                   {summary.reduce((acc, r) => acc + r[s], 0)}
