@@ -46,11 +46,11 @@ function InlineLevelCell({ id, level, onSave }: {
   if (editing) return (
     <input ref={inputRef} type="number" value={val}
       onChange={e => setVal(e.target.value)} onBlur={commit} onKeyDown={handleKey}
-      className="w-16 bg-[#383860] border border-marvel-red rounded px-1 py-0.5 text-center text-white text-xs outline-none" />
+      className="w-16 bg-[#1C1C2E] border border-marvel-red rounded px-1 py-0.5 text-center text-white text-xs outline-none" />
   )
   return (
     <button onClick={startEdit} title="Cliquer pour modifier le niveau"
-      className="text-[#C8C8E0] hover:text-white hover:bg-[#6A6A95] rounded px-2 py-0.5 transition-all min-w-8 text-center">
+      className="text-[#C8C8E0] hover:text-white hover:bg-[#3D3D60] rounded px-2 py-0.5 transition-all min-w-8 text-center">
       {level ?? '—'}
     </button>
   )
@@ -197,7 +197,7 @@ export default function Characters() {
 
       <div className="flex items-center gap-2 text-xs text-[#C8C8E0]">
         <span>Trier par :</span>
-        <div className="flex gap-3 bg-[#363660] px-3 py-1.5 rounded-lg">
+        <div className="flex gap-3 bg-[#1E1E38] px-3 py-1.5 rounded-lg">
           {(['base_name', 'stars', 'level'] as SortField[]).map(f => (
             <SortBtn key={f} field={f} current={sortField} dir={sortDir} onClick={() => toggleSort(f)} />
           ))}
@@ -209,7 +209,7 @@ export default function Characters() {
         <div className="card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#6A6A95] text-[#C8C8E0]">
+              <tr className="border-b border-[#3D3D60] text-[#C8C8E0]">
                 <th className="text-center py-2 font-normal">
                   <button onClick={() => toggleSort('base_name')} className="flex items-center gap-1 mx-auto hover:text-white transition-colors">
                     Personnage {sortField === 'base_name' ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
@@ -233,10 +233,10 @@ export default function Characters() {
             </thead>
             <tbody>
               {filtered.map(c => (
-                <tr key={c.id} className="border-b border-[#6A6A95]/40 hover:bg-[#6A6A95]/20">
+                <tr key={c.id} className="border-b border-[#3D3D60]/40 hover:bg-[#3D3D60]/20">
                   <td className="py-2 text-center font-medium">{c.base_name || parseBaseName(c.name).base}</td>
                   <td className="py-2 text-center text-xs text-[#C8C8E0]">
-                    {c.version && <span className="bg-[#6A6A95] px-1.5 py-0.5 rounded">{c.version}</span>}
+                    {c.version && <span className="bg-[#3D3D60] px-1.5 py-0.5 rounded">{c.version}</span>}
                   </td>
                   <td className="py-2 text-center"><StarBadge stars={c.stars as Stars} /></td>
                   <td className="py-2 text-center">
@@ -270,7 +270,7 @@ export default function Characters() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {versions.map(c => (
-                  <div key={c.id} className="flex items-center gap-2 bg-[#383860] rounded-lg px-3 py-2 group">
+                  <div key={c.id} className="flex items-center gap-2 bg-[#1C1C2E] rounded-lg px-3 py-2 group">
                     <StarBadge stars={c.stars as Stars} />
                     {c.version && <span className="text-xs text-[#C8C8E0]">{c.version}</span>}
                     <InlineLevelCell id={c.id} level={c.level} onSave={updateLevel} />
@@ -302,7 +302,7 @@ export default function Characters() {
                 <input className="input" value={form.name} onChange={e => handleNameChange(e.target.value)} placeholder="Personnage (Version)" />
               </div>
               {form.base_name && (
-                <div className="bg-[#383860] rounded-lg px-3 py-2 flex gap-4 text-xs">
+                <div className="bg-[#1C1C2E] rounded-lg px-3 py-2 flex gap-4 text-xs">
                   <span className="text-[#C8C8E0]">Base: <span className="text-white">{form.base_name}</span></span>
                   {form.version && <span className="text-[#C8C8E0]">Version: <span className="text-marvel-gold">{form.version}</span></span>}
                 </div>
@@ -331,7 +331,7 @@ export default function Characters() {
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Ascended</label>
                   <button type="button" onClick={() => setForm(f => ({ ...f, ascended: !f.ascended }))}
                     className={`w-full py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
-                      form.ascended ? 'bg-cyan-900/60 border-cyan-600 text-cyan-300' : 'bg-[#383860] border-[#6A6A95] text-[#C8C8E0] hover:border-cyan-600/50'
+                      form.ascended ? 'bg-cyan-900/60 border-cyan-600 text-cyan-300' : 'bg-[#1C1C2E] border-[#3D3D60] text-[#C8C8E0] hover:border-cyan-600/50'
                     }`}>
                     {form.ascended ? '⬆ Ascended' : '⬆ Non ascended'}
                   </button>

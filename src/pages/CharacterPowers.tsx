@@ -49,7 +49,7 @@ function CouleurBadge({ couleur }: { couleur: string | null }) {
 }
 
 function catColor(cat: string | null): string {
-  if (!cat) return 'bg-[#6A6A95] text-[#C8C8E0] border-[#444]'
+  if (!cat) return 'bg-[#3D3D60] text-[#C8C8E0] border-[#444]'
   if (cat.includes('Gain MP'))       return 'bg-blue-900/50   text-blue-300   border-blue-700'
   if (cat.includes('Dégâts'))        return 'bg-red-900/50    text-red-300    border-red-700'
   if (cat.includes('Création'))      return 'bg-green-900/50  text-green-300  border-green-700'
@@ -59,7 +59,7 @@ function catColor(cat: string | null): string {
   if (cat.includes('Gemmes Spéc'))   return 'bg-purple-900/50 text-purple-300 border-purple-700'
   if (cat.includes('Santé'))         return 'bg-teal-900/50   text-teal-300   border-teal-700'
   if (cat.includes('Paralysie'))     return 'bg-pink-900/50   text-pink-300   border-pink-700'
-  return 'bg-[#6A6A95] text-[#C8C8E0] border-[#444]'
+  return 'bg-[#3D3D60] text-[#C8C8E0] border-[#444]'
 }
 
 function EffectBadges({ power }: { power: CharacterPower }) {
@@ -125,11 +125,11 @@ function CharacterSearch({ value, onChange, characters }: {
         onFocus={() => { setQuery(''); setOpen(true) }}
         onBlur={() => setTimeout(() => setOpen(false), 150)} />
       {open && filtered.length > 0 && (
-        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#424270] border border-[#6A6A95] rounded-lg shadow-xl max-h-52 overflow-y-auto">
+        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#252540] border border-[#3D3D60] rounded-lg shadow-xl max-h-52 overflow-y-auto">
           {filtered.map(c => (
             <button key={c.id} type="button"
               onMouseDown={() => { onChange(c.id); setLabel(c.name); setOpen(false) }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-[#6A6A95] flex items-center gap-2">
+              className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60] flex items-center gap-2">
               <StarBadge stars={c.stars as Stars} />
               <span className="text-white">{c.name}</span>
             </button>
@@ -304,7 +304,7 @@ export default function CharacterPowers() {
           <option value="">Tous les effets</option>
           {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <div className="flex gap-1 bg-[#363660] p-1 rounded-lg">
+        <div className="flex gap-1 bg-[#1E1E38] p-1 rounded-lg">
           <button onClick={() => setViewMode('byCharacter')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${viewMode === 'byCharacter' ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'}`}>
             <LayoutGrid size={13} /> Par perso
@@ -350,7 +350,7 @@ export default function CharacterPowers() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button onClick={e => { e.stopPropagation(); openAdd(charId) }}
-                      className="text-xs bg-[#6A6A95] hover:bg-marvel-red/40 text-[#C8C8E0] hover:text-white px-2 py-1 rounded transition-all">
+                      className="text-xs bg-[#3D3D60] hover:bg-marvel-red/40 text-[#C8C8E0] hover:text-white px-2 py-1 rounded transition-all">
                       + Pouvoir
                     </button>
                     {isOpen ? <ChevronUp size={14} className="text-[#C8C8E0]" /> : <ChevronDown size={14} className="text-[#C8C8E0]" />}
@@ -358,16 +358,16 @@ export default function CharacterPowers() {
                 </button>
 
                 {isOpen && (
-                  <div className="mt-4 pt-4 border-t border-[#6A6A95] space-y-4">
+                  <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
                     {COULEURS.filter(col => byCouleur[col]).map(col => (
                       <div key={col}>
-                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border mb-2 ${COULEUR_BORDER[col as Couleur]} bg-[#383860]`}>
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border mb-2 ${COULEUR_BORDER[col as Couleur]} bg-[#1C1C2E]`}>
                           <CouleurBadge couleur={col} />
                           <span className="text-xs text-[#C8C8E0]">{byCouleur[col].length} pouvoir{byCouleur[col].length !== 1 ? 's' : ''}</span>
                         </div>
                         <div className="space-y-2 pl-2">
                           {byCouleur[col].sort((a, b) => (a.cout ?? 0) - (b.cout ?? 0)).map(p => (
-                            <div key={p.id} className="bg-[#383860] rounded-lg p-3 flex items-start gap-3 group">
+                            <div key={p.id} className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
                               <div className="shrink-0 text-center min-w-10">
                                 {p.cout !== null && <span className="text-marvel-gold font-bold text-sm">{p.cout}</span>}
                                 <p className="text-xs text-[#555]">MP</p>
@@ -397,7 +397,7 @@ export default function CharacterPowers() {
         <div className="card overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-[#6A6A95]">
+              <tr className="border-b border-[#3D3D60]">
                 <Th col="character"  label="Personnage" />
                 <Th col="power_name" label="Nom du pouvoir" />
                 <Th col="couleur"    label="Couleur" />
@@ -408,7 +408,7 @@ export default function CharacterPowers() {
             </thead>
             <tbody>
               {sortedFiltered.map(p => (
-                <tr key={p.id} className="border-b border-[#6A6A95]/40 hover:bg-[#6A6A95]/20 align-top">
+                <tr key={p.id} className="border-b border-[#3D3D60]/40 hover:bg-[#3D3D60]/20 align-top">
                   <td className="py-2 px-2 font-medium text-white">{cmap[p.character_id]?.name ?? '—'}</td>
                   <td className="py-2 px-2 text-[#E8E8F8]">{p.power_name ?? '—'}</td>
                   <td className="py-2 px-2 text-center"><CouleurBadge couleur={p.couleur} /></td>
@@ -465,7 +465,7 @@ export default function CharacterPowers() {
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Effets</p>
                 <div className="space-y-2">
                   {EFFECTS.map(n => (
-                    <div key={n} className="bg-[#383860] rounded-lg p-3 grid grid-cols-2 gap-2">
+                    <div key={n} className="bg-[#1C1C2E] rounded-lg p-3 grid grid-cols-2 gap-2">
                       <div>
                         <label className="text-xs text-[#C8C8E0] mb-1 block">Effet {n} — Catégorie</label>
                         <CategorySelect value={form[`effect_${n}_category`]} onChange={v => setEffect(n, 'category', v)} allCategories={allCategories} />

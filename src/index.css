@@ -4,28 +4,28 @@
 
 @layer base {
   body {
-    @apply bg-[#383860] text-white font-sans;
+    @apply bg-[#1C1C2E] text-white font-sans;
     background-image:
       radial-gradient(ellipse at 20% 50%, rgba(230,36,41,0.05) 0%, transparent 60%),
       radial-gradient(ellipse at 80% 20%, rgba(192,132,252,0.05) 0%, transparent 60%);
   }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { @apply bg-[#424270]; }
-  ::-webkit-scrollbar-thumb { @apply bg-[#6A6A95] rounded-full; }
+  ::-webkit-scrollbar-track { @apply bg-[#252540]; }
+  ::-webkit-scrollbar-thumb { @apply bg-[#3D3D60] rounded-full; }
 }
 
 @layer components {
   .card {
-    @apply bg-[#424270] border border-[#6A6A95] rounded-xl p-4;
+    @apply bg-[#252540] border border-[#3D3D60] rounded-xl p-4;
   }
   .btn-primary {
     @apply bg-marvel-red hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors;
   }
   .btn-secondary {
-    @apply bg-[#6A6A95] hover:bg-[#4D4D70] text-white px-4 py-2 rounded-lg transition-colors;
+    @apply bg-[#3D3D60] hover:bg-[#4D4D70] text-white px-4 py-2 rounded-lg transition-colors;
   }
   .input {
-    @apply bg-[#383860] border border-[#6A6A95] rounded-lg px-3 py-2 text-white
+    @apply bg-[#1C1C2E] border border-[#3D3D60] rounded-lg px-3 py-2 text-white
            placeholder-[#A0A0C0] focus:outline-none focus:border-marvel-red transition-colors w-full;
   }
   .badge {
