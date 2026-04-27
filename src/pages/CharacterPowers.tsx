@@ -25,19 +25,11 @@ const COULEUR_BORDER: Record<Couleur, string> = {
 }
 
 const DEFAULT_CATEGORIES: string[] = []
-const DEFAULT_TRIGGERS: string[] = []
+const DEFAULT_TRIGGERS: string[]   = []
 
-const EFFECTS = [1, 2, 3, 4, 5] as const
-type EffectNum = typeof EFFECTS[number]
-type EffectField = 'category' | 'trigger' | 'detail'
-
-const EMPTY_POWER: Omit<CharacterPower, 'id' | 'created_at' | 'updated_at'> = {
+const EMPTY: Omit<CharacterPower, 'id' | 'created_at' | 'updated_at'> = {
   character_id: '', power_name: null, couleur: null, cout: null,
-  effect_1_category: null, effect_1_trigger: null, effect_1_detail: null,
-  effect_2_category: null, effect_2_trigger: null, effect_2_detail: null,
-  effect_3_category: null, effect_3_trigger: null, effect_3_detail: null,
-  effect_4_category: null, effect_4_trigger: null, effect_4_detail: null,
-  effect_5_category: null, effect_5_trigger: null, effect_5_detail: null,
+  effect_category: null, effect_detail: null, effect_trigger: null,
 }
 
 type ViewMode = 'table' | 'byCharacter'
@@ -47,8 +39,7 @@ type SortDir  = 'asc' | 'desc'
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function CouleurBadge({ couleur }: { couleur: string | null }) {
   if (!couleur) return null
-  const style = COULEUR_STYLES[couleur as Couleur] ?? 'bg-gray-700 text-white'
-  return <span className={`badge ${style} font-semibold`}>{couleur}</span>
+  return <span className={`badge font-semibold ${COULEUR_STYLES[couleur as Couleur] ?? 'bg-gray-700 text-white'}`}>{couleur}</span>
 }
 
 function catColor(cat: string | null): string {
@@ -65,39 +56,20 @@ function catColor(cat: string | null): string {
   return 'bg-[#1E1E38] text-[#C8C8E0] border-[#3D3D60]'
 }
 
-// Effect display: category (badge) → detail (text) → trigger (italic)
-function EffectCell({ cat, detail, trigger }: { cat: string | null; detail: string | null; trigger: string | null }) {
+// Display: category badge → detail text → trigger italic
+function EffectDisplay({ cat, detail, trigger, center = false }: {
+  cat: string | null; detail: string | null; trigger: string | null; center?: boolean
+}) {
   if (!cat && !detail && !trigger) return <span className="text-[#444]">—</span>
   return (
-    <div className="space-y-0.5 flex flex-col items-center">
+    <div className={`space-y-0.5 ${center ? 'flex flex-col items-center' : ''}`}>
       {cat     && <span className={`badge border text-xs ${catColor(cat)}`} title={cat}>{cat}</span>}
-      {detail  && <span className="text-[#D8D8EE] leading-tight truncate max-w-28 text-xs" title={detail}>{detail}</span>}
-      {trigger && <span className="text-[#D8D8EE] leading-tight truncate max-w-28 text-xs italic" title={trigger}>{trigger}</span>}
+      {detail  && <span className="text-[#D8D8EE] text-xs leading-tight" title={detail}>{detail}</span>}
+      {trigger && <span className="text-[#D8D8EE] text-xs italic leading-tight" title={trigger}>{trigger}</span>}
     </div>
   )
 }
 
-function EffectBadges({ power }: { power: CharacterPower }) {
-  return (
-    <div className="flex flex-wrap gap-1">
-      {EFFECTS.map(n => {
-        const cat     = power[`effect_${n}_category`] as string | null
-        const detail  = power[`effect_${n}_detail`]   as string | null
-        const trigger = power[`effect_${n}_trigger`]  as string | null
-        if (!cat && !detail && !trigger) return null
-        return (
-          <div key={n} className="space-y-0.5">
-            {cat     && <span className={`badge border text-xs block ${catColor(cat)}`}>{cat}</span>}
-            {detail  && <span className="text-[#D8D8EE] text-xs block">{detail}</span>}
-            {trigger && <span className="text-[#D8D8EE] text-xs italic block">{trigger}</span>}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// DynamicSelect — same as Supports
 function DynamicSelect({ value, onChange, options, placeholder }: {
   value: string | null; onChange: (v: string | null) => void; options: string[]; placeholder: string
 }) {
@@ -137,7 +109,7 @@ export default function CharacterPowers() {
   const [sortDir, setSortDir]       = useState<SortDir>('asc')
   const [expanded, setExpanded]     = useState<string | null>(null)
   const [modal, setModal]           = useState<'add' | 'edit' | null>(null)
-  const [form, setForm]             = useState<typeof EMPTY_POWER>(EMPTY_POWER)
+  const [form, setForm]             = useState<typeof EMPTY>(EMPTY)
   const [editId, setEditId]         = useState<string | null>(null)
   const [saving, setSaving]         = useState(false)
 
@@ -154,38 +126,24 @@ export default function CharacterPowers() {
 
   const allCategories = [...new Set([
     ...DEFAULT_CATEGORIES,
-    ...powers.flatMap(p => [
-      p.effect_1_category, p.effect_2_category, p.effect_3_category,
-      p.effect_4_category, p.effect_5_category,
-    ].filter(Boolean) as string[]),
+    ...powers.map(p => p.effect_category).filter(Boolean) as string[],
   ])].sort()
 
   const allTriggers = [...new Set([
     ...DEFAULT_TRIGGERS,
-    ...powers.flatMap(p => [
-      p.effect_1_trigger, p.effect_2_trigger, p.effect_3_trigger,
-      p.effect_4_trigger, p.effect_5_trigger,
-    ].filter(Boolean) as string[]),
+    ...powers.map(p => p.effect_trigger).filter(Boolean) as string[],
   ])].sort()
 
-  const cmap = useCallback(() => Object.fromEntries(characters.map(c => [c.id, c])), [characters])
+  const cm = useCallback(() => Object.fromEntries(characters.map(c => [c.id, c])), [characters])
 
   const filtered = powers.filter(p => {
-    const char = cmap()[p.character_id]
-    const name = char?.name?.toLowerCase() ?? ''
+    const cmap = cm()
+    const name = cmap[p.character_id]?.name?.toLowerCase() ?? ''
     const matchSearch = !search || [
-      name, p.power_name, p.couleur,
-      p.effect_1_category, p.effect_1_trigger, p.effect_1_detail,
-      p.effect_2_category, p.effect_2_trigger, p.effect_2_detail,
-      p.effect_3_category, p.effect_3_trigger, p.effect_3_detail,
-      p.effect_4_category, p.effect_4_trigger, p.effect_4_detail,
-      p.effect_5_category, p.effect_5_trigger, p.effect_5_detail,
+      name, p.power_name, p.couleur, p.effect_category, p.effect_detail, p.effect_trigger,
     ].some(v => v?.toLowerCase().includes(search.toLowerCase()))
     const matchCouleur  = !filterCouleur  || p.couleur === filterCouleur
-    const matchCategory = !filterCategory || [
-      p.effect_1_category, p.effect_2_category, p.effect_3_category,
-      p.effect_4_category, p.effect_5_category,
-    ].some(c => c === filterCategory)
+    const matchCategory = !filterCategory || p.effect_category === filterCategory
     return matchSearch && matchCouleur && matchCategory
   })
 
@@ -194,10 +152,10 @@ export default function CharacterPowers() {
     else { setSortCol(col); setSortDir('asc') }
   }
 
-  const cm = cmap()
+  const cmap = cm()
   const sortedFiltered = [...filtered].sort((a, b) => {
     let va: string | number = '', vb: string | number = ''
-    if (sortCol === 'character') { va = cm[a.character_id]?.name?.toLowerCase() ?? ''; vb = cm[b.character_id]?.name?.toLowerCase() ?? '' }
+    if      (sortCol === 'character')  { va = cmap[a.character_id]?.name?.toLowerCase() ?? ''; vb = cmap[b.character_id]?.name?.toLowerCase() ?? '' }
     else if (sortCol === 'power_name') { va = a.power_name?.toLowerCase() ?? ''; vb = b.power_name?.toLowerCase() ?? '' }
     else if (sortCol === 'couleur')    { va = a.couleur?.toLowerCase() ?? ''; vb = b.couleur?.toLowerCase() ?? '' }
     else if (sortCol === 'cout')       { va = a.cout ?? -1; vb = b.cout ?? -1 }
@@ -208,16 +166,17 @@ export default function CharacterPowers() {
     return 0
   })
 
+  // Group by character, alphabetical
   const grouped = filtered.reduce<Record<string, CharacterPower[]>>((acc, p) => {
     acc[p.character_id] = acc[p.character_id] ?? []; acc[p.character_id].push(p); return acc
   }, {})
   const groupedEntries = Object.entries(grouped).sort((a, b) => {
-    const na = cm[a[0]]?.name?.toLowerCase() ?? '', nb = cm[b[0]]?.name?.toLowerCase() ?? ''
+    const na = cmap[a[0]]?.name?.toLowerCase() ?? '', nb = cmap[b[0]]?.name?.toLowerCase() ?? ''
     return na < nb ? -1 : na > nb ? 1 : 0
   })
 
   function openAdd(characterId?: string) {
-    setForm({ ...EMPTY_POWER, character_id: characterId ?? '' })
+    setForm({ ...EMPTY, character_id: characterId ?? '' })
     setEditId(null); setModal('add')
   }
   function openEdit(p: CharacterPower) {
@@ -225,10 +184,6 @@ export default function CharacterPowers() {
     setForm(rest); setEditId(p.id); setModal('edit')
   }
   function closeModal() { setModal(null); setEditId(null) }
-
-  function setEffect(n: EffectNum, field: EffectField, val: string | null) {
-    setForm(f => ({ ...f, [`effect_${n}_${field}`]: val }))
-  }
 
   async function save() {
     if (!form.character_id) return
@@ -265,6 +220,7 @@ export default function CharacterPowers() {
         <button onClick={() => openAdd()} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
       </div>
 
+      {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
@@ -294,9 +250,10 @@ export default function CharacterPowers() {
       <p className="text-sm text-[#C8C8E0]">{filtered.length} pouvoir{filtered.length !== 1 ? 's' : ''}</p>
 
       {loading ? <Spinner /> : viewMode === 'byCharacter' ? (
+        /* ── BY CHARACTER ── */
         <div className="space-y-2">
           {groupedEntries.map(([charId, charPowers]) => {
-            const char   = cm[charId]
+            const char   = cmap[charId]
             const isOpen = expanded === charId
             const byCouleur = charPowers.reduce<Record<string, CharacterPower[]>>((acc, p) => {
               const key = p.couleur ?? 'Inconnu'; acc[key] = acc[key] ?? []; acc[key].push(p); return acc
@@ -333,7 +290,6 @@ export default function CharacterPowers() {
                       <div key={col}>
                         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border mb-2 ${COULEUR_BORDER[col as Couleur]} bg-[#1C1C2E]`}>
                           <CouleurBadge couleur={col} />
-                          <span className="text-xs text-[#C8C8E0]">{byCouleur[col].length} pouvoir{byCouleur[col].length !== 1 ? 's' : ''}</span>
                         </div>
                         <div className="space-y-2 pl-2">
                           {byCouleur[col].sort((a, b) => (a.cout ?? 0) - (b.cout ?? 0)).map(p => (
@@ -344,7 +300,7 @@ export default function CharacterPowers() {
                               </div>
                               <div className="flex-1 space-y-1">
                                 {p.power_name && <p className="text-sm font-semibold text-white">{p.power_name}</p>}
-                                <EffectBadges power={p} />
+                                <EffectDisplay cat={p.effect_category} detail={p.effect_detail} trigger={p.effect_trigger} />
                               </div>
                               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                 <button onClick={() => openEdit(p)} className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
@@ -363,7 +319,7 @@ export default function CharacterPowers() {
           {groupedEntries.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">Aucun pouvoir trouvé</div>}
         </div>
       ) : (
-        /* ── TABLE VIEW — all centered ── */
+        /* ── TABLE VIEW ── */
         <div className="card overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -372,28 +328,20 @@ export default function CharacterPowers() {
                 <Th col="power_name" label="Nom du pouvoir" />
                 <Th col="couleur"    label="Couleur" />
                 <Th col="cout"       label="Coût MP" />
-                {EFFECTS.map(n => (
-                  <th key={n} className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Effet {n}</th>
-                ))}
+                <th className="py-2 px-2 font-normal text-center text-[#C8C8E0] min-w-32">Effet</th>
                 <th className="py-2 px-2 font-normal text-center text-[#C8C8E0]">Actions</th>
               </tr>
             </thead>
             <tbody>
               {sortedFiltered.map(p => (
-                <tr key={p.id} className="border-b border-[#3D3D60]/40 hover:bg-[#3D3D60]/20 align-top">
-                  <td className="py-2 px-2 font-medium text-white text-center">{cm[p.character_id]?.name ?? '—'}</td>
+                <tr key={p.id} className="border-b border-[#3D3D60]/40 hover:bg-[#3D3D60]/20 align-middle">
+                  <td className="py-2 px-2 font-medium text-white text-center">{cmap[p.character_id]?.name ?? '—'}</td>
                   <td className="py-2 px-2 text-[#D8D8EE] text-center">{p.power_name ?? '—'}</td>
                   <td className="py-2 px-2 text-center"><CouleurBadge couleur={p.couleur} /></td>
                   <td className="py-2 px-2 text-center text-marvel-gold font-bold">{p.cout ?? '—'}</td>
-                  {EFFECTS.map(n => (
-                    <td key={n} className="py-2 px-1 text-center">
-                      <EffectCell
-                        cat={p[`effect_${n}_category`]}
-                        detail={p[`effect_${n}_detail`]}
-                        trigger={p[`effect_${n}_trigger`]}
-                      />
-                    </td>
-                  ))}
+                  <td className="py-2 px-2 text-center">
+                    <EffectDisplay cat={p.effect_category} detail={p.effect_detail} trigger={p.effect_trigger} center />
+                  </td>
                   <td className="py-2 px-2 text-center">
                     <div className="flex justify-center gap-2">
                       <button onClick={() => openEdit(p)} className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
@@ -411,68 +359,71 @@ export default function CharacterPowers() {
       {/* Modal */}
       {modal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="card w-full max-w-2xl my-4">
+          <div className="card w-full max-w-xl my-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouveau Pouvoir' : 'Modifier Pouvoir'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
+
+              {/* Character */}
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Personnage *</label>
-                <SearchDropdown value={form.character_id} onChange={id => setForm(f => ({ ...f, character_id: id ?? '' }))} options={charOptions} placeholder="Rechercher un personnage..." />
+                <SearchDropdown value={form.character_id} onChange={id => setForm(f => ({ ...f, character_id: id ?? '' }))}
+                  options={charOptions} placeholder="Rechercher un personnage..." />
               </div>
+
+              {/* Name + Color + Cost */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-1">
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Nom du pouvoir</label>
-                  <input className="input" value={form.power_name ?? ''} onChange={e => setForm(f => ({ ...f, power_name: e.target.value || null }))} placeholder="Ex: Assaut Cosmique" />
+                  <input className="input" value={form.power_name ?? ''}
+                    onChange={e => setForm(f => ({ ...f, power_name: e.target.value || null }))}
+                    placeholder="Ex: Assaut Cosmique" />
                 </div>
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Couleur</label>
-                  <select className="input" value={form.couleur ?? ''} onChange={e => setForm(f => ({ ...f, couleur: e.target.value || null }))}>
+                  <select className="input" value={form.couleur ?? ''}
+                    onChange={e => setForm(f => ({ ...f, couleur: e.target.value || null }))}>
                     <option value="">— Aucune —</option>
                     {COULEURS.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Coût MP</label>
-                  <input type="number" className="input" value={form.cout ?? ''} onChange={e => setForm(f => ({ ...f, cout: e.target.value ? Number(e.target.value) : null }))} />
+                  <input type="number" className="input" value={form.cout ?? ''}
+                    onChange={e => setForm(f => ({ ...f, cout: e.target.value ? Number(e.target.value) : null }))} />
                 </div>
               </div>
 
-              {/* Effects — category / detail / trigger */}
-              <div>
-                <p className="text-xs font-semibold text-marvel-gold mb-2">Effets</p>
-                <div className="space-y-2">
-                  {EFFECTS.map(n => (
-                    <div key={n} className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
-                      <p className="text-xs text-[#C8C8E0] font-medium">Effet {n}</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
-                          <label className="text-xs text-[#C8C8E0] mb-1 block">Catégorie</label>
-                          <DynamicSelect
-                            value={form[`effect_${n}_category`]}
-                            onChange={v => setEffect(n, 'category', v)}
-                            options={allCategories}
-                            placeholder="Catégorie"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-[#C8C8E0] mb-1 block">Détail</label>
-                          <input className="input text-sm" value={form[`effect_${n}_detail`] ?? ''}
-                            onChange={e => setEffect(n, 'detail', e.target.value || null)} placeholder="Description libre..." />
-                        </div>
-                        <div>
-                          <label className="text-xs text-[#C8C8E0] mb-1 block">Trigger</label>
-                          <DynamicSelect
-                            value={form[`effect_${n}_trigger`]}
-                            onChange={v => setEffect(n, 'trigger', v)}
-                            options={allTriggers}
-                            placeholder="Trigger"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              {/* Single effect: category / detail / trigger */}
+              <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-3">
+                <p className="text-xs font-semibold text-marvel-gold">Effet</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">Catégorie</label>
+                    <DynamicSelect
+                      value={form.effect_category}
+                      onChange={v => setForm(f => ({ ...f, effect_category: v }))}
+                      options={allCategories}
+                      placeholder="Catégorie"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">Détail</label>
+                    <input className="input text-sm" value={form.effect_detail ?? ''}
+                      onChange={e => setForm(f => ({ ...f, effect_detail: e.target.value || null }))}
+                      placeholder="Description libre..." />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">Trigger</label>
+                    <DynamicSelect
+                      value={form.effect_trigger}
+                      onChange={v => setForm(f => ({ ...f, effect_trigger: v }))}
+                      options={allTriggers}
+                      placeholder="Trigger"
+                    />
+                  </div>
                 </div>
               </div>
 

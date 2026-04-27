@@ -30,11 +30,9 @@ export interface CharacterPower {
   power_name: string | null
   couleur: string | null
   cout: number | null
-  effect_1_category: string | null; effect_1_trigger: string | null; effect_1_detail: string | null
-  effect_2_category: string | null; effect_2_trigger: string | null; effect_2_detail: string | null
-  effect_3_category: string | null; effect_3_trigger: string | null; effect_3_detail: string | null
-  effect_4_category: string | null; effect_4_trigger: string | null; effect_4_detail: string | null
-  effect_5_category: string | null; effect_5_trigger: string | null; effect_5_detail: string | null
+  effect_category: string | null
+  effect_detail: string | null
+  effect_trigger: string | null
   created_at: string
   updated_at: string
 }
