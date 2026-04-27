@@ -29,7 +29,7 @@ const EMPTY: Omit<Support, 'id' | 'created_at' | 'updated_at'> = {
 }
 
 function catColor(cat: string | null): string {
-  if (!cat) return 'bg-[#52527A] text-[#8888AA] border-[#555]'
+  if (!cat) return 'bg-[#6A6A95] text-[#8888AA] border-[#555]'
   if (cat.includes('Gain MP'))       return 'bg-blue-900/50   text-blue-300   border-blue-700'
   if (cat.includes('Dégâts'))        return 'bg-red-900/50    text-red-300    border-red-700'
   if (cat.includes('Création'))      return 'bg-green-900/50  text-green-300  border-green-700'
@@ -39,7 +39,7 @@ function catColor(cat: string | null): string {
   if (cat.includes('Gemmes Spéc'))   return 'bg-purple-900/50 text-purple-300 border-purple-700'
   if (cat.includes('Santé'))         return 'bg-teal-900/50   text-teal-300   border-teal-700'
   if (cat.includes('Paralysie'))     return 'bg-pink-900/50   text-pink-300   border-pink-700'
-  return 'bg-[#52527A] text-[#8888AA] border-[#555]'
+  return 'bg-[#6A6A95] text-[#8888AA] border-[#555]'
 }
 
 // Generic select with "add new" option — used for both category and trigger
@@ -212,7 +212,7 @@ export default function Supports() {
         <div className="card overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-[#52527A]">
+              <tr className="border-b border-[#6A6A95]">
                 <Th col="name"        label="Nom"    />
                 <Th col="rang"        label="★"      />
                 <Th col="niveau"      label="Niv."   />
@@ -226,7 +226,7 @@ export default function Supports() {
             </thead>
             <tbody>
               {visible.map(s => (
-                <tr key={s.id} className="border-b border-[#52527A]/40 hover:bg-[#52527A]/20 align-top">
+                <tr key={s.id} className="border-b border-[#6A6A95]/40 hover:bg-[#6A6A95]/20 align-top">
                   <td className="py-2 px-2 font-medium text-white text-center">{s.name}</td>
                   <td className="py-2 px-2 text-center">
                     {s.rang ? <StarBadge stars={Math.min(s.rang, 6) as 1|2|3|4|5|6} /> : <span className="text-[#555]">—</span>}
@@ -237,7 +237,7 @@ export default function Supports() {
                       <span className={`badge border text-xs ${
                         s.restriction === 'Héros'   ? 'bg-blue-900/40 text-blue-300 border-blue-700' :
                         s.restriction === 'Vilains' ? 'bg-red-900/40  text-red-300  border-red-700'  :
-                                                      'bg-[#52527A]   text-[#8888AA] border-[#555]'
+                                                      'bg-[#6A6A95]   text-[#8888AA] border-[#555]'
                       }`}>{s.restriction}</span>
                     ) : <span className="text-[#555]">—</span>}
                   </td>
@@ -251,7 +251,7 @@ export default function Supports() {
                           <div className="space-y-1 flex flex-col items-center">
                             {cat     && <span className={`badge border text-xs ${catColor(cat)}`} title={cat}>{cat}</span>}
                             {detail  && <span className="text-[#AAAAAA] leading-tight truncate max-w-24" title={detail}>{detail}</span>}
-                            {trigger && <span className="badge border text-xs bg-indigo-900/40 text-indigo-300 border-indigo-700" title={trigger}>{trigger}</span>}
+                            {trigger && <span className="text-[#AAAAAA] leading-tight truncate max-w-24 italic" title={trigger}>{trigger}</span>}
                           </div>
                         ) : <span className="text-[#444]">—</span>}
                       </td>
@@ -264,7 +264,7 @@ export default function Supports() {
                         {s.synergy_restriction && <span className="badge border bg-marvel-red/20 text-red-300 border-red-800 text-xs truncate max-w-28">{s.synergy_restriction}</span>}
                         {s.synergy_category    && <span className={`badge border text-xs ${catColor(s.synergy_category)}`}>{s.synergy_category}</span>}
                         {s.synergy_detail      && <span className="text-[#AAAAAA] leading-tight truncate max-w-28">{s.synergy_detail}</span>}
-                        {s.synergy_trigger     && <span className="badge border text-xs bg-indigo-900/40 text-indigo-300 border-indigo-700">{s.synergy_trigger}</span>}
+                        {s.synergy_trigger     && <span className="text-[#AAAAAA] leading-tight truncate max-w-28 italic">{s.synergy_trigger}</span>}
                       </div>
                     ) : <span className="text-[#444]">—</span>}
                   </td>
@@ -337,7 +337,7 @@ export default function Supports() {
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Effets</p>
                 <div className="space-y-2">
                   {EFFECTS.map(n => (
-                    <div key={n} className="bg-[#2A2A45] rounded-lg p-3 space-y-2">
+                    <div key={n} className="bg-[#383860] rounded-lg p-3 space-y-2">
                       <p className="text-xs text-[#8888AA] font-medium">Effet {n}</p>
                       <div className="grid grid-cols-3 gap-2">
                         <div>
@@ -374,7 +374,7 @@ export default function Supports() {
               {/* Synergy */}
               <div>
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Synergie</p>
-                <div className="bg-[#2A2A45] rounded-lg p-3 space-y-2">
+                <div className="bg-[#383860] rounded-lg p-3 space-y-2">
                   <div>
                     <label className="text-xs text-[#8888AA] mb-1 block">Avec (personnage / tag)</label>
                     <input className="input text-sm" value={form.synergy_restriction ?? ''}

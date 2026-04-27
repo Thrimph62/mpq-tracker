@@ -261,7 +261,7 @@ export default function Import() {
         className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
           dragging ? 'border-marvel-red bg-marvel-red/10'
           : file   ? 'border-green-600 bg-green-900/10'
-                   : 'border-[#52527A] hover:border-[#8888AA]'
+                   : 'border-[#6A6A95] hover:border-[#8888AA]'
         }`}
       >
         <input ref={inputRef} type="file" accept=".xlsx" className="hidden"
@@ -295,7 +295,7 @@ export default function Import() {
             <button
               key={s.key} type="button"
               onClick={() => setSelected(prev => ({ ...prev, [s.key]: !prev[s.key] }))}
-              className="flex items-center gap-3 w-full text-left p-2 rounded-lg hover:bg-[#52527A]/40 transition-colors"
+              className="flex items-center gap-3 w-full text-left p-2 rounded-lg hover:bg-[#6A6A95]/40 transition-colors"
             >
               <span className={`shrink-0 transition-colors ${selected[s.key] ? 'text-marvel-red' : 'text-[#555]'}`}>
                 {selected[s.key] ? <CheckSquare size={18} /> : <Square size={18} />}
@@ -328,7 +328,7 @@ export default function Import() {
           <h2 className="font-semibold text-white">Résultats</h2>
           {results.map((r, i) => (
             <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${
-              r.error ? 'bg-red-900/20 border border-red-800/40' : 'bg-[#2A2A45]'
+              r.error ? 'bg-red-900/20 border border-red-800/40' : 'bg-[#383860]'
             }`}>
               {r.error
                 ? <AlertCircle size={16} className="text-red-400 mt-0.5 shrink-0" />

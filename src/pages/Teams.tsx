@@ -107,7 +107,7 @@ export default function Teams() {
         <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
       </div>
 
-      <div className="flex gap-1 bg-[#28284A] p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-[#363660] p-1 rounded-lg w-fit">
         {(['active', 'to_test'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === t ? 'bg-marvel-red text-white' : 'text-[#8888AA] hover:text-white'}`}>
@@ -157,20 +157,20 @@ export default function Teams() {
               </div>
 
               {expanded === team.id && (
-                <div className="mt-4 space-y-4 border-t border-[#52527A] pt-4">
+                <div className="mt-4 space-y-4 border-t border-[#6A6A95] pt-4">
                   <div className="grid grid-cols-3 gap-3">
                     <TeamSlot character={team.left_character}  build={team.left_build}  support={team.left_support}  boost={team.left_boost}  />
                     <TeamSlot character={team.mid_character}   build={team.mid_build}   support={team.mid_support}   boost={team.mid_boost}   />
                     <TeamSlot character={team.right_character} build={team.right_build} support={team.right_support} boost={team.right_boost} />
                   </div>
                   {team.strategie && (
-                    <div className="bg-[#2A2A45] rounded-lg p-3">
+                    <div className="bg-[#383860] rounded-lg p-3">
                       <p className="text-xs text-marvel-gold font-semibold mb-1">Stratégie</p>
                       <p className="text-sm text-[#CCCCCC] whitespace-pre-line leading-relaxed">{team.strategie}</p>
                     </div>
                   )}
                   {team.note_additionnelle && (
-                    <div className="bg-[#2A2A45] rounded-lg p-3">
+                    <div className="bg-[#383860] rounded-lg p-3">
                       <p className="text-xs text-[#8888AA] font-semibold mb-1">Note</p>
                       <p className="text-sm text-[#CCCCCC] whitespace-pre-line">{team.note_additionnelle}</p>
                     </div>
@@ -206,7 +206,7 @@ export default function Teams() {
               </div>
 
               {(['left', 'mid', 'right'] as Pos[]).map(pos => (
-                <div key={pos} className="bg-[#2A2A45] rounded-lg p-3 space-y-2">
+                <div key={pos} className="bg-[#383860] rounded-lg p-3 space-y-2">
                   <p className="text-xs font-semibold text-marvel-gold uppercase">{POS_LABELS[pos]}</p>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
