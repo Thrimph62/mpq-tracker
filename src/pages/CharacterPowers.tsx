@@ -23,11 +23,7 @@ const COULEUR_BORDER: Record<Couleur, string> = {
   Jaune:  'border-yellow-600', Violet: 'border-purple-700',
 }
 
-const DEFAULT_CATEGORIES = [
-  'Gain MP', 'Dégâts Gemmes', 'Dégâts Pouvoirs', 'Dégâts Equipe Ennemie',
-  'Création Gemmes', 'Destruction Gemmes', 'Conversion Gemmes',
-  'Fortification Gemmes', 'Gemmes Spéciales', 'Santé', 'Paralysie', 'Passif', 'Autre',
-]
+const DEFAULT_CATEGORIES: string[] = []
 
 const EFFECTS = [1, 2, 3, 4, 5] as const
 type EffectNum = typeof EFFECTS[number]

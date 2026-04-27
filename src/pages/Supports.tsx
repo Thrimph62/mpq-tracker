@@ -7,11 +7,7 @@ import { Plus, Search, X, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from
 const EFFECTS = [1, 2, 3, 4, 5] as const
 type EffectNum = typeof EFFECTS[number]
 
-const DEFAULT_CATEGORIES = [
-  'Gain MP', 'Dégâts Gemmes', 'Dégâts Pouvoirs', 'Dégâts Equipe Ennemie',
-  'Création Gemmes', 'Destruction Gemmes', 'Conversion Gemmes',
-  'Fortification Gemmes', 'Gemmes Spéciales', 'Santé', 'Paralysie', 'Passif', 'Autre',
-]
+const DEFAULT_CATEGORIES: string[] = []
 
 const DEFAULT_RESTRICTIONS = ['/', 'Héros', 'Vilains']
 
