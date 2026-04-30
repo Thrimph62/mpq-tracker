@@ -45,9 +45,10 @@ CREATE TABLE character_powers (
   couleur         TEXT,   -- Bleu, Rouge, Vert, Noir, Jaune, Violet
   cout            INTEGER,
   -- Effets (même structure que supports)
-  effect_category TEXT,
-  effect_detail   TEXT,
-  effect_trigger  TEXT,
+  effect_1_cout INTEGER, effect_1_category TEXT, effect_1_detail TEXT, effect_1_trigger TEXT,
+  effect_2_cout INTEGER, effect_2_category TEXT, effect_2_detail TEXT, effect_2_trigger TEXT,
+  effect_3_cout INTEGER, effect_3_category TEXT, effect_3_detail TEXT, effect_3_trigger TEXT,
+  effect_4_cout INTEGER, effect_4_category TEXT, effect_4_detail TEXT, effect_4_trigger TEXT,
   created_at      TIMESTAMPTZ DEFAULT NOW(),
   updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
