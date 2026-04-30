@@ -25,7 +25,7 @@ const EFFECTS = [1, 2, 3, 4] as const
 type EffectNum = typeof EFFECTS[number]
 
 const EMPTY: Omit<CharacterPower, 'id' | 'created_at' | 'updated_at'> = {
-  character_id: '', power_name: null, couleur: null,
+  character_id: '', power_name: null, couleur: null, position: null,
   effect_1_cout: null, effect_1_category: null, effect_1_detail: null, effect_1_trigger: null,
   effect_2_cout: null, effect_2_category: null, effect_2_detail: null, effect_2_trigger: null,
   effect_3_cout: null, effect_3_category: null, effect_3_detail: null, effect_3_trigger: null,
@@ -33,7 +33,7 @@ const EMPTY: Omit<CharacterPower, 'id' | 'created_at' | 'updated_at'> = {
 }
 
 type ViewMode = 'table' | 'byCharacter'
-type SortCol  = 'character' | 'power_name' | 'couleur'
+type SortCol  = 'character' | 'power_name' | 'couleur' | 'position'
 type SortDir  = 'asc' | 'desc'
 
 function CouleurBadge({ couleur }: { couleur: string | null }) {
@@ -105,7 +105,7 @@ export default function CharacterPowers() {
   const [filterCouleur, setFilterCouleur]   = useState('')
   const [filterCategory, setFilterCategory] = useState('')
   const [viewMode, setViewMode]     = useState<ViewMode>('byCharacter')
-  const [sortCol, setSortCol]       = useState<SortCol>('character')
+  const [sortCol, setSortCol]       = useState<SortCol>('position')
   const [sortDir, setSortDir]       = useState<SortDir>('asc')
   const [expanded, setExpanded]     = useState<string | null>(null)
   const [modal, setModal]           = useState<'add' | 'edit' | null>(null)
@@ -153,10 +153,19 @@ export default function CharacterPowers() {
 
   const cm = cmap()
   const sortedFiltered = [...filtered].sort((a, b) => {
-    const va = sortCol === 'character' ? (cm[a.character_id]?.name?.toLowerCase() ?? '') : sortCol === 'power_name' ? (a.power_name?.toLowerCase() ?? '') : (a.couleur?.toLowerCase() ?? '')
-    const vb = sortCol === 'character' ? (cm[b.character_id]?.name?.toLowerCase() ?? '') : sortCol === 'power_name' ? (b.power_name?.toLowerCase() ?? '') : (b.couleur?.toLowerCase() ?? '')
+    let va: string | number, vb: string | number
+    if      (sortCol === 'character')  { va = cm[a.character_id]?.name?.toLowerCase() ?? ''; vb = cm[b.character_id]?.name?.toLowerCase() ?? '' }
+    else if (sortCol === 'power_name') { va = a.power_name?.toLowerCase() ?? ''; vb = b.power_name?.toLowerCase() ?? '' }
+    else if (sortCol === 'couleur')    { va = a.couleur?.toLowerCase() ?? ''; vb = b.couleur?.toLowerCase() ?? '' }
+    else                               { va = a.position ?? 99; vb = b.position ?? 99 }
     if (va < vb) return sortDir === 'asc' ? -1 : 1
     if (va > vb) return sortDir === 'asc' ? 1 : -1
+    // Secondary sort by position when sorting by other fields
+    if (sortCol !== 'position') {
+      const pa = a.position ?? 99, pb = b.position ?? 99
+      if (pa < pb) return -1
+      if (pa > pb) return 1
+    }
     return 0
   })
 
@@ -250,7 +259,9 @@ export default function CharacterPowers() {
           {groupedEntries.map(([charId, charPowers]) => {
             const char   = cm[charId]
             const isOpen = expanded === charId
-            const byCouleur = charPowers.reduce<Record<string, CharacterPower[]>>((acc, p) => {
+            // Sort by position first
+            const sortedPowers = [...charPowers].sort((a, b) => (a.position ?? 99) - (b.position ?? 99))
+            const byCouleur = sortedPowers.reduce<Record<string, CharacterPower[]>>((acc, p) => {
               const key = p.couleur ?? 'Inconnu'; acc[key] = acc[key] ?? []; acc[key].push(p); return acc
             }, {})
             return (
@@ -287,12 +298,22 @@ export default function CharacterPowers() {
                           <CouleurBadge couleur={col} />
                         </div>
                         <div className="space-y-2 pl-2">
-                          {byCouleur[col].map(p => {
+                          {byCouleur[col].sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).map(p => {
                             const effectCount = EFFECTS.filter(n => p[`effect_${n}_category`] || p[`effect_${n}_detail`] || p[`effect_${n}_cout`]).length
                             return (
                               <div key={p.id} className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
                                 <div className="flex-1 space-y-2">
-                                  {p.power_name && <p className="text-sm font-semibold text-white">{p.power_name}</p>}
+                                  {p.power_name && (
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-sm font-semibold text-white">{p.power_name}</p>
+                                      {p.position && (
+                                        <span className="badge bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] text-xs">#{p.position}</span>
+                                      )}
+                                    </div>
+                                  )}
+                                  {!p.power_name && p.position && (
+                                    <span className="badge bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] text-xs">#{p.position}</span>
+                                  )}
                                   {/* Show each effect with its MP cost */}
                                   {EFFECTS.map(n => {
                                     const cout = p[`effect_${n}_cout`] as number | null
@@ -336,6 +357,7 @@ export default function CharacterPowers() {
             <thead>
               <tr className="border-b border-[#3D3D60]">
                 <Th col="character"  label="Personnage" />
+                <Th col="position"   label="Pos." />
                 <Th col="power_name" label="Nom du pouvoir" />
                 <Th col="couleur"    label="Couleur" />
                 {EFFECTS.map(n => (
@@ -348,6 +370,7 @@ export default function CharacterPowers() {
               {sortedFiltered.map(p => (
                 <tr key={p.id} className="border-b border-[#3D3D60]/40 hover:bg-[#3D3D60]/20 align-top">
                   <td className="py-2 px-2 font-medium text-white text-center">{cm[p.character_id]?.name ?? '—'}</td>
+                  <td className="py-2 px-2 text-center text-marvel-gold font-bold">{p.position ?? '—'}</td>
                   <td className="py-2 px-2 text-[#D8D8EE] text-center">{p.power_name ?? '—'}</td>
                   <td className="py-2 px-2 text-center"><CouleurBadge couleur={p.couleur} /></td>
                   {EFFECTS.map(n => (
@@ -406,7 +429,7 @@ export default function CharacterPowers() {
                   allowFreeText={false}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Nom du pouvoir</label>
                   <input className="input" value={form.power_name ?? ''}
@@ -419,6 +442,14 @@ export default function CharacterPowers() {
                     onChange={e => setForm(f => ({ ...f, couleur: e.target.value || null }))}>
                     <option value="">— Aucune —</option>
                     {COULEURS.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Position (1–6)</label>
+                  <select className="input" value={form.position ?? ''}
+                    onChange={e => setForm(f => ({ ...f, position: e.target.value ? Number(e.target.value) : null }))}>
+                    <option value="">—</option>
+                    {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
               </div>

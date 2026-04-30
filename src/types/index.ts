@@ -29,6 +29,7 @@ export interface CharacterPower {
   character_id: string
   power_name: string | null
   couleur: string | null
+  position: number | null  // 1–6, shared across all effects of the same power
   // Up to 4 effects — each with its own MP cost
   effect_1_cout: number | null; effect_1_category: string | null; effect_1_detail: string | null; effect_1_trigger: string | null
   effect_2_cout: number | null; effect_2_category: string | null; effect_2_detail: string | null; effect_2_trigger: string | null
