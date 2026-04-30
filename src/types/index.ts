@@ -61,21 +61,14 @@ export interface Support {
 export interface Team {
   id: string
   name: string
-  left_character: string | null
-  left_build: string | null
-  left_support: string | null
-  left_boost: string | null
-  mid_character: string | null
-  mid_build: string | null
-  mid_support: string | null
-  mid_boost: string | null
-  right_character: string | null
-  right_build: string | null
-  right_support: string | null
-  right_boost: string | null
+  left_character: string | null;  left_build: string | null;  left_support: string | null;  left_boost: string | null
+  mid_character: string | null;   mid_build: string | null;   mid_support: string | null;   mid_boost: string | null
+  right_character: string | null; right_build: string | null; right_support: string | null; right_boost: string | null
   strategie: string | null
-  ok_hard_nodes: string | null
-  ok_cn_node: string | null
+  hn1: string | null
+  hn2: string | null
+  hn3: string | null
+  cn: string | null
   all_3_non_boosted: string | null
   note_additionnelle: string | null
   status: TeamStatus

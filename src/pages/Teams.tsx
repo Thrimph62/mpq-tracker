@@ -11,7 +11,7 @@ const EMPTY_FORM: Omit<Team, 'id' | 'created_at' | 'updated_at'> = {
   left_character: null,  left_build: null,  left_support: null,  left_boost: null,
   mid_character: null,   mid_build: null,   mid_support: null,   mid_boost: null,
   right_character: null, right_build: null, right_support: null, right_boost: null,
-  strategie: null, ok_hard_nodes: null, ok_cn_node: null,
+  strategie: null, hn1: null, hn2: null, hn3: null, cn: null,
   all_3_non_boosted: null, note_additionnelle: null,
 }
 
@@ -139,8 +139,10 @@ export default function Teams() {
                   </button>
                   {tab === 'active' && (
                     <div className="flex gap-3 mt-1 text-xs text-[#C8C8E0]">
-                      <span>Hard Nodes: <OkBadge value={team.ok_hard_nodes} /></span>
-                      <span>CN Node: <OkBadge value={team.ok_cn_node} /></span>
+                      <span>HN1: <OkBadge value={team.hn1} /></span>
+                      <span>HN2: <OkBadge value={team.hn2} /></span>
+                      <span>HN3: <OkBadge value={team.hn3} /></span>
+                      <span>CN: <OkBadge value={team.cn} /></span>
                     </div>
                   )}
                 </div>
@@ -250,15 +252,15 @@ export default function Teams() {
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Stratégie</label>
                 <textarea className="input resize-none h-28" value={form.strategie ?? ''} onChange={f('strategie')} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                {(['ok_hard_nodes', 'ok_cn_node'] as const).map(key => (
+              <div className="grid grid-cols-4 gap-3">
+                {(['hn1', 'hn2', 'hn3', 'cn'] as const).map(key => (
                   <div key={key}>
-                    <label className="text-xs text-[#C8C8E0] mb-1 block">{key === 'ok_hard_nodes' ? 'Hard Nodes' : 'CN Node'}</label>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">{key.toUpperCase()}</label>
                     <select className="input" value={form[key] ?? ''} onChange={f(key)}>
                       <option value="">—</option>
-                      <option value="Oui">Oui</option>
                       <option value="Non">Non</option>
-                      <option value="Only Tested in PVP">PVP seulement</option>
+                      <option value="Oui">Oui</option>
+                      <option value="Partiellement">Partiellement</option>
                     </select>
                   </div>
                 ))}
