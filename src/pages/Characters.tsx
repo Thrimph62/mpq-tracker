@@ -84,7 +84,7 @@ export default function Characters() {
   const [saving, setSaving]       = useState(false)
 
   async function load() {
-    const { data } = await supabase.from('characters').select('*')
+    const { data } = await supabase.from('mpq_tracker_characters').select('*')
       .order('base_name').order('version').order('level', { ascending: false })
     if (data) setChars(data)
     setLoading(false)
@@ -137,29 +137,29 @@ export default function Characters() {
   async function save() {
     setSaving(true)
     const payload = { ...form, base_name: form.base_name || parseBaseName(form.name).base, version: form.version || parseBaseName(form.name).version }
-    if (modal === 'add') await supabase.from('characters').insert([payload])
-    else if (editId) await supabase.from('characters').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId)
+    if (modal === 'add') await supabase.from('mpq_tracker_characters').insert([payload])
+    else if (editId) await supabase.from('mpq_tracker_characters').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId)
     await load(); closeModal(); setSaving(false)
   }
 
   async function remove(id: string) {
     if (!confirm('Supprimer ce personnage ?')) return
-    await supabase.from('characters').delete().eq('id', id)
+    await supabase.from('mpq_tracker_characters').delete().eq('id', id)
     setChars(prev => prev.filter(c => c.id !== id))
   }
 
   async function updateStatus(id: string, status: CharacterStatus) {
-    await supabase.from('characters').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
+    await supabase.from('mpq_tracker_characters').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
     setChars(prev => prev.map(c => c.id === id ? { ...c, status } : c))
   }
 
   async function updateAscended(id: string, ascended: boolean) {
-    await supabase.from('characters').update({ ascended, updated_at: new Date().toISOString() }).eq('id', id)
+    await supabase.from('mpq_tracker_characters').update({ ascended, updated_at: new Date().toISOString() }).eq('id', id)
     setChars(prev => prev.map(c => c.id === id ? { ...c, ascended } : c))
   }
 
   async function updateLevel(id: string, level: number | null) {
-    await supabase.from('characters').update({ level, updated_at: new Date().toISOString() }).eq('id', id)
+    await supabase.from('mpq_tracker_characters').update({ level, updated_at: new Date().toISOString() }).eq('id', id)
     setChars(prev => prev.map(c => c.id === id ? { ...c, level } : c))
   }
 

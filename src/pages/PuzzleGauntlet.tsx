@@ -34,9 +34,9 @@ export default function PuzzleGauntlet() {
 
   async function load() {
     const [{ data: n }, { data: c }, { data: s }] = await Promise.all([
-      supabase.from('puzzle_gauntlet').select('*').order('categorie').order('node'),
-      supabase.from('characters').select('*').order('base_name').order('version'),
-      supabase.from('supports').select('*').order('name'),
+      supabase.from('mpq_tracker_puzzle_gauntlet').select('*').order('categorie').order('node'),
+      supabase.from('mpq_tracker_characters').select('*').order('base_name').order('version'),
+      supabase.from('mpq_tracker_supports').select('*').order('name'),
     ])
     if (n) setNodes(n)
     if (c) setCharacters(c)
@@ -73,14 +73,14 @@ export default function PuzzleGauntlet() {
 
   async function save() {
     setSaving(true)
-    if (modal === 'add') await supabase.from('puzzle_gauntlet').insert([form])
-    else if (editId) await supabase.from('puzzle_gauntlet').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
+    if (modal === 'add') await supabase.from('mpq_tracker_puzzle_gauntlet').insert([form])
+    else if (editId) await supabase.from('mpq_tracker_puzzle_gauntlet').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
     await load(); closeModal(); setSaving(false)
   }
 
   async function remove(id: string) {
     if (!confirm('Supprimer ce node ?')) return
-    await supabase.from('puzzle_gauntlet').delete().eq('id', id)
+    await supabase.from('mpq_tracker_puzzle_gauntlet').delete().eq('id', id)
     setNodes(prev => prev.filter(n => n.id !== id))
   }
 

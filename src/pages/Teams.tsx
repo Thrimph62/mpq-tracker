@@ -34,9 +34,9 @@ export default function Teams() {
 
   async function load() {
     const [{ data: t }, { data: c }, { data: s }] = await Promise.all([
-      supabase.from('teams').select('*').order('name'),
-      supabase.from('characters').select('*').order('base_name').order('version'),
-      supabase.from('supports').select('*').order('name'),
+      supabase.from('mpq_tracker_teams').select('*').order('name'),
+      supabase.from('mpq_tracker_characters').select('*').order('base_name').order('version'),
+      supabase.from('mpq_tracker_supports').select('*').order('name'),
     ])
     if (t) setTeams(t)
     if (c) setCharacters(c)
@@ -77,19 +77,19 @@ export default function Teams() {
 
   async function save() {
     setSaving(true)
-    if (modal === 'add') await supabase.from('teams').insert([form])
-    else if (editId) await supabase.from('teams').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
+    if (modal === 'add') await supabase.from('mpq_tracker_teams').insert([form])
+    else if (editId) await supabase.from('mpq_tracker_teams').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
     await load(); closeModal(); setSaving(false)
   }
 
   async function remove(id: string) {
     if (!confirm('Supprimer cette équipe ?')) return
-    await supabase.from('teams').delete().eq('id', id)
+    await supabase.from('mpq_tracker_teams').delete().eq('id', id)
     setTeams(prev => prev.filter(t => t.id !== id))
   }
 
   async function moveToActive(id: string) {
-    await supabase.from('teams').update({ status: 'active', updated_at: new Date().toISOString() }).eq('id', id)
+    await supabase.from('mpq_tracker_teams').update({ status: 'active', updated_at: new Date().toISOString() }).eq('id', id)
     await load()
   }
 

@@ -65,7 +65,7 @@ async function importCharacters(rows: unknown[][]): Promise<ImportResult> {
   }
   let inserted = 0, skipped = 0
   for (const rec of records) {
-    const { error } = await supabase.from('characters').insert([rec])
+    const { error } = await supabase.from('mpq_tracker_characters').insert([rec])
     if (error) skipped++
     else inserted++
   }
@@ -95,7 +95,7 @@ async function importSupports(rows: unknown[][]): Promise<ImportResult> {
   }
   let inserted = 0, skipped = 0
   for (const rec of records) {
-    const { error } = await supabase.from('supports').insert([rec])
+    const { error } = await supabase.from('mpq_tracker_supports').insert([rec])
     if (error) skipped++
     else inserted++
   }
@@ -129,7 +129,7 @@ async function importTeams(rows: unknown[][], isActive: boolean): Promise<Import
   }
   let inserted = 0, skipped = 0
   for (const rec of records) {
-    const { error } = await supabase.from('teams').insert([rec])
+    const { error } = await supabase.from('mpq_tracker_teams').insert([rec])
     if (error) skipped++
     else inserted++
   }
@@ -156,7 +156,7 @@ async function importQuetes(rows: unknown[][]): Promise<ImportResult> {
   }
   let inserted = 0, skipped = 0
   for (const rec of records) {
-    const { error } = await supabase.from('quetes').insert([rec])
+    const { error } = await supabase.from('mpq_tracker_quetes').insert([rec])
     if (error) skipped++
     else inserted++
   }
@@ -183,7 +183,7 @@ async function importGauntlet(rows: unknown[][]): Promise<ImportResult> {
   }
   let inserted = 0, skipped = 0
   for (const rec of records) {
-    const { error } = await supabase.from('puzzle_gauntlet').insert([rec])
+    const { error } = await supabase.from('mpq_tracker_puzzle_gauntlet').insert([rec])
     if (error) skipped++
     else inserted++
   }

@@ -115,8 +115,8 @@ export default function CharacterPowers() {
 
   async function load() {
     const [{ data: pw }, { data: ch }] = await Promise.all([
-      supabase.from('character_powers').select('*').order('couleur'),
-      supabase.from('characters').select('*').order('base_name').order('version'),
+      supabase.from('mpq_tracker_character_powers').select('*').order('couleur'),
+      supabase.from('mpq_tracker_characters').select('*').order('base_name').order('version'),
     ])
     if (pw) setPowers(pw)
     if (ch) setCharacters(ch)
@@ -194,15 +194,15 @@ export default function CharacterPowers() {
   async function save() {
     if (!form.character_id) return
     setSaving(true)
-    if (modal === 'add') await supabase.from('character_powers').insert([form])
-    else if (editId) await supabase.from('character_powers')
+    if (modal === 'add') await supabase.from('mpq_tracker_character_powers').insert([form])
+    else if (editId) await supabase.from('mpq_tracker_character_powers')
       .update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
     await load(); closeModal(); setSaving(false)
   }
 
   async function remove(id: string) {
     if (!confirm('Supprimer ce pouvoir ?')) return
-    await supabase.from('character_powers').delete().eq('id', id)
+    await supabase.from('mpq_tracker_character_powers').delete().eq('id', id)
     setPowers(prev => prev.filter(p => p.id !== id))
   }
 

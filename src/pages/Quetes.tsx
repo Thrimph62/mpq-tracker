@@ -33,9 +33,9 @@ export default function Quetes() {
 
   async function load() {
     const [{ data: q }, { data: c }, { data: s }] = await Promise.all([
-      supabase.from('quetes').select('*').order('nom'),
-      supabase.from('characters').select('*').order('base_name').order('version'),
-      supabase.from('supports').select('*').order('name'),
+      supabase.from('mpq_tracker_quetes').select('*').order('nom'),
+      supabase.from('mpq_tracker_characters').select('*').order('base_name').order('version'),
+      supabase.from('mpq_tracker_supports').select('*').order('name'),
     ])
     if (q) setQuetes(q)
     if (c) setCharacters(c)
@@ -63,14 +63,14 @@ export default function Quetes() {
 
   async function save() {
     setSaving(true)
-    if (modal === 'add') await supabase.from('quetes').insert([form])
-    else if (editId) await supabase.from('quetes').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
+    if (modal === 'add') await supabase.from('mpq_tracker_quetes').insert([form])
+    else if (editId) await supabase.from('mpq_tracker_quetes').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
     await load(); closeModal(); setSaving(false)
   }
 
   async function remove(id: string) {
     if (!confirm('Supprimer cette quête ?')) return
-    await supabase.from('quetes').delete().eq('id', id)
+    await supabase.from('mpq_tracker_quetes').delete().eq('id', id)
     setQuetes(prev => prev.filter(q => q.id !== id))
   }
 

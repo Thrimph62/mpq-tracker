@@ -77,7 +77,7 @@ export default function Supports() {
   const [customRestr, setCustomRestr] = useState('')
 
   async function load() {
-    const { data } = await supabase.from('supports').select('*').order('name')
+    const { data } = await supabase.from('mpq_tracker_supports').select('*').order('name')
     if (data) setSupports(data)
     setLoading(false)
   }
@@ -134,14 +134,14 @@ export default function Supports() {
   async function save() {
     setSaving(true)
     const payload = { ...form, restriction: customRestr.trim() || form.restriction }
-    if (modal === 'add') await supabase.from('supports').insert([payload])
-    else if (editId) await supabase.from('supports').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId)
+    if (modal === 'add') await supabase.from('mpq_tracker_supports').insert([payload])
+    else if (editId) await supabase.from('mpq_tracker_supports').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId)
     await load(); closeModal(); setSaving(false)
   }
 
   async function remove(id: string) {
     if (!confirm('Supprimer ce support ?')) return
-    await supabase.from('supports').delete().eq('id', id)
+    await supabase.from('mpq_tracker_supports').delete().eq('id', id)
     setSupports(prev => prev.filter(s => s.id !== id))
   }
 

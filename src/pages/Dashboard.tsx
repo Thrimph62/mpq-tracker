@@ -22,7 +22,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.from('characters').select('stars, status, ascended')
+      const { data } = await supabase.from('mpq_tracker_characters').select('stars, status, ascended')
       if (data) {
         setSummary(STAR_TIERS.map(s => ({
           stars:     s,
@@ -33,7 +33,7 @@ export default function Dashboard() {
           ascended:  data.filter(c => c.stars === s && c.ascended).length,
         })))
       }
-      const { data: rec } = await supabase.from('characters').select('*')
+      const { data: rec } = await supabase.from('mpq_tracker_characters').select('*')
         .order('updated_at', { ascending: false }).limit(5)
       if (rec) setRecent(rec)
       setLoading(false)
