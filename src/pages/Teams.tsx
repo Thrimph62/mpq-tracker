@@ -4,10 +4,10 @@ import { Team, Character, Support } from '../types'
 import { TeamSlot } from '../components/TeamSlot'
 import { OkBadge } from '../components/Badges'
 import { SearchDropdown, toCharacterOptions, toSupportOptions } from '../components/SearchDropdown'
-import { Plus, Search, X, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Search, X, ChevronDown, ChevronUp, Pencil, Trash2, Star } from 'lucide-react'
 
 const EMPTY_FORM: Omit<Team, 'id' | 'created_at' | 'updated_at'> = {
-  name: '', status: 'active',
+  name: '', status: 'active', favorite: false,
   left_character: null,  left_build: null,  left_support: null,  left_boost: null,
   mid_character: null,   mid_build: null,   mid_support: null,   mid_boost: null,
   right_character: null, right_build: null, right_support: null, right_boost: null,
@@ -26,6 +26,7 @@ export default function Teams() {
   const [loading, setLoading]     = useState(true)
   const [tab, setTab]             = useState<Tab>('active')
   const [search, setSearch]       = useState('')
+  const [filterFavorite, setFilterFavorite] = useState<'all' | 'yes' | 'no'>('all')
   const [expanded, setExpanded]   = useState<string | null>(null)
   const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
   const [form, setForm]           = useState<typeof EMPTY_FORM>(EMPTY_FORM)
@@ -61,12 +62,20 @@ export default function Teams() {
   }
 
   const visible = teams.filter(t => {
-    const matchTab    = t.status === tab
-    const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) ||
+    const matchTab      = t.status === tab
+    const matchSearch   = t.name.toLowerCase().includes(search.toLowerCase()) ||
       [t.left_character, t.mid_character, t.right_character]
         .some(c => c?.toLowerCase().includes(search.toLowerCase()))
-    return matchTab && matchSearch
+    const matchFavorite = filterFavorite === 'all' ||
+      (filterFavorite === 'yes' ? t.favorite : !t.favorite)
+    return matchTab && matchSearch && matchFavorite
   })
+
+  async function toggleFavorite(id: string, current: boolean) {
+    await supabase.from('mpq_tracker_teams')
+      .update({ favorite: !current, updated_at: new Date().toISOString() }).eq('id', id)
+    setTeams(prev => prev.map(t => t.id === id ? { ...t, favorite: !current } : t))
+  }
 
   function openAdd() { setForm({ ...EMPTY_FORM, status: tab }); setEditId(null); setModal('add') }
   function openEdit(t: Team) {
@@ -117,10 +126,25 @@ export default function Teams() {
         ))}
       </div>
 
-      <div className="relative max-w-sm">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
-        <input className="input pl-9" placeholder="Rechercher une équipe ou un perso..."
-          value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative max-w-sm flex-1">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
+          <input className="input pl-9" placeholder="Rechercher une équipe ou un perso..."
+            value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        {/* Favorite filter */}
+        <div className="flex gap-1 bg-[#1E1E38] p-1 rounded-lg">
+          {(['all', 'yes', 'no'] as const).map(v => (
+            <button key={v} onClick={() => setFilterFavorite(v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                filterFavorite === v ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'
+              }`}>
+              {v === 'all' && 'Tous'}
+              {v === 'yes' && <><Star size={12} className="fill-yellow-400 text-yellow-400" /> Favoris</>}
+              {v === 'no'  && 'Non favoris'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? <Spinner /> : (
@@ -147,6 +171,17 @@ export default function Teams() {
                   )}
                 </div>
                 <div className="flex gap-2 shrink-0">
+                  {/* Favorite toggle */}
+                  <button
+                    onClick={() => toggleFavorite(team.id, team.favorite)}
+                    title={team.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    className="p-1 transition-colors hover:scale-110"
+                  >
+                    <Star
+                      size={16}
+                      className={team.favorite ? 'fill-yellow-400 text-yellow-400' : 'text-[#3D3D60] hover:text-yellow-400'}
+                    />
+                  </button>
                   {tab === 'to_test' && (
                     <button onClick={() => moveToActive(team.id)}
                       className="text-xs bg-green-900/40 text-green-300 border border-green-700 px-2 py-1 rounded hover:bg-green-900/60 transition-colors">

@@ -71,6 +71,7 @@ export interface Team {
   cn: string | null
   all_3_non_boosted: string | null
   note_additionnelle: string | null
+  favorite: boolean
   status: TeamStatus
   created_at: string
   updated_at: string

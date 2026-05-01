@@ -51,7 +51,7 @@ def import_characters(supabase: Client, df: pd.DataFrame):
             "status":    "rostered",
         })
     if records:
-        supabase.table("characters").insert(records).execute()
+        supabase.table("mpq_tracker_characters").insert(records).execute()
     print(f"  ✓ {len(records)} personnages importés")
 
 def import_supports(supabase: Client, df: pd.DataFrame):
@@ -77,7 +77,7 @@ def import_supports(supabase: Client, df: pd.DataFrame):
             "for_filter":         clean(row.iloc[13]),
         })
     if records:
-        supabase.table("supports").upsert(records, on_conflict="name").execute()
+        supabase.table("mpq_tracker_supports").upsert(records, on_conflict="name").execute()
     print(f"  ✓ {len(records)} supports importés")
 
 def import_teams(supabase: Client, df: pd.DataFrame):
@@ -109,7 +109,7 @@ def import_teams(supabase: Client, df: pd.DataFrame):
         })
     # Teams to Test (status = to_test) — sheet index 5
     if records:
-        supabase.table("teams").upsert(records, on_conflict="name").execute()
+        supabase.table("mpq_tracker_teams").upsert(records, on_conflict="name").execute()
     print(f"  ✓ {len(records)} équipes importées")
 
 def import_teams_to_test(supabase: Client, df: pd.DataFrame):
@@ -124,7 +124,7 @@ def import_teams_to_test(supabase: Client, df: pd.DataFrame):
             "status":             "to_test",
         })
     if records:
-        supabase.table("teams").upsert(records, on_conflict="name").execute()
+        supabase.table("mpq_tracker_teams").upsert(records, on_conflict="name").execute()
     print(f"  ✓ {len(records)} équipes à tester importées")
 
 def import_quetes(supabase: Client, df: pd.DataFrame):
@@ -153,7 +153,7 @@ def import_quetes(supabase: Client, df: pd.DataFrame):
             "note":              clean(row.iloc[4]),
         })
     if records:
-        supabase.table("quetes").upsert(records, on_conflict="nom").execute()
+        supabase.table("mpq_tracker_quetes").upsert(records, on_conflict="nom").execute()
     print(f"  ✓ {len(records)} quêtes importées")
 
 def import_gauntlet(supabase: Client, df: pd.DataFrame):
@@ -179,7 +179,7 @@ def import_gauntlet(supabase: Client, df: pd.DataFrame):
             "note":               clean(row.iloc[7]),
         })
     if records:
-        supabase.table("puzzle_gauntlet").insert(records).execute()
+        supabase.table("mpq_tracker_puzzle_gauntlet").insert(records).execute()
     print(f"  ✓ {len(records)} nodes importées")
 
 def main():
