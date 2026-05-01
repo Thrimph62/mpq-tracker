@@ -13,7 +13,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- version   = ce qui est entre parenthèses, ex: "Classic"
 -- ascended  = booléen indépendant du statut (un perso peut être ascended ET max_champ)
 --             l'ascension peut être n'importe quel tier → tier supérieur (2★→3★, 3★→4★, etc.)
-CREATE TABLE characters (
+CREATE TABLE mpq_tracker_characters (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name        TEXT NOT NULL,
   base_name   TEXT NOT NULL,
@@ -27,20 +27,20 @@ CREATE TABLE characters (
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_characters_stars     ON characters(stars);
-CREATE INDEX idx_characters_status    ON characters(status);
-CREATE INDEX idx_characters_ascended  ON characters(ascended);
-CREATE INDEX idx_characters_name      ON characters(name);
-CREATE INDEX idx_characters_base_name ON characters(base_name);
+CREATE INDEX idx_characters_stars     ON mpq_tracker_characters(stars);
+CREATE INDEX idx_characters_status    ON mpq_tracker_characters(status);
+CREATE INDEX idx_characters_ascended  ON mpq_tracker_characters(ascended);
+CREATE INDEX idx_characters_name      ON mpq_tracker_characters(name);
+CREATE INDEX idx_characters_base_name ON mpq_tracker_characters(base_name);
 
 -- ────────────────────────────────────────────────
 -- CHARACTER POWERS
 -- ────────────────────────────────────────────────
 -- Un personnage peut avoir N pouvoirs
 -- Par couleur, plusieurs pouvoirs avec coûts différents (traités séparément)
-CREATE TABLE character_powers (
+CREATE TABLE mpq_tracker_character_powers (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  character_id    UUID REFERENCES characters(id) ON DELETE CASCADE,
+  character_id    UUID REFERENCES mpq_tracker_characters(id) ON DELETE CASCADE,
   power_name      TEXT,
   couleur         TEXT,   -- Bleu, Rouge, Vert, Noir, Jaune, Violet
   cout            INTEGER,
@@ -53,8 +53,8 @@ CREATE TABLE character_powers (
   updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_powers_character ON character_powers(character_id);
-CREATE INDEX idx_powers_couleur   ON character_powers(couleur);
+CREATE INDEX idx_powers_character ON mpq_tracker_character_powers(character_id);
+CREATE INDEX idx_powers_couleur   ON mpq_tracker_character_powers(couleur);
 
 -- ────────────────────────────────────────────────
 -- SUPPORTS
@@ -62,7 +62,7 @@ CREATE INDEX idx_powers_couleur   ON character_powers(couleur);
 -- Each support has up to 5 effects, each with a category + free text detail.
 -- Synergy has: a restriction (who it synergises with) + same category+detail structure.
 -- Effect categories are stored as free text — no enum constraint so new ones can be added anytime.
-CREATE TABLE supports (
+CREATE TABLE mpq_tracker_supports (
   id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name                 TEXT NOT NULL,
   rang                 INTEGER,
@@ -93,12 +93,12 @@ CREATE TABLE supports (
   updated_at           TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_supports_name ON supports(name);
+CREATE INDEX idx_supports_name ON mpq_tracker_supports(name);
 
 -- ────────────────────────────────────────────────
 -- TEAMS
 -- ────────────────────────────────────────────────
-CREATE TABLE teams (
+CREATE TABLE mpq_tracker_teams (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name                  TEXT NOT NULL,
   -- Personnage Gauche
@@ -127,12 +127,12 @@ CREATE TABLE teams (
   updated_at            TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_teams_status ON teams(status);
+CREATE INDEX idx_teams_status ON mpq_tracker_teams(status);
 
 -- ────────────────────────────────────────────────
 -- QUÊTES
 -- ────────────────────────────────────────────────
-CREATE TABLE quetes (
+CREATE TABLE mpq_tracker_quetes (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nom                 TEXT NOT NULL,
   gauche_personnage   TEXT,
@@ -152,7 +152,7 @@ CREATE TABLE quetes (
 -- ────────────────────────────────────────────────
 -- PUZZLE GAUNTLET
 -- ────────────────────────────────────────────────
-CREATE TABLE puzzle_gauntlet (
+CREATE TABLE mpq_tracker_puzzle_gauntlet (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   categorie           TEXT,
   node                TEXT,
@@ -172,25 +172,25 @@ CREATE TABLE puzzle_gauntlet (
   updated_at          TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_gauntlet_categorie ON puzzle_gauntlet(categorie);
+CREATE INDEX idx_gauntlet_categorie ON mpq_tracker_puzzle_gauntlet(categorie);
 
 -- ────────────────────────────────────────────────
 -- ROW LEVEL SECURITY — Solo user (auth.uid check)
 -- ────────────────────────────────────────────────
-ALTER TABLE characters       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE character_powers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE supports         ENABLE ROW LEVEL SECURITY;
-ALTER TABLE teams            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE quetes           ENABLE ROW LEVEL SECURITY;
-ALTER TABLE puzzle_gauntlet  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mpq_tracker_characters       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mpq_tracker_character_powers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mpq_tracker_supports         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mpq_tracker_teams            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mpq_tracker_quetes           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mpq_tracker_puzzle_gauntlet  ENABLE ROW LEVEL SECURITY;
 
 -- Allow full access only to authenticated users
-CREATE POLICY "auth_only" ON characters       FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth_only" ON character_powers FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth_only" ON supports         FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth_only" ON teams            FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth_only" ON quetes           FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth_only" ON puzzle_gauntlet  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON mpq_tracker_characters       FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON mpq_tracker_character_powers FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON mpq_tracker_supports         FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON mpq_tracker_teams            FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON mpq_tracker_quetes           FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth_only" ON mpq_tracker_puzzle_gauntlet  FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- ────────────────────────────────────────────────
 -- AUTO-UPDATE updated_at
@@ -200,8 +200,8 @@ RETURNS TRIGGER AS $$
 BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_characters       BEFORE UPDATE ON characters       FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER trg_supports         BEFORE UPDATE ON supports         FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER trg_teams            BEFORE UPDATE ON teams            FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER trg_quetes           BEFORE UPDATE ON quetes           FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER trg_puzzle_gauntlet  BEFORE UPDATE ON puzzle_gauntlet  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_mpq_tracker_characters       BEFORE UPDATE ON mpq_tracker_characters       FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_mpq_tracker_supports         BEFORE UPDATE ON mpq_tracker_supports         FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_mpq_tracker_teams            BEFORE UPDATE ON mpq_tracker_teams            FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_mpq_tracker_quetes           BEFORE UPDATE ON mpq_tracker_quetes           FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_mpq_tracker_puzzle_gauntlet  BEFORE UPDATE ON mpq_tracker_puzzle_gauntlet  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
