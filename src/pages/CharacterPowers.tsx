@@ -64,7 +64,7 @@ export default function CharacterPowers() {
   const [filterCouleur, setFilterCouleur]   = useState('')
   const [filterCategory, setFilterCategory] = useState('')
   const [viewMode, setViewMode]     = useState<ViewMode>('byCharacter')
-  const [sortCol, setSortCol]       = useState<SortCol>('position')
+  const [sortCol, setSortCol]       = useState<SortCol>('character')
   const [sortDir, setSortDir]       = useState<SortDir>('asc')
   const [expanded, setExpanded]     = useState<string | null>(null)
   const [modal, setModal]           = useState<'add' | 'edit' | null>(null)
@@ -133,8 +133,8 @@ export default function CharacterPowers() {
     else                               { va = a.position ?? 99; vb = b.position ?? 99 }
     if (va < vb) return sortDir === 'asc' ? -1 : 1
     if (va > vb) return sortDir === 'asc' ? 1 : -1
-    if (sortCol !== 'position') { const pa = a.position ?? 99, pb = b.position ?? 99; if (pa !== pb) return pa - pb }
-    return 0
+    // Always use position as secondary sort
+    return (a.position ?? 99) - (b.position ?? 99)
   })
 
   const grouped = filtered.reduce<Record<string, CharacterPower[]>>((acc, p) => {

@@ -1,3 +1,5 @@
+import React from 'react'
+
 // Shared types and components for effect fields
 // Used by both Supports and CharacterPowers pages
 
@@ -38,17 +40,31 @@ export function EffectDisplay({ cout, category, sous_category, quantite, force, 
   const hasContent = cout || category || sous_category || quantite || force || autre || trigger
   if (!hasContent) return <span className="text-[#444]">—</span>
 
+  // Build list of non-null items to render with separators
+  const items: { key: string; node: React.ReactNode }[] = []
+  if (cout !== null && cout !== undefined)
+    items.push({ key: 'cout',    node: <span className="text-marvel-gold font-bold">{cout} MP</span> })
+  if (category)
+    items.push({ key: 'cat',     node: <span className={`badge border ${catColor(category)}`}>{category}</span> })
+  if (sous_category)
+    items.push({ key: 'sous',    node: <span className="text-[#D8D8EE]">{sous_category}</span> })
+  if (quantite)
+    items.push({ key: 'qte',     node: <span className="text-[#D8D8EE]">qte: {quantite}</span> })
+  if (force)
+    items.push({ key: 'force',   node: <span className="text-[#D8D8EE]">force: {force}</span> })
+  if (autre)
+    items.push({ key: 'autre',   node: <span className="text-[#D8D8EE]">{autre}</span> })
+  if (trigger)
+    items.push({ key: 'trigger', node: <span className="text-[#D8D8EE] italic">{trigger}</span> })
+
   return (
-    <div className={`space-y-0.5 text-xs ${center ? 'flex flex-col items-center' : ''}`}>
-      {cout       !== null && cout !== undefined && (
-        <span className="text-marvel-gold font-bold">{cout} MP</span>
-      )}
-      {category     && <span className={`badge border ${catColor(category)}`}>{category}</span>}
-      {sous_category && <span className="text-[#D8D8EE] leading-tight">{sous_category}</span>}
-      {quantite     && <span className="text-[#D8D8EE] leading-tight">qte: {quantite}</span>}
-      {force        && <span className="text-[#D8D8EE] leading-tight">force: {force}</span>}
-      {autre        && <span className="text-[#D8D8EE] leading-tight">{autre}</span>}
-      {trigger      && <span className="text-[#D8D8EE] leading-tight italic">{trigger}</span>}
+    <div className={`flex flex-wrap items-center gap-1 text-xs ${center ? 'justify-center' : ''}`}>
+      {items.map((item, i) => (
+        <span key={item.key} className="flex items-center gap-1">
+          {i > 0 && <span className="text-[#555] select-none">//</span>}
+          {item.node}
+        </span>
+      ))}
     </div>
   )
 }
