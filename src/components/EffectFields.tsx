@@ -51,7 +51,7 @@ export function EffectDisplay({
   if (!hasContent) return <span className="text-[#444]">—</span>
 
   return (
-    <div className={`space-y-0.5 text-xs ${center ? 'flex flex-col items-center' : ''}`}>
+    <div className={'space-y-1 text-xs' + (center ? ' text-center' : '')}>
       {cout !== null && cout !== undefined && <div><span className="text-marvel-gold font-bold">{cout} MP</span></div>}
       {category      && <div><span className={`badge border ${catColor(category)}`}>{category}</span></div>}
       {sous_category && <div><span className="badge border bg-indigo-900/40 text-indigo-200 border-indigo-700">{sous_category}</span></div>}
