@@ -1,5 +1,3 @@
-import React from 'react'
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface EffectData {
   category:        string | null
@@ -52,37 +50,18 @@ export function EffectDisplay({
     degats || quantite || force || choix || autre || trigger
   if (!hasContent) return <span className="text-[#444]">—</span>
 
-  const items: { key: string; node: React.ReactNode }[] = []
-
-  if (cout !== null && cout !== undefined)
-    items.push({ key: 'cout',    node: <span className="text-marvel-gold font-bold">{cout} MP</span> })
-  if (category)
-    items.push({ key: 'cat',     node: <span className={`badge border ${catColor(category)}`}>{category}</span> })
-  if (sous_category)
-    items.push({ key: 'sous',    node: <span className={`badge border ${sousColor(sous_category)}`}>{sous_category}</span> })
-  if (sous_category_2)
-    items.push({ key: 'sous2',   node: <span className={`badge border ${sousColor(sous_category_2)}`}>{sous_category_2}</span> })
-  if (degats)
-    items.push({ key: 'degats',  node: <span className="text-[#D8D8EE]">Dmg: {degats}</span> })
-  if (quantite)
-    items.push({ key: 'qte',     node: <span className="text-[#D8D8EE]">qte: {quantite}</span> })
-  if (force)
-    items.push({ key: 'force',   node: <span className="text-[#D8D8EE]">Force: {force}</span> })
-  if (choix)
-    items.push({ key: 'choix',   node: <span className="text-[#D8D8EE]">{choix}</span> })
-  if (autre)
-    items.push({ key: 'autre',   node: <span className="text-[#D8D8EE]">{autre}</span> })
-  if (trigger)
-    items.push({ key: 'trigger', node: <span className="text-[#D8D8EE] italic">Trigger: {trigger}</span> })
-
   return (
-    <div className={`flex flex-wrap items-center gap-1 text-xs ${center ? 'justify-center' : ''}`}>
-      {items.map((item, i) => (
-        <span key={item.key} className="flex items-center gap-1">
-          {i > 0 && <span className="text-[#555] select-none">//</span>}
-          {item.node}
-        </span>
-      ))}
+    <div className={`space-y-0.5 text-xs ${center ? 'flex flex-col items-center' : ''}`}>
+      {cout !== null && cout !== undefined && <div><span className="text-marvel-gold font-bold">{cout} MP</span></div>}
+      {category      && <div><span className={`badge border ${catColor(category)}`}>{category}</span></div>}
+      {sous_category && <div><span className="badge border bg-indigo-900/40 text-indigo-200 border-indigo-700">{sous_category}</span></div>}
+      {sous_category_2 && <div><span className="badge border bg-violet-900/40 text-violet-200 border-violet-700">{sous_category_2}</span></div>}
+      {degats   && <div><span className="text-[#D8D8EE]">Dmg: {degats}</span></div>}
+      {quantite && <div><span className="text-[#D8D8EE]">qte: {quantite}</span></div>}
+      {force    && <div><span className="text-[#D8D8EE]">Force: {force}</span></div>}
+      {choix    && <div><span className="text-[#D8D8EE]">{choix}</span></div>}
+      {autre    && <div><span className="text-[#D8D8EE]">{autre}</span></div>}
+      {trigger  && <div><span className="text-[#D8D8EE] italic">Trigger: {trigger}</span></div>}
     </div>
   )
 }
@@ -185,10 +164,10 @@ export function EffectForm({
         {/* Sous Catégorie 2 — linked to Sous Catégorie */}
         <div>
           <label className="text-xs text-[#C8C8E0] mb-1 block">
-            Sous Catégorie 2 {!data.sous_category && <span className="text-[#555]">(choisir sous-cat. d'abord)</span>}
+            Sous Catégorie 2
           </label>
           <DynamicSelect value={data.sous_category_2} onChange={v => onChange('sous_category_2', v)}
-            options={availableSous2} placeholder="Sous Catégorie 2" disabled={!data.sous_category} />
+            options={availableSous2} placeholder="Sous Catégorie 2" />
         </div>
         {/* Dégâts */}
         <div>
