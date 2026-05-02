@@ -319,7 +319,17 @@ export default function Supports() {
                     <EffectForm
                       key={n}
                       label={`Effet ${n}`}
-                      data={{ category: form[`effect_${n}_category`], sous_category: form[`effect_${n}_sous_category`], quantite: form[`effect_${n}_quantite`], force: form[`effect_${n}_force`], autre: form[`effect_${n}_autre`], trigger: form[`effect_${n}_trigger`] }}
+                      data={{
+                        category:        form[`effect_${n}_category`],
+                        sous_category:   form[`effect_${n}_sous_category`],
+                        sous_category_2: form[`effect_${n}_sous_category_2`],
+                        degats:          form[`effect_${n}_degats`],
+                        quantite:        form[`effect_${n}_quantite`],
+                        force:           form[`effect_${n}_force`],
+                        choix:           form[`effect_${n}_choix`],
+                        autre:           form[`effect_${n}_autre`],
+                        trigger:         form[`effect_${n}_trigger`],
+                      }}
                       onChange={(field, val) => setEffect(n, field, val)}
                       allCategories={allCategories}
                       categoryMap={categoryMap}
