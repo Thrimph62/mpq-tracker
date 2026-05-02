@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { Character, CharacterPower, Stars } from '../types'
 import { StarBadge } from '../components/Badges'
 import { SearchDropdown, toCharacterOptions } from '../components/SearchDropdown'
+import { EffectDisplay, EffectForm, EffectData } from '../components/EffectFields'
 import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp, List, LayoutGrid, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 
 const COULEURS = ['Bleu', 'Rouge', 'Vert', 'Noir', 'Jaune', 'Violet'] as const
@@ -19,17 +20,15 @@ const COULEUR_BORDER: Record<Couleur, string> = {
   Jaune:  'border-yellow-600', Violet: 'border-purple-700',
 }
 
-const DEFAULT_CATEGORIES: string[] = []
-const DEFAULT_TRIGGERS: string[]   = []
 const EFFECTS = [1, 2, 3, 4] as const
 type EffectNum = typeof EFFECTS[number]
 
 const EMPTY: Omit<CharacterPower, 'id' | 'created_at' | 'updated_at'> = {
   character_id: '', power_name: null, couleur: null, position: null,
-  effect_1_cout: null, effect_1_category: null, effect_1_detail: null, effect_1_trigger: null,
-  effect_2_cout: null, effect_2_category: null, effect_2_detail: null, effect_2_trigger: null,
-  effect_3_cout: null, effect_3_category: null, effect_3_detail: null, effect_3_trigger: null,
-  effect_4_cout: null, effect_4_category: null, effect_4_detail: null, effect_4_trigger: null,
+  effect_1_cout: null, effect_1_category: null, effect_1_sous_category: null, effect_1_quantite: null, effect_1_force: null, effect_1_autre: null, effect_1_trigger: null,
+  effect_2_cout: null, effect_2_category: null, effect_2_sous_category: null, effect_2_quantite: null, effect_2_force: null, effect_2_autre: null, effect_2_trigger: null,
+  effect_3_cout: null, effect_3_category: null, effect_3_sous_category: null, effect_3_quantite: null, effect_3_force: null, effect_3_autre: null, effect_3_trigger: null,
+  effect_4_cout: null, effect_4_category: null, effect_4_sous_category: null, effect_4_quantite: null, effect_4_force: null, effect_4_autre: null, effect_4_trigger: null,
 }
 
 type ViewMode = 'table' | 'byCharacter'
@@ -41,60 +40,20 @@ function CouleurBadge({ couleur }: { couleur: string | null }) {
   return <span className={`badge font-semibold ${COULEUR_STYLES[couleur as Couleur] ?? 'bg-gray-700 text-white'}`}>{couleur}</span>
 }
 
-function catColor(cat: string | null): string {
-  if (!cat) return 'bg-[#1E1E38] text-[#C8C8E0] border-[#3D3D60]'
-  if (cat.includes('Gain MP'))       return 'bg-blue-900/50   text-blue-300   border-blue-700'
-  if (cat.includes('Dégâts'))        return 'bg-red-900/50    text-red-300    border-red-700'
-  if (cat.includes('Création'))      return 'bg-green-900/50  text-green-300  border-green-700'
-  if (cat.includes('Destruction'))   return 'bg-orange-900/50 text-orange-300 border-orange-700'
-  if (cat.includes('Conversion'))    return 'bg-yellow-900/50 text-yellow-300 border-yellow-700'
-  if (cat.includes('Fortification')) return 'bg-gray-700/50   text-gray-300   border-gray-500'
-  if (cat.includes('Santé'))         return 'bg-teal-900/50   text-teal-300   border-teal-700'
-  if (cat.includes('Paralysie'))     return 'bg-pink-900/50   text-pink-300   border-pink-700'
-  return 'bg-[#1E1E38] text-[#C8C8E0] border-[#3D3D60]'
-}
-
-// Single effect display: category badge → detail text → trigger italic
-function EffectDisplay({ cout, cat, detail, trigger, center = false }: {
-  cout?: number | null; cat: string | null; detail: string | null; trigger: string | null; center?: boolean
-}) {
-  if (!cat && !detail && !trigger) return null
-  return (
-    <div className={`space-y-0.5 ${center ? 'flex flex-col items-center' : ''}`}>
-      {cout !== undefined && cout !== null && (
-        <span className="text-marvel-gold font-bold text-sm">{cout} MP</span>
-      )}
-      {cat     && <span className={`badge border text-xs ${catColor(cat)}`}>{cat}</span>}
-      {detail  && <span className="text-[#D8D8EE] text-xs leading-tight">{detail}</span>}
-      {trigger && <span className="text-[#D8D8EE] text-xs italic leading-tight">{trigger}</span>}
-    </div>
-  )
-}
-
-function DynamicSelect({ value, onChange, options, placeholder }: {
-  value: string | null; onChange: (v: string | null) => void; options: string[]; placeholder: string
-}) {
-  const isNew = value !== null && value !== '' && !options.includes(value)
-  return (
-    <div className="space-y-1">
-      <select className="input text-sm"
-        value={isNew ? '__new__' : (value ?? '')}
-        onChange={e => { if (e.target.value === '__new__') onChange(''); else onChange(e.target.value || null) }}>
-        <option value="">— Aucun —</option>
-        {options.map(c => <option key={c} value={c}>{c}</option>)}
-        <option value="__new__">+ Nouveau {placeholder.toLowerCase()}...</option>
-      </select>
-      {(isNew || value === '') && (
-        <input className="input text-sm" placeholder={`Nouveau ${placeholder.toLowerCase()}...`}
-          autoFocus={value === ''} value={value ?? ''} onChange={e => onChange(e.target.value || null)} />
-      )}
-    </div>
-  )
-}
-
 function SortIcon({ col, current, dir }: { col: SortCol; current: SortCol; dir: SortDir }) {
   if (col !== current) return <ArrowUpDown size={10} className="opacity-30" />
   return dir === 'asc' ? <ArrowUp size={10} className="text-marvel-gold" /> : <ArrowDown size={10} className="text-marvel-gold" />
+}
+
+function getEffectData(p: CharacterPower, n: EffectNum): EffectData {
+  return {
+    category:      p[`effect_${n}_category`]      as string | null,
+    sous_category: p[`effect_${n}_sous_category`] as string | null,
+    quantite:      p[`effect_${n}_quantite`]      as string | null,
+    force:         p[`effect_${n}_force`]         as string | null,
+    autre:         p[`effect_${n}_autre`]         as string | null,
+    trigger:       p[`effect_${n}_trigger`]       as string | null,
+  }
 }
 
 export default function CharacterPowers() {
@@ -115,7 +74,7 @@ export default function CharacterPowers() {
 
   async function load() {
     const [{ data: pw }, { data: ch }] = await Promise.all([
-      supabase.from('mpq_tracker_character_powers').select('*').order('couleur'),
+      supabase.from('mpq_tracker_character_powers').select('*').order('position'),
       supabase.from('mpq_tracker_characters').select('*').order('base_name').order('version'),
     ])
     if (pw) setPowers(pw)
@@ -124,22 +83,36 @@ export default function CharacterPowers() {
   }
   useEffect(() => { load() }, [])
 
-  const allCategories = [...new Set([...DEFAULT_CATEGORIES,
-    ...powers.flatMap(p => EFFECTS.map(n => p[`effect_${n}_category`] as string | null).filter(Boolean) as string[]),
-  ])].sort()
+  const allCategories = [...new Set(powers.flatMap(p =>
+    EFFECTS.map(n => p[`effect_${n}_category`] as string | null).filter(Boolean) as string[]
+  ))].sort()
 
-  const allTriggers = [...new Set([...DEFAULT_TRIGGERS,
-    ...powers.flatMap(p => EFFECTS.map(n => p[`effect_${n}_trigger`] as string | null).filter(Boolean) as string[]),
-  ])].sort()
+  // Map: category -> sorted sous_categories linked to it
+  const categoryMap = powers.reduce<Record<string, string[]>>((acc, p) => {
+    EFFECTS.forEach(n => {
+      const cat = p[`effect_${n}_category`] as string | null
+      const sub = p[`effect_${n}_sous_category`] as string | null
+      if (cat && sub) {
+        if (!acc[cat]) acc[cat] = []
+        if (!acc[cat].includes(sub)) acc[cat].push(sub)
+      }
+    })
+    return acc
+  }, {})
+  Object.keys(categoryMap).forEach(k => categoryMap[k].sort())
+
+  const allTriggers = [...new Set(powers.flatMap(p =>
+    EFFECTS.map(n => p[`effect_${n}_trigger`] as string | null).filter(Boolean) as string[]
+  ))].sort()
 
   const cmap = useCallback(() => Object.fromEntries(characters.map(c => [c.id, c])), [characters])
 
   const filtered = powers.filter(p => {
-    const cm   = cmap()
+    const cm = cmap()
     const name = cm[p.character_id]?.name?.toLowerCase() ?? ''
     const matchSearch = !search || [
       name, p.power_name, p.couleur,
-      ...EFFECTS.flatMap(n => [p[`effect_${n}_category`], p[`effect_${n}_detail`], p[`effect_${n}_trigger`]]),
+      ...EFFECTS.flatMap(n => [p[`effect_${n}_category`], p[`effect_${n}_sous_category`], p[`effect_${n}_quantite`], p[`effect_${n}_force`], p[`effect_${n}_autre`], p[`effect_${n}_trigger`]]),
     ].some(v => v && String(v).toLowerCase().includes(search.toLowerCase()))
     const matchCouleur  = !filterCouleur  || p.couleur === filterCouleur
     const matchCategory = !filterCategory || EFFECTS.some(n => p[`effect_${n}_category`] === filterCategory)
@@ -160,12 +133,7 @@ export default function CharacterPowers() {
     else                               { va = a.position ?? 99; vb = b.position ?? 99 }
     if (va < vb) return sortDir === 'asc' ? -1 : 1
     if (va > vb) return sortDir === 'asc' ? 1 : -1
-    // Secondary sort by position when sorting by other fields
-    if (sortCol !== 'position') {
-      const pa = a.position ?? 99, pb = b.position ?? 99
-      if (pa < pb) return -1
-      if (pa > pb) return 1
-    }
+    if (sortCol !== 'position') { const pa = a.position ?? 99, pb = b.position ?? 99; if (pa !== pb) return pa - pb }
     return 0
   })
 
@@ -178,16 +146,14 @@ export default function CharacterPowers() {
   })
 
   function openAdd(characterId?: string) {
-    setForm({ ...EMPTY, character_id: characterId ?? '' })
-    setEditId(null); setModal('add')
+    setForm({ ...EMPTY, character_id: characterId ?? '' }); setEditId(null); setModal('add')
   }
   function openEdit(p: CharacterPower) {
-    const { id, created_at, updated_at, ...rest } = p
-    setForm(rest); setEditId(p.id); setModal('edit')
+    const { id, created_at, updated_at, ...rest } = p; setForm(rest); setEditId(p.id); setModal('edit')
   }
   function closeModal() { setModal(null); setEditId(null) }
 
-  function setEffect(n: EffectNum, field: 'cout' | 'category' | 'detail' | 'trigger', val: string | number | null) {
+  function setEffect(n: EffectNum, field: keyof EffectData, val: string | null) {
     setForm(f => ({ ...f, [`effect_${n}_${field}`]: val }))
   }
 
@@ -195,8 +161,7 @@ export default function CharacterPowers() {
     if (!form.character_id) return
     setSaving(true)
     if (modal === 'add') await supabase.from('mpq_tracker_character_powers').insert([form])
-    else if (editId) await supabase.from('mpq_tracker_character_powers')
-      .update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
+    else if (editId) await supabase.from('mpq_tracker_character_powers').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
     await load(); closeModal(); setSaving(false)
   }
 
@@ -259,7 +224,6 @@ export default function CharacterPowers() {
           {groupedEntries.map(([charId, charPowers]) => {
             const char   = cm[charId]
             const isOpen = expanded === charId
-            // Sort by position first
             const sortedPowers = [...charPowers].sort((a, b) => (a.position ?? 99) - (b.position ?? 99))
             const byCouleur = sortedPowers.reduce<Record<string, CharacterPower[]>>((acc, p) => {
               const key = p.couleur ?? 'Inconnu'; acc[key] = acc[key] ?? []; acc[key].push(p); return acc
@@ -275,9 +239,7 @@ export default function CharacterPowers() {
                     </div>
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {Object.keys(byCouleur).map(col => (
-                        <span key={col} className={`badge text-xs ${COULEUR_STYLES[col as Couleur] ?? 'bg-gray-700 text-white'}`}>
-                          {col} ({byCouleur[col].length})
-                        </span>
+                        <span key={col} className={`badge text-xs ${COULEUR_STYLES[col as Couleur] ?? 'bg-gray-700 text-white'}`}>{col} ({byCouleur[col].length})</span>
                       ))}
                     </div>
                   </div>
@@ -298,49 +260,33 @@ export default function CharacterPowers() {
                           <CouleurBadge couleur={col} />
                         </div>
                         <div className="space-y-2 pl-2">
-                          {byCouleur[col].sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).map(p => {
-                            const effectCount = EFFECTS.filter(n => p[`effect_${n}_category`] || p[`effect_${n}_detail`] || p[`effect_${n}_cout`]).length
-                            return (
-                              <div key={p.id} className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
-                                <div className="flex-1 space-y-2">
-                                  {p.power_name && (
-                                    <div className="flex items-center gap-2">
-                                      <p className="text-sm font-semibold text-white">{p.power_name}</p>
-                                      {p.position && (
-                                        <span className="badge bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] text-xs">#{p.position}</span>
+                          {byCouleur[col].sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).map(p => (
+                            <div key={p.id} className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
+                              <div className="flex-1 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  {p.power_name && <p className="text-sm font-semibold text-white">{p.power_name}</p>}
+                                  {p.position && <span className="badge bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] text-xs">#{p.position}</span>}
+                                </div>
+                                {EFFECTS.map(n => {
+                                  const cout = p[`effect_${n}_cout`] as number | null
+                                  const d    = getEffectData(p, n)
+                                  if (!cout && !d.category && !d.sous_category && !d.quantite && !d.force && !d.autre && !d.trigger) return null
+                                  return (
+                                    <div key={n} className="flex items-start gap-2">
+                                      {cout !== null && (
+                                        <span className="shrink-0 text-marvel-gold font-bold text-xs bg-marvel-gold/10 px-1.5 py-0.5 rounded">{cout} MP</span>
                                       )}
+                                      <EffectDisplay {...d} />
                                     </div>
-                                  )}
-                                  {!p.power_name && p.position && (
-                                    <span className="badge bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] text-xs">#{p.position}</span>
-                                  )}
-                                  {/* Show each effect with its MP cost */}
-                                  {EFFECTS.map(n => {
-                                    const cout = p[`effect_${n}_cout`] as number | null
-                                    const cat  = p[`effect_${n}_category`] as string | null
-                                    const det  = p[`effect_${n}_detail`]   as string | null
-                                    const trig = p[`effect_${n}_trigger`]  as string | null
-                                    if (!cout && !cat && !det && !trig) return null
-                                    return (
-                                      <div key={n} className="flex items-start gap-2">
-                                        {cout !== null && (
-                                          <span className="shrink-0 text-marvel-gold font-bold text-xs bg-marvel-gold/10 px-1.5 py-0.5 rounded">
-                                            {cout} MP
-                                          </span>
-                                        )}
-                                        <EffectDisplay cat={cat} detail={det} trigger={trig} />
-                                      </div>
-                                    )
-                                  })}
-                                  {effectCount === 0 && <p className="text-xs text-[#C8C8E0]">Aucun effet</p>}
-                                </div>
-                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                  <button onClick={() => openEdit(p)} className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
-                                  <button onClick={() => remove(p.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
-                                </div>
+                                  )
+                                })}
                               </div>
-                            )
-                          })}
+                              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                <button onClick={() => openEdit(p)} className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
+                                <button onClick={() => remove(p.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ))}
@@ -360,9 +306,7 @@ export default function CharacterPowers() {
                 <Th col="position"   label="Pos." />
                 <Th col="power_name" label="Nom du pouvoir" />
                 <Th col="couleur"    label="Couleur" />
-                {EFFECTS.map(n => (
-                  <th key={n} className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Effet {n}</th>
-                ))}
+                {EFFECTS.map(n => <th key={n} className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Effet {n}</th>)}
                 <th className="py-2 px-2 font-normal text-center text-[#C8C8E0]">Actions</th>
               </tr>
             </thead>
@@ -375,23 +319,11 @@ export default function CharacterPowers() {
                   <td className="py-2 px-2 text-center"><CouleurBadge couleur={p.couleur} /></td>
                   {EFFECTS.map(n => (
                     <td key={n} className="py-2 px-1 text-center align-top">
-                      <div className="flex flex-col items-center gap-0.5">
-                        {(p[`effect_${n}_cout`] !== null) && (
-                          <span className="text-marvel-gold font-bold text-xs">{p[`effect_${n}_cout`]} MP</span>
-                        )}
-                        {p[`effect_${n}_category`] && (
-                          <span className={`badge border text-xs ${catColor(p[`effect_${n}_category`] as string)}`}>{p[`effect_${n}_category`] as string}</span>
-                        )}
-                        {p[`effect_${n}_detail`] && (
-                          <span className="text-[#D8D8EE] text-xs">{p[`effect_${n}_detail`] as string}</span>
-                        )}
-                        {p[`effect_${n}_trigger`] && (
-                          <span className="text-[#D8D8EE] text-xs italic">{p[`effect_${n}_trigger`] as string}</span>
-                        )}
-                        {!p[`effect_${n}_cout`] && !p[`effect_${n}_category`] && !p[`effect_${n}_detail`] && !p[`effect_${n}_trigger`] && (
-                          <span className="text-[#444]">—</span>
-                        )}
-                      </div>
+                      <EffectDisplay
+                        {...getEffectData(p, n)}
+                        cout={p[`effect_${n}_cout`] as number | null}
+                        center
+                      />
                     </td>
                   ))}
                   <td className="py-2 px-2 text-center">
@@ -408,7 +340,6 @@ export default function CharacterPowers() {
         </div>
       )}
 
-      {/* Modal */}
       {modal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-2xl my-4">
@@ -417,95 +348,57 @@ export default function CharacterPowers() {
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
-              {/* Fixed fields — same for all effects */}
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Personnage *</label>
                 <SearchDropdown
                   value={form.character_id ? (characters.find(c => c.id === form.character_id)?.name ?? '') : ''}
                   onChange={() => {}}
                   onSelectId={id => setForm(f => ({ ...f, character_id: id ?? '' }))}
-                  options={charOptions}
-                  placeholder="Rechercher un personnage..."
-                  allowFreeText={false}
-                />
+                  options={charOptions} placeholder="Rechercher un personnage..." allowFreeText={false} />
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Nom du pouvoir</label>
-                  <input className="input" value={form.power_name ?? ''}
-                    onChange={e => setForm(f => ({ ...f, power_name: e.target.value || null }))}
-                    placeholder="Ex: Assaut Cosmique" />
+                  <input className="input" value={form.power_name ?? ''} onChange={e => setForm(f => ({ ...f, power_name: e.target.value || null }))} placeholder="Ex: Assaut Cosmique" />
                 </div>
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Couleur</label>
-                  <select className="input" value={form.couleur ?? ''}
-                    onChange={e => setForm(f => ({ ...f, couleur: e.target.value || null }))}>
+                  <select className="input" value={form.couleur ?? ''} onChange={e => setForm(f => ({ ...f, couleur: e.target.value || null }))}>
                     <option value="">— Aucune —</option>
                     {COULEURS.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Position (1–6)</label>
-                  <select className="input" value={form.position ?? ''}
-                    onChange={e => setForm(f => ({ ...f, position: e.target.value ? Number(e.target.value) : null }))}>
+                  <select className="input" value={form.position ?? ''} onChange={e => setForm(f => ({ ...f, position: e.target.value ? Number(e.target.value) : null }))}>
                     <option value="">—</option>
                     {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
               </div>
 
-              {/* Effects 1–4 — each with MP cost */}
               <div>
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Effets (jusqu'à 4)</p>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {EFFECTS.map(n => (
-                    <div key={n} className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-[#C8C8E0]">Effet {n}</span>
-                        <div className="w-24">
-                          <input type="number" className="input text-sm py-1"
-                            placeholder="MP"
-                            value={form[`effect_${n}_cout`] ?? ''}
-                            onChange={e => setEffect(n, 'cout', e.target.value ? Number(e.target.value) : null)} />
-                        </div>
-                        <span className="text-xs text-[#C8C8E0]">MP</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
-                          <label className="text-xs text-[#C8C8E0] mb-1 block">Catégorie</label>
-                          <DynamicSelect
-                            value={form[`effect_${n}_category`]}
-                            onChange={v => setEffect(n, 'category', v)}
-                            options={allCategories}
-                            placeholder="Catégorie"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-[#C8C8E0] mb-1 block">Détail</label>
-                          <input className="input text-sm" value={form[`effect_${n}_detail`] ?? ''}
-                            onChange={e => setEffect(n, 'detail', e.target.value || null)}
-                            placeholder="Description libre..." />
-                        </div>
-                        <div>
-                          <label className="text-xs text-[#C8C8E0] mb-1 block">Trigger</label>
-                          <DynamicSelect
-                            value={form[`effect_${n}_trigger`]}
-                            onChange={v => setEffect(n, 'trigger', v)}
-                            options={allTriggers}
-                            placeholder="Trigger"
-                          />
-                        </div>
-                      </div>
-                    </div>
+                    <EffectForm
+                      key={n}
+                      label={`Effet ${n}`}
+                      data={{ category: form[`effect_${n}_category`], sous_category: form[`effect_${n}_sous_category`], quantite: form[`effect_${n}_quantite`], force: form[`effect_${n}_force`], autre: form[`effect_${n}_autre`], trigger: form[`effect_${n}_trigger`] }}
+                      onChange={(field, val) => setEffect(n, field, val)}
+                      allCategories={allCategories}
+                      categoryMap={categoryMap}
+                      allTriggers={allTriggers}
+                      coutValue={form[`effect_${n}_cout`]}
+                      onCoutChange={val => setForm(f => ({ ...f, [`effect_${n}_cout`]: val }))}
+                    />
                   ))}
                 </div>
               </div>
 
               <div className="flex gap-3 pt-2">
                 <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
-                <button onClick={save} disabled={saving || !form.character_id} className="btn-primary flex-1">
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-                </button>
+                <button onClick={save} disabled={saving || !form.character_id} className="btn-primary flex-1">{saving ? 'Sauvegarde...' : 'Sauvegarder'}</button>
               </div>
             </div>
           </div>

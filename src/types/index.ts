@@ -31,10 +31,10 @@ export interface CharacterPower {
   couleur: string | null
   position: number | null  // 1–6, shared across all effects of the same power
   // Up to 4 effects — each with its own MP cost
-  effect_1_cout: number | null; effect_1_category: string | null; effect_1_detail: string | null; effect_1_trigger: string | null
-  effect_2_cout: number | null; effect_2_category: string | null; effect_2_detail: string | null; effect_2_trigger: string | null
-  effect_3_cout: number | null; effect_3_category: string | null; effect_3_detail: string | null; effect_3_trigger: string | null
-  effect_4_cout: number | null; effect_4_category: string | null; effect_4_detail: string | null; effect_4_trigger: string | null
+  effect_1_cout: number | null; effect_1_category: string | null; effect_1_sous_category: string | null; effect_1_quantite: string | null; effect_1_force: string | null; effect_1_autre: string | null; effect_1_trigger: string | null
+  effect_2_cout: number | null; effect_2_category: string | null; effect_2_sous_category: string | null; effect_2_quantite: string | null; effect_2_force: string | null; effect_2_autre: string | null; effect_2_trigger: string | null
+  effect_3_cout: number | null; effect_3_category: string | null; effect_3_sous_category: string | null; effect_3_quantite: string | null; effect_3_force: string | null; effect_3_autre: string | null; effect_3_trigger: string | null
+  effect_4_cout: number | null; effect_4_category: string | null; effect_4_sous_category: string | null; effect_4_quantite: string | null; effect_4_force: string | null; effect_4_autre: string | null; effect_4_trigger: string | null
   created_at: string
   updated_at: string
 }
@@ -46,14 +46,14 @@ export interface Support {
   niveau: number | null
   restriction: string | null
   // Effects 1–5 — each has category + trigger + detail
-  effect_1_category: string | null; effect_1_trigger: string | null; effect_1_detail: string | null
-  effect_2_category: string | null; effect_2_trigger: string | null; effect_2_detail: string | null
-  effect_3_category: string | null; effect_3_trigger: string | null; effect_3_detail: string | null
-  effect_4_category: string | null; effect_4_trigger: string | null; effect_4_detail: string | null
-  effect_5_category: string | null; effect_5_trigger: string | null; effect_5_detail: string | null
+  effect_1_category: string | null; effect_1_sous_category: string | null; effect_1_quantite: string | null; effect_1_force: string | null; effect_1_autre: string | null; effect_1_trigger: string | null
+  effect_2_category: string | null; effect_2_sous_category: string | null; effect_2_quantite: string | null; effect_2_force: string | null; effect_2_autre: string | null; effect_2_trigger: string | null
+  effect_3_category: string | null; effect_3_sous_category: string | null; effect_3_quantite: string | null; effect_3_force: string | null; effect_3_autre: string | null; effect_3_trigger: string | null
+  effect_4_category: string | null; effect_4_sous_category: string | null; effect_4_quantite: string | null; effect_4_force: string | null; effect_4_autre: string | null; effect_4_trigger: string | null
+  effect_5_category: string | null; effect_5_sous_category: string | null; effect_5_quantite: string | null; effect_5_force: string | null; effect_5_autre: string | null; effect_5_trigger: string | null
   // Synergy
   synergy_restriction: string | null
-  synergy_category: string | null; synergy_trigger: string | null; synergy_detail: string | null
+  synergy_category: string | null; synergy_sous_category: string | null; synergy_quantite: string | null; synergy_force: string | null; synergy_autre: string | null; synergy_trigger: string | null
   created_at: string
   updated_at: string
 }
