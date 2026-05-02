@@ -25,10 +25,10 @@ type EffectNum = typeof EFFECTS[number]
 
 const EMPTY: Omit<CharacterPower, 'id' | 'created_at' | 'updated_at'> = {
   character_id: '', power_name: null, couleur: null, position: null,
-  effect_1_cout: null, effect_1_category: null, effect_1_sous_category: null, effect_1_quantite: null, effect_1_force: null, effect_1_autre: null, effect_1_trigger: null,
-  effect_2_cout: null, effect_2_category: null, effect_2_sous_category: null, effect_2_quantite: null, effect_2_force: null, effect_2_autre: null, effect_2_trigger: null,
-  effect_3_cout: null, effect_3_category: null, effect_3_sous_category: null, effect_3_quantite: null, effect_3_force: null, effect_3_autre: null, effect_3_trigger: null,
-  effect_4_cout: null, effect_4_category: null, effect_4_sous_category: null, effect_4_quantite: null, effect_4_force: null, effect_4_autre: null, effect_4_trigger: null,
+  effect_1_cout: null, effect_1_category: null, effect_1_sous_category: null, effect_1_sous_category_2: null, effect_1_degats: null, effect_1_quantite: null, effect_1_force: null, effect_1_choix: null, effect_1_autre: null, effect_1_trigger: null,
+  effect_2_cout: null, effect_2_category: null, effect_2_sous_category: null, effect_2_sous_category_2: null, effect_2_degats: null, effect_2_quantite: null, effect_2_force: null, effect_2_choix: null, effect_2_autre: null, effect_2_trigger: null,
+  effect_3_cout: null, effect_3_category: null, effect_3_sous_category: null, effect_3_sous_category_2: null, effect_3_degats: null, effect_3_quantite: null, effect_3_force: null, effect_3_choix: null, effect_3_autre: null, effect_3_trigger: null,
+  effect_4_cout: null, effect_4_category: null, effect_4_sous_category: null, effect_4_sous_category_2: null, effect_4_degats: null, effect_4_quantite: null, effect_4_force: null, effect_4_choix: null, effect_4_autre: null, effect_4_trigger: null,
 }
 
 type ViewMode = 'table' | 'byCharacter'
@@ -47,12 +47,15 @@ function SortIcon({ col, current, dir }: { col: SortCol; current: SortCol; dir: 
 
 function getEffectData(p: CharacterPower, n: EffectNum): EffectData {
   return {
-    category:      p[`effect_${n}_category`]      as string | null,
-    sous_category: p[`effect_${n}_sous_category`] as string | null,
-    quantite:      p[`effect_${n}_quantite`]      as string | null,
-    force:         p[`effect_${n}_force`]         as string | null,
-    autre:         p[`effect_${n}_autre`]         as string | null,
-    trigger:       p[`effect_${n}_trigger`]       as string | null,
+    category:        p[`effect_${n}_category`]        as string | null,
+    sous_category:   p[`effect_${n}_sous_category`]   as string | null,
+    sous_category_2: p[`effect_${n}_sous_category_2`] as string | null,
+    degats:          p[`effect_${n}_degats`]          as string | null,
+    quantite:        p[`effect_${n}_quantite`]        as string | null,
+    force:           p[`effect_${n}_force`]           as string | null,
+    choix:           p[`effect_${n}_choix`]           as string | null,
+    autre:           p[`effect_${n}_autre`]           as string | null,
+    trigger:         p[`effect_${n}_trigger`]         as string | null,
   }
 }
 
@@ -100,6 +103,19 @@ export default function CharacterPowers() {
     return acc
   }, {})
   Object.keys(categoryMap).forEach(k => categoryMap[k].sort())
+
+  const sousMap = powers.reduce<Record<string, string[]>>((acc, p) => {
+    EFFECTS.forEach(n => {
+      const sub  = p[`effect_${n}_sous_category`] as string | null
+      const sub2 = p[`effect_${n}_sous_category_2`] as string | null
+      if (sub && sub2) {
+        if (!acc[sub]) acc[sub] = []
+        if (!acc[sub].includes(sub2)) acc[sub].push(sub2)
+      }
+    })
+    return acc
+  }, {})
+  Object.keys(sousMap).forEach(k => sousMap[k].sort())
 
   const allTriggers = [...new Set(powers.flatMap(p =>
     EFFECTS.map(n => p[`effect_${n}_trigger`] as string | null).filter(Boolean) as string[]
@@ -388,6 +404,7 @@ export default function CharacterPowers() {
                       onChange={(field, val) => setEffect(n, field, val)}
                       allCategories={allCategories}
                       categoryMap={categoryMap}
+                    sousMap={sousMap}
                       allTriggers={allTriggers}
                       coutValue={form[`effect_${n}_cout`]}
                       onCoutChange={val => setForm(f => ({ ...f, [`effect_${n}_cout`]: val }))}
