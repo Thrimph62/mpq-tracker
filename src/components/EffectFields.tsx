@@ -1,3 +1,5 @@
+import React from 'react'
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface EffectData {
   category:        string | null
@@ -77,6 +79,8 @@ interface DynamicSelectProps {
 
 export function DynamicSelect({ value, onChange, options, placeholder, disabled = false }: DynamicSelectProps) {
   const isNew = value !== null && value !== '' && !options.includes(value)
+  const showInput = isNew || value === ''
+
   if (disabled) {
     return <div className="input text-sm text-[#555] cursor-not-allowed opacity-50">— Sélectionner d'abord —</div>
   }
@@ -89,11 +93,46 @@ export function DynamicSelect({ value, onChange, options, placeholder, disabled 
         {options.map(c => <option key={c} value={c}>{c}</option>)}
         <option value="__new__">+ Nouveau {placeholder.toLowerCase()}...</option>
       </select>
-      {(isNew || value === '') && (
-        <input className="input text-sm" placeholder={`Nouveau ${placeholder.toLowerCase()}...`}
-          autoFocus={value === ''} value={value ?? ''} onChange={e => onChange(e.target.value || null)} />
+      {showInput && (
+        <StableInput
+          initialValue={value ?? ''}
+          onCommit={v => onChange(v === '' ? null : v)}
+          placeholder={`Nouveau ${placeholder.toLowerCase()}...`}
+          autoFocus={value === ''}
+        />
       )}
     </div>
+  )
+}
+
+// ── StableInput — local state prevents focus loss on parent re-render ─────────
+interface StableInputProps {
+  initialValue: string
+  onCommit: (v: string) => void
+  placeholder?: string
+  autoFocus?: boolean
+  type?: string
+  className?: string
+}
+
+function StableInput({ initialValue, onCommit, placeholder, autoFocus, type = 'text', className = 'input text-sm' }: StableInputProps) {
+  const [val, setVal] = React.useState(initialValue)
+  // Sync if parent resets the value externally (e.g. clearing the form)
+  const prevInit = React.useRef(initialValue)
+  if (prevInit.current !== initialValue) {
+    prevInit.current = initialValue
+    setVal(initialValue)
+  }
+  return (
+    <input
+      type={type}
+      className={className}
+      placeholder={placeholder}
+      autoFocus={autoFocus}
+      value={val}
+      onChange={e => setVal(e.target.value)}
+      onBlur={e => onCommit(e.target.value)}
+    />
   )
 }
 
@@ -140,9 +179,13 @@ export function EffectForm({
         <p className="text-xs text-[#C8C8E0] font-medium">{label}</p>
         {onCoutChange !== undefined && (
           <div className="flex items-center gap-1">
-            <input type="number" className="input text-sm py-1 w-20" placeholder="MP"
-              value={coutValue ?? ''}
-              onChange={e => onCoutChange(e.target.value ? Number(e.target.value) : null)} />
+            <StableInput
+              type="number"
+              className="input text-sm py-1 w-20"
+              initialValue={String(coutValue ?? '')}
+              onCommit={v => onCoutChange(v ? Number(v) : null)}
+              placeholder="MP"
+            />
             <span className="text-xs text-[#C8C8E0]">MP</span>
           </div>
         )}
@@ -172,32 +215,27 @@ export function EffectForm({
         {/* Dégâts */}
         <div>
           <label className="text-xs text-[#C8C8E0] mb-1 block">Dégâts <span className="text-[#555]">(Dmg: xxx)</span></label>
-          <input className="input text-sm" placeholder="Ex: 2500" value={data.degats ?? ''}
-            onChange={e => onChange('degats', e.target.value || null)} />
+          <StableInput initialValue={data.degats ?? ''} onCommit={v => onChange('degats', v || null)} placeholder="Ex: 2500" />
         </div>
         {/* Quantité */}
         <div>
           <label className="text-xs text-[#C8C8E0] mb-1 block">Quantité <span className="text-[#555]">(qte: xxx)</span></label>
-          <input className="input text-sm" placeholder="Ex: 3" value={data.quantite ?? ''}
-            onChange={e => onChange('quantite', e.target.value || null)} />
+          <StableInput initialValue={data.quantite ?? ''} onCommit={v => onChange('quantite', v || null)} placeholder="Ex: 3" />
         </div>
         {/* Force */}
         <div>
           <label className="text-xs text-[#C8C8E0] mb-1 block">Force <span className="text-[#555]">(Force: xxx)</span></label>
-          <input className="input text-sm" placeholder="Ex: x2" value={data.force ?? ''}
-            onChange={e => onChange('force', e.target.value || null)} />
+          <StableInput initialValue={data.force ?? ''} onCommit={v => onChange('force', v || null)} placeholder="Ex: x2" />
         </div>
         {/* Choix */}
         <div>
           <label className="text-xs text-[#C8C8E0] mb-1 block">Choix</label>
-          <input className="input text-sm" placeholder="Description libre..." value={data.choix ?? ''}
-            onChange={e => onChange('choix', e.target.value || null)} />
+          <StableInput initialValue={data.choix ?? ''} onCommit={v => onChange('choix', v || null)} placeholder="Description libre..." />
         </div>
         {/* Autre */}
         <div>
           <label className="text-xs text-[#C8C8E0] mb-1 block">Autre</label>
-          <input className="input text-sm" placeholder="Description libre..." value={data.autre ?? ''}
-            onChange={e => onChange('autre', e.target.value || null)} />
+          <StableInput initialValue={data.autre ?? ''} onCommit={v => onChange('autre', v || null)} placeholder="Description libre..." />
         </div>
         {/* Trigger */}
         <div className="col-span-2">
