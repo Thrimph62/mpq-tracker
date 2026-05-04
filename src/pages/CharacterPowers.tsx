@@ -323,7 +323,7 @@ export default function CharacterPowers() {
                 <Th col="power_name" label="Nom du pouvoir" />
                 <Th col="couleur"    label="Couleur" />
                 {EFFECTS.map(n => <th key={n} className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Effet {n}</th>)}
-                <th className="py-2 px-2 font-normal text-center text-[#C8C8E0]">Actions</th>
+                <th className="py-2 px-2 font-normal text-center text-[#C8C8E0] sticky right-0 bg-[#252540] z-10">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -342,7 +342,7 @@ export default function CharacterPowers() {
                       />
                     </td>
                   ))}
-                  <td className="py-2 px-2 text-center">
+                  <td className="py-2 px-2 text-center sticky right-0 bg-[#252540] z-10">
                     <div className="flex justify-center gap-2">
                       <button onClick={() => openEdit(p)} className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
                       <button onClick={() => remove(p.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
