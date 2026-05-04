@@ -42,6 +42,11 @@ function InlineLevelCell({ id, level, onSave }: {
     if (e.key === 'Enter') commit()
     if (e.key === 'Escape') { setEditing(false); setVal(String(level ?? '')) }
   }
+  function increment(e: React.MouseEvent) {
+    e.stopPropagation()
+    const next = (level ?? 0) + 1
+    onSave(id, next)
+  }
 
   if (editing) return (
     <input ref={inputRef} type="number" value={val}
@@ -49,10 +54,16 @@ function InlineLevelCell({ id, level, onSave }: {
       className="w-16 bg-[#1C1C2E] border border-marvel-red rounded px-1 py-0.5 text-center text-white text-xs outline-none" />
   )
   return (
-    <button onClick={startEdit} title="Cliquer pour modifier le niveau"
-      className="text-[#C8C8E0] hover:text-white hover:bg-[#3D3D60] rounded px-2 py-0.5 transition-all min-w-8 text-center">
-      {level ?? '—'}
-    </button>
+    <div className="flex items-center justify-center gap-1">
+      <button onClick={startEdit} title="Cliquer pour modifier le niveau"
+        className="text-[#C8C8E0] hover:text-white hover:bg-[#3D3D60] rounded px-2 py-0.5 transition-all min-w-8 text-center">
+        {level ?? '—'}
+      </button>
+      <button onClick={increment} title="+1"
+        className="text-[#C8C8E0] hover:text-white hover:bg-green-800/50 rounded px-1.5 py-0.5 text-xs font-bold transition-all leading-none">
+        +
+      </button>
+    </div>
   )
 }
 
