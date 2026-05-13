@@ -122,8 +122,14 @@ export default function Supports() {
     .filter(s => {
       const matchSearch = !search || [
         s.name, s.restriction,
-        ...EFFECTS.flatMap(n => [s[`effect_${n}_category`], s[`effect_${n}_sous_category`], s[`effect_${n}_quantite`], s[`effect_${n}_force`], s[`effect_${n}_autre`], s[`effect_${n}_trigger`]]),
-        s.synergy_restriction, s.synergy_category, s.synergy_sous_category, s.synergy_trigger,
+        ...EFFECTS.flatMap(n => [
+          s[`effect_${n}_category`], s[`effect_${n}_sous_category`], s[`effect_${n}_sous_category_2`],
+          s[`effect_${n}_degats`], s[`effect_${n}_quantite`], s[`effect_${n}_force`],
+          s[`effect_${n}_choix`], s[`effect_${n}_autre`], s[`effect_${n}_trigger`],
+        ]),
+        s.synergy_restriction, s.synergy_category, s.synergy_sous_category,
+        s.synergy_sous_category_2, s.synergy_degats, s.synergy_quantite,
+        s.synergy_force, s.synergy_choix, s.synergy_autre, s.synergy_trigger,
       ].some(v => v && String(v).toLowerCase().includes(search.toLowerCase()))
       const matchEffect = !filterEffect || [...EFFECTS.map(n => s[`effect_${n}_category`]), s.synergy_category].some(c => c === filterEffect)
       return matchSearch && matchEffect
