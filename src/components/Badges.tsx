@@ -106,3 +106,28 @@ export function OkBadge({ value }: { value: string | null }) {
     </span>
   )
 }
+
+// Clickable duplicate toggle
+interface InlineDuplicateProps {
+  is_duplicate: boolean
+  onChange: (next: boolean) => void
+}
+
+export function InlineDuplicateBadge({ is_duplicate, onChange }: InlineDuplicateProps) {
+  function handleClick(e: React.MouseEvent) {
+    e.stopPropagation()
+    onChange(!is_duplicate)
+  }
+  if (is_duplicate) return (
+    <button onClick={handleClick} title="Click to mark as Original"
+      className="badge border border-[#555] bg-[#2A2A45] text-[#888] hover:text-white hover:border-[#888] cursor-pointer transition-colors select-none">
+      Dupe
+    </button>
+  )
+  return (
+    <button onClick={handleClick} title="Click to mark as Duplicate"
+      className="badge border bg-green-900/60 text-green-300 border-green-700 cursor-pointer hover:opacity-80 transition-opacity select-none">
+      Original
+    </button>
+  )
+}

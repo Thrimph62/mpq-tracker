@@ -18,7 +18,8 @@ export interface Character {
   stars: Stars
   level: number | null
   status: CharacterStatus | null
-  ascended: boolean   // indépendant du statut — un perso peut être ascended ET max_champ
+  ascended: boolean
+  is_duplicate: boolean
   notes: string | null
   created_at: string
   updated_at: string
@@ -29,12 +30,13 @@ export interface CharacterPower {
   character_id: string
   power_name: string | null
   couleur: string | null
-  position: number | null  // 1–6, shared across all effects of the same power
-  // Up to 4 effects — each with its own MP cost
-  effect_1_cout: number | null; effect_1_category: string | null; effect_1_sous_category: string | null; effect_1_sous_category_2: string | null; effect_1_degats: string | null; effect_1_quantite: string | null; effect_1_force: string | null; effect_1_choix: string | null; effect_1_autre: string | null; effect_1_trigger: string | null
-  effect_2_cout: number | null; effect_2_category: string | null; effect_2_sous_category: string | null; effect_2_sous_category_2: string | null; effect_2_degats: string | null; effect_2_quantite: string | null; effect_2_force: string | null; effect_2_choix: string | null; effect_2_autre: string | null; effect_2_trigger: string | null
-  effect_3_cout: number | null; effect_3_category: string | null; effect_3_sous_category: string | null; effect_3_sous_category_2: string | null; effect_3_degats: string | null; effect_3_quantite: string | null; effect_3_force: string | null; effect_3_choix: string | null; effect_3_autre: string | null; effect_3_trigger: string | null
-  effect_4_cout: number | null; effect_4_category: string | null; effect_4_sous_category: string | null; effect_4_sous_category_2: string | null; effect_4_degats: string | null; effect_4_quantite: string | null; effect_4_force: string | null; effect_4_choix: string | null; effect_4_autre: string | null; effect_4_trigger: string | null
+  position: number | null
+  description: string | null
+  // Up to 4 effects — each with its own MP cost + category/sub chain
+  effect_1_cout: number | null; effect_1_category: string | null; effect_1_sous_category: string | null; effect_1_sous_category_2: string | null; effect_1_sous_category_3: string | null
+  effect_2_cout: number | null; effect_2_category: string | null; effect_2_sous_category: string | null; effect_2_sous_category_2: string | null; effect_2_sous_category_3: string | null
+  effect_3_cout: number | null; effect_3_category: string | null; effect_3_sous_category: string | null; effect_3_sous_category_2: string | null; effect_3_sous_category_3: string | null
+  effect_4_cout: number | null; effect_4_category: string | null; effect_4_sous_category: string | null; effect_4_sous_category_2: string | null; effect_4_sous_category_3: string | null
   created_at: string
   updated_at: string
 }

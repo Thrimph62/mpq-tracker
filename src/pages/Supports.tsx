@@ -36,6 +36,7 @@ function getEffectData(s: Support, n: EffectNum): EffectData {
     category:        s[`effect_${n}_category`]        as string | null,
     sous_category:   s[`effect_${n}_sous_category`]   as string | null,
     sous_category_2: s[`effect_${n}_sous_category_2`] as string | null,
+    sous_category_3: null,
     degats:          s[`effect_${n}_degats`]          as string | null,
     quantite:        s[`effect_${n}_quantite`]        as string | null,
     force:           s[`effect_${n}_force`]           as string | null,
@@ -159,7 +160,8 @@ export default function Supports() {
   function getSynergyData(): EffectData {
     return {
       category: form.synergy_category, sous_category: form.synergy_sous_category,
-      sous_category_2: form.synergy_sous_category_2, degats: form.synergy_degats,
+      sous_category_2: form.synergy_sous_category_2, sous_category_3: null,
+      degats: form.synergy_degats,
       quantite: form.synergy_quantite, force: form.synergy_force,
       choix: form.synergy_choix, autre: form.synergy_autre, trigger: form.synergy_trigger,
     }
@@ -329,6 +331,7 @@ export default function Supports() {
                         category:        form[`effect_${n}_category`],
                         sous_category:   form[`effect_${n}_sous_category`],
                         sous_category_2: form[`effect_${n}_sous_category_2`],
+                        sous_category_3: null,
                         degats:          form[`effect_${n}_degats`],
                         quantite:        form[`effect_${n}_quantite`],
                         force:           form[`effect_${n}_force`],
@@ -340,6 +343,7 @@ export default function Supports() {
                       allCategories={allCategories}
                       categoryMap={categoryMap}
                     sousMap={sousMap}
+                    sousMap2={{}}
                       allTriggers={allTriggers}
                     />
                   ))}
@@ -361,6 +365,7 @@ export default function Supports() {
                     allCategories={allCategories}
                     categoryMap={categoryMap}
                     sousMap={sousMap}
+                    sousMap2={{}}
                     allTriggers={allTriggers}
                   />
                 </div>

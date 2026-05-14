@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { Character, CharacterStatus, Stars } from '../types'
-import { StarBadge, InlineStatusBadge, InlineAscendedBadge } from '../components/Badges'
-import { Plus, Search, X, Pencil, Trash2, Layers, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { StarBadge, InlineStatusBadge, InlineAscendedBadge, InlineDuplicateBadge } from '../components/Badges'
+import { Plus, Search, X, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 
 const STATUSES: CharacterStatus[] = ['not_owned', 'rostered', 'champ', 'max_champ']
 const STARS_OPTIONS: Stars[] = [6, 5, 4, 3, 2, 1]
@@ -18,10 +18,64 @@ function parseBaseName(name: string): { base: string; version: string | null } {
 
 const EMPTY: Omit<Character, 'id' | 'created_at' | 'updated_at'> = {
   name: '', base_name: '', version: null, stars: 5,
-  level: null, status: 'rostered', ascended: false, notes: null,
+  level: null, status: 'rostered', ascended: false, is_duplicate: false, notes: null,
 }
 
-type ViewMode  = 'list' | 'grouped'
+// Auto-assign duplicates within a name group
+// The one with the highest level (ties: oldest created_at) = Original, rest = Dupe
+async function autoAssignDuplicates(chars: Character[], nameFilter?: string): Promise<Character[]> {
+  const groups: Record<string, Character[]> = {}
+  chars.forEach(c => {
+    const key = c.name
+    groups[key] = groups[key] ?? []
+    groups[key].push(c)
+  })
+
+  const updates: { id: string; is_duplicate: boolean }[] = []
+  const result = [...chars]
+
+  const groupsToProcess = nameFilter
+    ? { [nameFilter]: groups[nameFilter] ?? [] }
+    : groups
+
+  for (const [, group] of Object.entries(groupsToProcess)) {
+    if (group.length <= 1) {
+      // Single copy — always Original
+      if (group.length === 1 && group[0].is_duplicate) {
+        updates.push({ id: group[0].id, is_duplicate: false })
+        const idx = result.findIndex(c => c.id === group[0].id)
+        if (idx !== -1) result[idx] = { ...result[idx], is_duplicate: false }
+      }
+      continue
+    }
+    // Find the "winner" — highest level, ties broken by oldest created_at
+    const winner = group.reduce((best, c) => {
+      const bLvl = best.level ?? -1
+      const cLvl = c.level ?? -1
+      if (cLvl > bLvl) return c
+      if (cLvl === bLvl && c.created_at < best.created_at) return c
+      return best
+    })
+    for (const c of group) {
+      const shouldBeDupe = c.id !== winner.id
+      if (c.is_duplicate !== shouldBeDupe) {
+        updates.push({ id: c.id, is_duplicate: shouldBeDupe })
+        const idx = result.findIndex(r => r.id === c.id)
+        if (idx !== -1) result[idx] = { ...result[idx], is_duplicate: shouldBeDupe }
+      }
+    }
+  }
+
+  // Batch update Supabase
+  for (const u of updates) {
+    await supabase.from('mpq_tracker_characters')
+      .update({ is_duplicate: u.is_duplicate, updated_at: new Date().toISOString() })
+      .eq('id', u.id)
+  }
+
+  return result
+}
+
 type SortField = 'base_name' | 'stars' | 'level'
 type SortDir   = 'asc' | 'desc'
 
@@ -88,7 +142,6 @@ export default function Characters() {
   const [filterAscended, setFilterAscended] = useState<'all' | 'yes' | 'no'>('all')
   const [sortField, setSortField] = useState<SortField>('base_name')
   const [sortDir, setSortDir]     = useState<SortDir>('asc')
-  const [viewMode, setViewMode]   = useState<ViewMode>('list')
   const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
   const [form, setForm]           = useState<typeof EMPTY>(EMPTY)
   const [editId, setEditId]       = useState<string | null>(null)
@@ -97,7 +150,10 @@ export default function Characters() {
   async function load() {
     const { data } = await supabase.from('mpq_tracker_characters').select('*')
       .order('base_name').order('version').order('level', { ascending: false })
-    if (data) setChars(data)
+    if (data) {
+      const assigned = await autoAssignDuplicates(data as Character[])
+      setChars(assigned)
+    }
     setLoading(false)
   }
   useEffect(() => { load() }, [])
@@ -128,10 +184,6 @@ export default function Characters() {
       return (b.level ?? -1) - (a.level ?? -1)
     })
 
-  const grouped = filtered.reduce<Record<string, Character[]>>((acc, c) => {
-    const key = c.base_name || parseBaseName(c.name).base
-    acc[key] = acc[key] ?? []; acc[key].push(c); return acc
-  }, {})
 
   function openAdd()  { setForm(EMPTY); setEditId(null); setModal('add') }
   function openEdit(c: Character) {
@@ -156,7 +208,9 @@ export default function Characters() {
   async function remove(id: string) {
     if (!confirm('Delete this character?')) return
     await supabase.from('mpq_tracker_characters').delete().eq('id', id)
-    setChars(prev => prev.filter(c => c.id !== id))
+    const remaining = chars.filter(c => c.id !== id)
+    const assigned  = await autoAssignDuplicates(remaining)
+    setChars(assigned)
   }
 
   async function updateStatus(id: string, status: CharacterStatus) {
@@ -171,7 +225,15 @@ export default function Characters() {
 
   async function updateLevel(id: string, level: number | null) {
     await supabase.from('mpq_tracker_characters').update({ level, updated_at: new Date().toISOString() }).eq('id', id)
-    setChars(prev => prev.map(c => c.id === id ? { ...c, level } : c))
+    const updated  = chars.map(c => c.id === id ? { ...c, level } : c)
+    const charName = chars.find(c => c.id === id)?.name
+    const assigned = await autoAssignDuplicates(updated, charName)
+    setChars(assigned)
+  }
+
+  async function updateDuplicate(id: string, is_duplicate: boolean) {
+    await supabase.from('mpq_tracker_characters').update({ is_duplicate, updated_at: new Date().toISOString() }).eq('id', id)
+    setChars(prev => prev.map(c => c.id === id ? { ...c, is_duplicate } : c))
   }
 
   return (
@@ -200,10 +262,6 @@ export default function Characters() {
           <option value="yes">Ascended only</option>
           <option value="no">Not ascended</option>
         </select>
-        <button onClick={() => setViewMode(v => v === 'list' ? 'grouped' : 'list')}
-          className={`btn-secondary flex items-center gap-2 ${viewMode === 'grouped' ? 'bg-marvel-red/20 border-marvel-red/40 text-white' : ''}`}>
-          <Layers size={14} /> {viewMode === 'grouped' ? 'Grouped' : 'List'}
-        </button>
       </div>
 
       <div className="flex items-center gap-2 text-xs text-[#C8C8E0]">
@@ -216,7 +274,7 @@ export default function Characters() {
         <span className="ml-1 text-[#555]">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
-      {loading ? <Spinner /> : viewMode === 'list' ? (
+      {loading ? <Spinner /> : (
         <div className="card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -239,6 +297,7 @@ export default function Characters() {
                 </th>
                 <th className="text-center py-2 font-normal">Status <span className="text-[#555] text-xs">(clic)</span></th>
                 <th className="text-center py-2 font-normal">Asc. <span className="text-[#555] text-xs">(clic)</span></th>
+                <th className="text-center py-2 font-normal">Duplicate <span className="text-[#555] text-xs">(click)</span></th>
                 <th className="text-center py-2 font-normal">Actions</th>
               </tr>
             </thead>
@@ -260,6 +319,9 @@ export default function Characters() {
                     <InlineAscendedBadge ascended={c.ascended} onChange={a => updateAscended(c.id, a)} />
                   </td>
                   <td className="py-2 text-center">
+                    <InlineDuplicateBadge is_duplicate={c.is_duplicate} onChange={d => updateDuplicate(c.id, d)} />
+                  </td>
+                  <td className="py-2 text-center">
                     <div className="flex justify-center gap-2">
                       <button onClick={() => openEdit(c)} className="text-[#C8C8E0] hover:text-white transition-colors"><Pencil size={14} /></button>
                       <button onClick={() => remove(c.id)} className="text-[#C8C8E0] hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
@@ -271,34 +333,8 @@ export default function Characters() {
           </table>
           {filtered.length === 0 && <p className="text-center text-[#C8C8E0] py-8">No characters found</p>}
         </div>
-      ) : (
-        <div className="space-y-2">
-          {Object.entries(grouped).map(([baseName, versions]) => (
-            <div key={baseName} className="card">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-white">{baseName}</h3>
-                <span className="text-xs text-[#C8C8E0]">{versions.length} version{versions.length > 1 ? 's' : ''}</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {versions.map(c => (
-                  <div key={c.id} className="flex items-center gap-2 bg-[#1C1C2E] rounded-lg px-3 py-2 group">
-                    <StarBadge stars={c.stars as Stars} />
-                    {c.version && <span className="text-xs text-[#C8C8E0]">{c.version}</span>}
-                    <InlineLevelCell id={c.id} level={c.level} onSave={updateLevel} />
-                    <InlineStatusBadge status={c.status as CharacterStatus} onChange={s => updateStatus(c.id, s)} />
-                    <InlineAscendedBadge ascended={c.ascended} onChange={a => updateAscended(c.id, a)} />
-                    <div className="flex gap-1 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(c)} className="text-[#C8C8E0] hover:text-white"><Pencil size={12} /></button>
-                      <button onClick={() => remove(c.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={12} /></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-          {Object.keys(grouped).length === 0 && <div className="card text-center text-[#C8C8E0] py-8">No characters found</div>}
-        </div>
       )}
+
 
       {modal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">

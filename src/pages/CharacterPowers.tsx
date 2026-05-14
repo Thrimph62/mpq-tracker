@@ -6,38 +6,49 @@ import { SearchDropdown, toCharacterOptions } from '../components/SearchDropdown
 import { EffectDisplay, EffectForm, EffectData } from '../components/EffectFields'
 import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp, List, LayoutGrid, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 
-const COULEURS = ['Bleu', 'Rouge', 'Vert', 'Noir', 'Jaune', 'Violet'] as const
-type Color = typeof COULEURS[number]
+// ── Constants ─────────────────────────────────────────────────────────────────
+// Alphabetical order
+const COULEURS = ['Black', 'Blue', 'Green', 'Purple', 'Red', 'Yellow'] as const
+type Couleur = typeof COULEURS[number]
 
-const COULEUR_STYLES: Record<Color, string> = {
-  Bleu:   'bg-blue-600   text-white', Rouge:  'bg-red-600    text-white',
-  Vert:   'bg-green-600  text-white', Noir:   'bg-gray-600   text-white',
-  Jaune:  'bg-yellow-500 text-black', Violet: 'bg-purple-600 text-white',
+const COULEUR_STYLES: Record<Couleur, string> = {
+  Black:  'bg-gray-600   text-white',
+  Blue:   'bg-blue-600   text-white',
+  Green:  'bg-green-600  text-white',
+  Purple: 'bg-purple-600 text-white',
+  Red:    'bg-red-600    text-white',
+  Yellow: 'bg-yellow-500 text-black',
 }
-const COULEUR_BORDER: Record<Color, string> = {
-  Bleu:   'border-blue-700',   Rouge:  'border-red-700',
-  Vert:   'border-green-700',  Noir:   'border-gray-600',
-  Jaune:  'border-yellow-600', Violet: 'border-purple-700',
+const COULEUR_BORDER: Record<Couleur, string> = {
+  Black:  'border-gray-600',   Blue:   'border-blue-700',
+  Green:  'border-green-700',  Purple: 'border-purple-700',
+  Red:    'border-red-700',    Yellow: 'border-yellow-600',
 }
 
 const EFFECTS = [1, 2, 3, 4] as const
 type EffectNum = typeof EFFECTS[number]
 
 const EMPTY: Omit<CharacterPower, 'id' | 'created_at' | 'updated_at'> = {
-  character_id: '', power_name: null, couleur: null, position: null,
-  effect_1_cout: null, effect_1_category: null, effect_1_sous_category: null, effect_1_sous_category_2: null, effect_1_degats: null, effect_1_quantite: null, effect_1_force: null, effect_1_choix: null, effect_1_autre: null, effect_1_trigger: null,
-  effect_2_cout: null, effect_2_category: null, effect_2_sous_category: null, effect_2_sous_category_2: null, effect_2_degats: null, effect_2_quantite: null, effect_2_force: null, effect_2_choix: null, effect_2_autre: null, effect_2_trigger: null,
-  effect_3_cout: null, effect_3_category: null, effect_3_sous_category: null, effect_3_sous_category_2: null, effect_3_degats: null, effect_3_quantite: null, effect_3_force: null, effect_3_choix: null, effect_3_autre: null, effect_3_trigger: null,
-  effect_4_cout: null, effect_4_category: null, effect_4_sous_category: null, effect_4_sous_category_2: null, effect_4_degats: null, effect_4_quantite: null, effect_4_force: null, effect_4_choix: null, effect_4_autre: null, effect_4_trigger: null,
+  character_id: '', power_name: null, couleur: null, position: null, description: null,
+  effect_1_cout: null, effect_1_category: null, effect_1_sous_category: null, effect_1_sous_category_2: null, effect_1_sous_category_3: null,
+  effect_2_cout: null, effect_2_category: null, effect_2_sous_category: null, effect_2_sous_category_2: null, effect_2_sous_category_3: null,
+  effect_3_cout: null, effect_3_category: null, effect_3_sous_category: null, effect_3_sous_category_2: null, effect_3_sous_category_3: null,
+  effect_4_cout: null, effect_4_category: null, effect_4_sous_category: null, effect_4_sous_category_2: null, effect_4_sous_category_3: null,
 }
 
 type ViewMode = 'table' | 'byCharacter'
 type SortCol  = 'character' | 'power_name' | 'couleur' | 'position'
 type SortDir  = 'asc' | 'desc'
 
-function ColorBadge({ couleur }: { couleur: string | null }) {
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function CouleurBadge({ couleur }: { couleur: string | null }) {
   if (!couleur) return null
-  return <span className={`badge font-semibold ${COULEUR_STYLES[couleur as Color] ?? 'bg-gray-700 text-white'}`}>{couleur}</span>
+  return <span className={`badge font-semibold ${COULEUR_STYLES[couleur as Couleur] ?? 'bg-gray-700 text-white'}`}>{couleur}</span>
+}
+
+function catColor(cat: string | null): string {
+  if (!cat) return 'bg-[#1E1E38] text-[#C8C8E0] border-[#3D3D60]'
+  return 'bg-[#3D3D60] text-[#C8C8E0] border-[#555]'
 }
 
 function SortIcon({ col, current, dir }: { col: SortCol; current: SortCol; dir: SortDir }) {
@@ -50,21 +61,29 @@ function getEffectData(p: CharacterPower, n: EffectNum): EffectData {
     category:        p[`effect_${n}_category`]        as string | null,
     sous_category:   p[`effect_${n}_sous_category`]   as string | null,
     sous_category_2: p[`effect_${n}_sous_category_2`] as string | null,
-    degats:          p[`effect_${n}_degats`]          as string | null,
-    quantite:        p[`effect_${n}_quantite`]        as string | null,
-    force:           p[`effect_${n}_force`]           as string | null,
-    choix:           p[`effect_${n}_choix`]           as string | null,
-    autre:           p[`effect_${n}_autre`]           as string | null,
-    trigger:         p[`effect_${n}_trigger`]         as string | null,
+    sous_category_3: p[`effect_${n}_sous_category_3`] as string | null,
+    // Powers don't use these fields
+    degats: null, quantite: null, force: null, choix: null, autre: null, trigger: null,
   }
 }
 
+function getFormEffectData(form: typeof EMPTY, n: EffectNum): EffectData {
+  return {
+    category:        form[`effect_${n}_category`],
+    sous_category:   form[`effect_${n}_sous_category`],
+    sous_category_2: form[`effect_${n}_sous_category_2`],
+    sous_category_3: form[`effect_${n}_sous_category_3`],
+    degats: null, quantite: null, force: null, choix: null, autre: null, trigger: null,
+  }
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 export default function CharacterPowers() {
   const [powers, setPowers]         = useState<CharacterPower[]>([])
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading]       = useState(true)
   const [search, setSearch]         = useState('')
-  const [filterColor, setFilterColor]   = useState('')
+  const [filterCouleur, setFilterCouleur]   = useState('')
   const [filterCategory, setFilterCategory] = useState('')
   const [viewMode, setViewMode]     = useState<ViewMode>('byCharacter')
   const [sortCol, setSortCol]       = useState<SortCol>('character')
@@ -90,49 +109,51 @@ export default function CharacterPowers() {
     EFFECTS.map(n => p[`effect_${n}_category`] as string | null).filter(Boolean) as string[]
   ))].sort()
 
-  // Map: category -> sorted sous_categories linked to it
+  // categoryMap: category → sous_categories
   const categoryMap = powers.reduce<Record<string, string[]>>((acc, p) => {
     EFFECTS.forEach(n => {
       const cat = p[`effect_${n}_category`] as string | null
       const sub = p[`effect_${n}_sous_category`] as string | null
-      if (cat && sub) {
-        if (!acc[cat]) acc[cat] = []
-        if (!acc[cat].includes(sub)) acc[cat].push(sub)
-      }
-    })
-    return acc
+      if (cat && sub) { if (!acc[cat]) acc[cat] = []; if (!acc[cat].includes(sub)) acc[cat].push(sub) }
+    }); return acc
   }, {})
   Object.keys(categoryMap).forEach(k => categoryMap[k].sort())
 
+  // sousMap: sous_category → sous_category_2
   const sousMap = powers.reduce<Record<string, string[]>>((acc, p) => {
     EFFECTS.forEach(n => {
-      const sub  = p[`effect_${n}_sous_category`] as string | null
+      const sub  = p[`effect_${n}_sous_category`]   as string | null
       const sub2 = p[`effect_${n}_sous_category_2`] as string | null
-      if (sub && sub2) {
-        if (!acc[sub]) acc[sub] = []
-        if (!acc[sub].includes(sub2)) acc[sub].push(sub2)
-      }
-    })
-    return acc
+      if (sub && sub2) { if (!acc[sub]) acc[sub] = []; if (!acc[sub].includes(sub2)) acc[sub].push(sub2) }
+    }); return acc
   }, {})
   Object.keys(sousMap).forEach(k => sousMap[k].sort())
 
-  const allTriggers = [...new Set(powers.flatMap(p =>
-    EFFECTS.map(n => p[`effect_${n}_trigger`] as string | null).filter(Boolean) as string[]
-  ))].sort()
+  // sousMap2: sous_category_2 → sous_category_3
+  const sousMap2 = powers.reduce<Record<string, string[]>>((acc, p) => {
+    EFFECTS.forEach(n => {
+      const sub2 = p[`effect_${n}_sous_category_2`] as string | null
+      const sub3 = p[`effect_${n}_sous_category_3`] as string | null
+      if (sub2 && sub3) { if (!acc[sub2]) acc[sub2] = []; if (!acc[sub2].includes(sub3)) acc[sub2].push(sub3) }
+    }); return acc
+  }, {})
+  Object.keys(sousMap2).forEach(k => sousMap2[k].sort())
 
   const cmap = useCallback(() => Object.fromEntries(characters.map(c => [c.id, c])), [characters])
 
   const filtered = powers.filter(p => {
-    const cm = cmap()
+    const cm   = cmap()
     const name = cm[p.character_id]?.name?.toLowerCase() ?? ''
     const matchSearch = !search || [
-      name, p.power_name, p.couleur,
-      ...EFFECTS.flatMap(n => [p[`effect_${n}_category`], p[`effect_${n}_sous_category`], p[`effect_${n}_quantite`], p[`effect_${n}_force`], p[`effect_${n}_autre`], p[`effect_${n}_trigger`]]),
+      name, p.power_name, p.couleur, p.description,
+      ...EFFECTS.flatMap(n => [
+        p[`effect_${n}_category`], p[`effect_${n}_sous_category`],
+        p[`effect_${n}_sous_category_2`], p[`effect_${n}_sous_category_3`],
+      ]),
     ].some(v => v && String(v).toLowerCase().includes(search.toLowerCase()))
-    const matchColor  = !filterColor  || p.couleur === filterColor
+    const matchCouleur  = !filterCouleur  || p.couleur === filterCouleur
     const matchCategory = !filterCategory || EFFECTS.some(n => p[`effect_${n}_category`] === filterCategory)
-    return matchSearch && matchColor && matchCategory
+    return matchSearch && matchCouleur && matchCategory
   })
 
   function toggleSort(col: SortCol) {
@@ -149,17 +170,18 @@ export default function CharacterPowers() {
     else                               { va = a.position ?? 99; vb = b.position ?? 99 }
     if (va < vb) return sortDir === 'asc' ? -1 : 1
     if (va > vb) return sortDir === 'asc' ? 1 : -1
-    // Always use position as secondary sort
     return (a.position ?? 99) - (b.position ?? 99)
   })
 
+  // Group by character, sorted alphabetically; within each group sort by position
   const grouped = filtered.reduce<Record<string, CharacterPower[]>>((acc, p) => {
     acc[p.character_id] = acc[p.character_id] ?? []; acc[p.character_id].push(p); return acc
   }, {})
-  const groupedEntries = Object.entries(grouped).sort((a, b) => {
-    const na = cm[a[0]]?.name?.toLowerCase() ?? '', nb = cm[b[0]]?.name?.toLowerCase() ?? ''
-    return na < nb ? -1 : na > nb ? 1 : 0
-  })
+  const groupedEntries = Object.entries(grouped)
+    .sort((a, b) => {
+      const na = cm[a[0]]?.name?.toLowerCase() ?? '', nb = cm[b[0]]?.name?.toLowerCase() ?? ''
+      return na < nb ? -1 : na > nb ? 1 : 0
+    })
 
   function openAdd(characterId?: string) {
     setForm({ ...EMPTY, character_id: characterId ?? '' }); setEditId(null); setModal('add')
@@ -177,12 +199,13 @@ export default function CharacterPowers() {
     if (!form.character_id) return
     setSaving(true)
     if (modal === 'add') await supabase.from('mpq_tracker_character_powers').insert([form])
-    else if (editId) await supabase.from('mpq_tracker_character_powers').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
+    else if (editId) await supabase.from('mpq_tracker_character_powers')
+      .update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
     await load(); closeModal(); setSaving(false)
   }
 
   async function remove(id: string) {
-    if (!confirm('Delete ce power ?')) return
+    if (!confirm('Delete this power?')) return
     await supabase.from('mpq_tracker_character_powers').delete().eq('id', id)
     setPowers(prev => prev.filter(p => p.id !== id))
   }
@@ -200,6 +223,44 @@ export default function CharacterPowers() {
 
   const charOptions = toCharacterOptions(characters)
 
+  // Render a power card in by-character view
+  function PowerCard({ p }: { p: CharacterPower }) {
+    const effectCount = EFFECTS.filter(n =>
+      p[`effect_${n}_category`] || p[`effect_${n}_sous_category`] || p[`effect_${n}_cout`]
+    ).length
+    return (
+      <div className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
+        <div className="flex-1 space-y-2 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            {p.power_name && <p className="text-sm font-semibold text-white">{p.power_name}</p>}
+            {p.position   && <span className="badge bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] text-xs">#{p.position}</span>}
+          </div>
+          {p.description && (
+            <p className="text-xs text-[#C8C8E0] leading-relaxed border-l-2 border-[#3D3D60] pl-2 italic">{p.description}</p>
+          )}
+          {EFFECTS.map(n => {
+            const cout = p[`effect_${n}_cout`] as number | null
+            const d    = getEffectData(p, n)
+            if (!cout && !d.category && !d.sous_category && !d.sous_category_2 && !d.sous_category_3) return null
+            return (
+              <div key={n} className="flex items-start gap-2">
+                {cout !== null && (
+                  <span className="shrink-0 text-marvel-gold font-bold text-xs bg-marvel-gold/10 px-1.5 py-0.5 rounded">{cout} MP</span>
+                )}
+                <EffectDisplay {...d} />
+              </div>
+            )
+          })}
+          {effectCount === 0 && !p.description && <p className="text-xs text-[#555]">No effects</p>}
+        </div>
+        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <button onClick={() => openEdit(p)} className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
+          <button onClick={() => remove(p.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -210,10 +271,10 @@ export default function CharacterPowers() {
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
-          <input className="input pl-9" placeholder="Rechercher perso, power, effet..."
+          <input className="input pl-9" placeholder="Search character, power, description, effect..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select className="input w-auto" value={filterColor} onChange={e => setFilterColor(e.target.value)}>
+        <select className="input w-auto" value={filterCouleur} onChange={e => setFilterCouleur(e.target.value)}>
           <option value="">All colors</option>
           {COULEURS.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -236,14 +297,17 @@ export default function CharacterPowers() {
       <p className="text-sm text-[#C8C8E0]">{filtered.length} power{filtered.length !== 1 ? 's' : ''}</p>
 
       {loading ? <Spinner /> : viewMode === 'byCharacter' ? (
+        /* ── BY CHARACTER — alphabetical, powers sorted by position ── */
         <div className="space-y-2">
           {groupedEntries.map(([charId, charPowers]) => {
-            const char   = cm[charId]
-            const isOpen = expanded === charId
-            const sortedPowers = [...charPowers].sort((a, b) => (a.position ?? 99) - (b.position ?? 99))
-            const byColor = sortedPowers.reduce<Record<string, CharacterPower[]>>((acc, p) => {
-              const key = p.couleur ?? 'Inconnu'; acc[key] = acc[key] ?? []; acc[key].push(p); return acc
+            const char       = cm[charId]
+            const isOpen     = expanded === charId
+            // Sort by position
+            const sorted     = [...charPowers].sort((a, b) => (a.position ?? 99) - (b.position ?? 99))
+            const byCouleur  = sorted.reduce<Record<string, CharacterPower[]>>((acc, p) => {
+              const key = p.couleur ?? 'Unknown'; acc[key] = acc[key] ?? []; acc[key].push(p); return acc
             }, {})
+
             return (
               <div key={charId} className="card">
                 <button onClick={() => setExpanded(isOpen ? null : charId)} className="flex items-center gap-3 w-full text-left group">
@@ -254,15 +318,17 @@ export default function CharacterPowers() {
                       <span className="text-xs text-[#C8C8E0]">({charPowers.length} power{charPowers.length !== 1 ? 's' : ''})</span>
                     </div>
                     <div className="flex gap-1 mt-1 flex-wrap">
-                      {Object.keys(byColor).map(col => (
-                        <span key={col} className={`badge text-xs ${COULEUR_STYLES[col as Color] ?? 'bg-gray-700 text-white'}`}>{col} ({byColor[col].length})</span>
+                      {Object.keys(byCouleur).map(col => (
+                        <span key={col} className={`badge text-xs ${COULEUR_STYLES[col as Couleur] ?? 'bg-gray-700 text-white'}`}>
+                          {col} ({byCouleur[col].length})
+                        </span>
                       ))}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button onClick={e => { e.stopPropagation(); openAdd(charId) }}
                       className="text-xs bg-[#3D3D60] hover:bg-marvel-red/40 text-[#C8C8E0] hover:text-white px-2 py-1 rounded transition-all">
-                      + Pouvoir
+                      + Power
                     </button>
                     {isOpen ? <ChevronUp size={14} className="text-[#C8C8E0]" /> : <ChevronDown size={14} className="text-[#C8C8E0]" />}
                   </div>
@@ -270,58 +336,41 @@ export default function CharacterPowers() {
 
                 {isOpen && (
                   <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
-                    {COULEURS.filter(col => byColor[col]).map(col => (
+                    {COULEURS.filter(col => byCouleur[col]).map(col => (
                       <div key={col}>
-                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border mb-2 ${COULEUR_BORDER[col as Color]} bg-[#1C1C2E]`}>
-                          <ColorBadge couleur={col} />
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border mb-2 ${COULEUR_BORDER[col as Couleur]} bg-[#1C1C2E]`}>
+                          <CouleurBadge couleur={col} />
                         </div>
                         <div className="space-y-2 pl-2">
-                          {byColor[col].sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).map(p => (
-                            <div key={p.id} className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
-                              <div className="flex-1 space-y-2">
-                                <div className="flex items-center gap-2">
-                                  {p.power_name && <p className="text-sm font-semibold text-white">{p.power_name}</p>}
-                                  {p.position && <span className="badge bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] text-xs">#{p.position}</span>}
-                                </div>
-                                {EFFECTS.map(n => {
-                                  const cout = p[`effect_${n}_cout`] as number | null
-                                  const d    = getEffectData(p, n)
-                                  if (!cout && !d.category && !d.sous_category && !d.quantite && !d.force && !d.autre && !d.trigger) return null
-                                  return (
-                                    <div key={n} className="flex items-start gap-2">
-                                      {cout !== null && (
-                                        <span className="shrink-0 text-marvel-gold font-bold text-xs bg-marvel-gold/10 px-1.5 py-0.5 rounded">{cout} MP</span>
-                                      )}
-                                      <EffectDisplay {...d} />
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                <button onClick={() => openEdit(p)} className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
-                                <button onClick={() => remove(p.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
-                              </div>
-                            </div>
-                          ))}
+                          {byCouleur[col].map(p => <PowerCard key={p.id} p={p} />)}
                         </div>
                       </div>
                     ))}
+                    {/* Unknown color */}
+                    {byCouleur['Unknown'] && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-[#C8C8E0]">No color</p>
+                        {byCouleur['Unknown'].map(p => <PowerCard key={p.id} p={p} />)}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             )
           })}
-          {groupedEntries.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">Aucun power trouvé</div>}
+          {groupedEntries.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No powers found</div>}
         </div>
       ) : (
+        /* ── TABLE VIEW ── */
         <div className="card overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[#3D3D60]">
                 <Th col="character"  label="Character" />
                 <Th col="position"   label="Pos." />
-                <Th col="power_name" label="Name du power" />
+                <Th col="power_name" label="Power name" />
                 <Th col="couleur"    label="Color" />
+                <th className="py-2 px-2 font-normal text-left text-[#C8C8E0] min-w-40">Description</th>
                 {EFFECTS.map(n => <th key={n} className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Effect {n}</th>)}
                 <th className="py-2 px-2 font-normal text-center text-[#C8C8E0] sticky right-0 bg-[#252540] z-10">Actions</th>
               </tr>
@@ -332,14 +381,11 @@ export default function CharacterPowers() {
                   <td className="py-2 px-2 font-medium text-white text-center">{cm[p.character_id]?.name ?? '—'}</td>
                   <td className="py-2 px-2 text-center text-marvel-gold font-bold">{p.position ?? '—'}</td>
                   <td className="py-2 px-2 text-[#D8D8EE] text-center">{p.power_name ?? '—'}</td>
-                  <td className="py-2 px-2 text-center"><ColorBadge couleur={p.couleur} /></td>
+                  <td className="py-2 px-2 text-center"><CouleurBadge couleur={p.couleur} /></td>
+                  <td className="py-2 px-2 text-xs text-[#C8C8E0] italic max-w-40 truncate" title={p.description ?? ''}>{p.description ?? '—'}</td>
                   {EFFECTS.map(n => (
                     <td key={n} className="py-2 px-1 text-center align-top">
-                      <EffectDisplay
-                        {...getEffectData(p, n)}
-                        cout={p[`effect_${n}_cout`] as number | null}
-                        center
-                      />
+                      <EffectDisplay {...getEffectData(p, n)} cout={p[`effect_${n}_cout`] as number | null} center />
                     </td>
                   ))}
                   <td className="py-2 px-2 text-center sticky right-0 bg-[#252540] z-10">
@@ -352,18 +398,20 @@ export default function CharacterPowers() {
               ))}
             </tbody>
           </table>
-          {sortedFiltered.length === 0 && <p className="text-center text-[#C8C8E0] py-8">Aucun power trouvé</p>}
+          {sortedFiltered.length === 0 && <p className="text-center text-[#C8C8E0] py-8">No powers found</p>}
         </div>
       )}
 
+      {/* ── Modal ── */}
       {modal && (
         <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-2xl my-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Power' : 'Edit Pouvoir'}</h2>
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Power' : 'Edit Power'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
+              {/* Character */}
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Character *</label>
                 <SearchDropdown
@@ -372,27 +420,42 @@ export default function CharacterPowers() {
                   onSelectId={id => setForm(f => ({ ...f, character_id: id ?? '' }))}
                   options={charOptions} placeholder="Search for a character..." allowFreeText={false} />
               </div>
+
+              {/* Power name / Color / Position */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Name du power</label>
-                  <input className="input" value={form.power_name ?? ''} onChange={e => setForm(f => ({ ...f, power_name: e.target.value || null }))} placeholder="Ex: Assaut Cosmique" />
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Power name</label>
+                  <input className="input" value={form.power_name ?? ''}
+                    onChange={e => setForm(f => ({ ...f, power_name: e.target.value || null }))}
+                    placeholder="Ex: Cosmic Assault" />
                 </div>
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Color</label>
-                  <select className="input" value={form.couleur ?? ''} onChange={e => setForm(f => ({ ...f, couleur: e.target.value || null }))}>
+                  <select className="input" value={form.couleur ?? ''}
+                    onChange={e => setForm(f => ({ ...f, couleur: e.target.value || null }))}>
                     <option value="">— None —</option>
                     {COULEURS.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Position (1–6)</label>
-                  <select className="input" value={form.position ?? ''} onChange={e => setForm(f => ({ ...f, position: e.target.value ? Number(e.target.value) : null }))}>
+                  <select className="input" value={form.position ?? ''}
+                    onChange={e => setForm(f => ({ ...f, position: e.target.value ? Number(e.target.value) : null }))}>
                     <option value="">—</option>
                     {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
               </div>
 
+              {/* Description */}
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Description <span className="text-[#555]">(full power description)</span></label>
+                <textarea className="input resize-none h-20 text-sm" value={form.description ?? ''}
+                  onChange={e => setForm(f => ({ ...f, description: e.target.value || null }))}
+                  placeholder="Full power description..." />
+              </div>
+
+              {/* Effects 1–4 */}
               <div>
                 <p className="text-xs font-semibold text-marvel-gold mb-2">Effects (up to 4)</p>
                 <div className="space-y-2">
@@ -400,24 +463,16 @@ export default function CharacterPowers() {
                     <EffectForm
                       key={n}
                       label={`Effect ${n}`}
-                      data={{
-                        category:        form[`effect_${n}_category`],
-                        sous_category:   form[`effect_${n}_sous_category`],
-                        sous_category_2: form[`effect_${n}_sous_category_2`],
-                        degats:          form[`effect_${n}_degats`],
-                        quantite:        form[`effect_${n}_quantite`],
-                        force:           form[`effect_${n}_force`],
-                        choix:           form[`effect_${n}_choix`],
-                        autre:           form[`effect_${n}_autre`],
-                        trigger:         form[`effect_${n}_trigger`],
-                      }}
+                      data={getFormEffectData(form, n)}
                       onChange={(field, val) => setEffect(n, field, val)}
                       allCategories={allCategories}
                       categoryMap={categoryMap}
-                    sousMap={sousMap}
-                      allTriggers={allTriggers}
+                      sousMap={sousMap}
+                      sousMap2={sousMap2}
+                      allTriggers={[]}
                       coutValue={form[`effect_${n}_cout`]}
                       onCoutChange={val => setForm(f => ({ ...f, [`effect_${n}_cout`]: val }))}
+                      simplified={true}
                     />
                   ))}
                 </div>
@@ -425,7 +480,9 @@ export default function CharacterPowers() {
 
               <div className="flex gap-3 pt-2">
                 <button onClick={closeModal} className="btn-secondary flex-1">Cancel</button>
-                <button onClick={save} disabled={saving || !form.character_id} className="btn-primary flex-1">{saving ? 'Saving...' : 'Save'}</button>
+                <button onClick={save} disabled={saving || !form.character_id} className="btn-primary flex-1">
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
               </div>
             </div>
           </div>
