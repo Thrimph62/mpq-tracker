@@ -225,15 +225,13 @@ export default function CharacterPowers() {
 
   // Render a power card in by-character view
   function PowerCard({ p }: { p: CharacterPower }) {
-    const effectCount = EFFECTS.filter(n =>
-      p[`effect_${n}_category`] || p[`effect_${n}_sous_category`] || p[`effect_${n}_cout`]
-    ).length
     return (
       <div className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
         <div className="flex-1 space-y-2 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            {p.power_name && <p className="text-sm font-semibold text-white">{p.power_name}</p>}
             {p.position   && <span className="badge bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] text-xs">#{p.position}</span>}
+            {p.couleur    && <CouleurBadge couleur={p.couleur} />}
+            {p.power_name && <p className="text-sm font-semibold text-white">{p.power_name}</p>}
           </div>
           {p.description && (
             <p className="text-xs text-[#C8C8E0] leading-relaxed border-l-2 border-[#3D3D60] pl-2 italic">{p.description}</p>
@@ -243,15 +241,9 @@ export default function CharacterPowers() {
             const d    = getEffectData(p, n)
             if (!cout && !d.category && !d.sous_category && !d.sous_category_2 && !d.sous_category_3) return null
             return (
-              <div key={n} className="flex items-start gap-2">
-                {cout !== null && (
-                  <span className="shrink-0 text-marvel-gold font-bold text-xs bg-marvel-gold/10 px-1.5 py-0.5 rounded">{cout} MP</span>
-                )}
-                <EffectDisplay {...d} />
-              </div>
+              <EffectDisplay key={n} {...d} cout={cout} simplified />
             )
           })}
-          {effectCount === 0 && !p.description && <p className="text-xs text-[#555]">No effects</p>}
         </div>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           <button onClick={() => openEdit(p)} className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
@@ -335,24 +327,20 @@ export default function CharacterPowers() {
                 </button>
 
                 {isOpen && (
-                  <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
-                    {COULEURS.filter(col => byCouleur[col]).map(col => (
-                      <div key={col}>
-                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border mb-2 ${COULEUR_BORDER[col as Couleur]} bg-[#1C1C2E]`}>
-                          <CouleurBadge couleur={col} />
-                        </div>
-                        <div className="space-y-2 pl-2">
-                          {byCouleur[col].map(p => <PowerCard key={p.id} p={p} />)}
+                  <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-2">
+                    {sorted.map(p => (
+                      <div key={p.id} className="flex items-start gap-2">
+                        {/* Color badge as a side indicator */}
+                        {p.couleur && (
+                          <span className={`mt-1 shrink-0 badge text-xs ${COULEUR_STYLES[p.couleur as Couleur] ?? 'bg-gray-700 text-white'}`}>
+                            {p.couleur}
+                          </span>
+                        )}
+                        <div className="flex-1">
+                          <PowerCard p={p} />
                         </div>
                       </div>
                     ))}
-                    {/* Unknown color */}
-                    {byCouleur['Unknown'] && (
-                      <div className="space-y-2">
-                        <p className="text-xs text-[#C8C8E0]">No color</p>
-                        {byCouleur['Unknown'].map(p => <PowerCard key={p.id} p={p} />)}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -385,7 +373,7 @@ export default function CharacterPowers() {
                   <td className="py-2 px-2 text-xs text-[#C8C8E0] italic max-w-40 truncate" title={p.description ?? ''}>{p.description ?? '—'}</td>
                   {EFFECTS.map(n => (
                     <td key={n} className="py-2 px-1 text-center align-top">
-                      <EffectDisplay {...getEffectData(p, n)} cout={p[`effect_${n}_cout`] as number | null} center />
+                      <EffectDisplay {...getEffectData(p, n)} cout={p[`effect_${n}_cout`] as number | null} center simplified />
                     </td>
                   ))}
                   <td className="py-2 px-2 text-center sticky right-0 bg-[#252540] z-10">

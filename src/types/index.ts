@@ -47,15 +47,15 @@ export interface Support {
   rang: number | null
   niveau: number | null
   restriction: string | null
-  // Effects 1–5 — each has category + trigger + detail
-  effect_1_category: string | null; effect_1_sous_category: string | null; effect_1_sous_category_2: string | null; effect_1_degats: string | null; effect_1_quantite: string | null; effect_1_force: string | null; effect_1_choix: string | null; effect_1_autre: string | null; effect_1_trigger: string | null
-  effect_2_category: string | null; effect_2_sous_category: string | null; effect_2_sous_category_2: string | null; effect_2_degats: string | null; effect_2_quantite: string | null; effect_2_force: string | null; effect_2_choix: string | null; effect_2_autre: string | null; effect_2_trigger: string | null
-  effect_3_category: string | null; effect_3_sous_category: string | null; effect_3_sous_category_2: string | null; effect_3_degats: string | null; effect_3_quantite: string | null; effect_3_force: string | null; effect_3_choix: string | null; effect_3_autre: string | null; effect_3_trigger: string | null
-  effect_4_category: string | null; effect_4_sous_category: string | null; effect_4_sous_category_2: string | null; effect_4_degats: string | null; effect_4_quantite: string | null; effect_4_force: string | null; effect_4_choix: string | null; effect_4_autre: string | null; effect_4_trigger: string | null
-  effect_5_category: string | null; effect_5_sous_category: string | null; effect_5_sous_category_2: string | null; effect_5_degats: string | null; effect_5_quantite: string | null; effect_5_force: string | null; effect_5_choix: string | null; effect_5_autre: string | null; effect_5_trigger: string | null
+  // Effects 1–5
+  effect_1_description: string | null; effect_1_category: string | null; effect_1_sous_category: string | null; effect_1_sous_category_2: string | null; effect_1_sous_category_3: string | null; effect_1_degats: string | null; effect_1_quantite: string | null; effect_1_force: string | null; effect_1_choix: string | null; effect_1_autre: string | null; effect_1_trigger: string | null
+  effect_2_description: string | null; effect_2_category: string | null; effect_2_sous_category: string | null; effect_2_sous_category_2: string | null; effect_2_sous_category_3: string | null; effect_2_degats: string | null; effect_2_quantite: string | null; effect_2_force: string | null; effect_2_choix: string | null; effect_2_autre: string | null; effect_2_trigger: string | null
+  effect_3_description: string | null; effect_3_category: string | null; effect_3_sous_category: string | null; effect_3_sous_category_2: string | null; effect_3_sous_category_3: string | null; effect_3_degats: string | null; effect_3_quantite: string | null; effect_3_force: string | null; effect_3_choix: string | null; effect_3_autre: string | null; effect_3_trigger: string | null
+  effect_4_description: string | null; effect_4_category: string | null; effect_4_sous_category: string | null; effect_4_sous_category_2: string | null; effect_4_sous_category_3: string | null; effect_4_degats: string | null; effect_4_quantite: string | null; effect_4_force: string | null; effect_4_choix: string | null; effect_4_autre: string | null; effect_4_trigger: string | null
+  effect_5_description: string | null; effect_5_category: string | null; effect_5_sous_category: string | null; effect_5_sous_category_2: string | null; effect_5_sous_category_3: string | null; effect_5_degats: string | null; effect_5_quantite: string | null; effect_5_force: string | null; effect_5_choix: string | null; effect_5_autre: string | null; effect_5_trigger: string | null
   // Synergy
   synergy_restriction: string | null
-  synergy_category: string | null; synergy_sous_category: string | null; synergy_sous_category_2: string | null; synergy_degats: string | null; synergy_quantite: string | null; synergy_force: string | null; synergy_choix: string | null; synergy_autre: string | null; synergy_trigger: string | null
+  synergy_description: string | null; synergy_category: string | null; synergy_sous_category: string | null; synergy_sous_category_2: string | null; synergy_sous_category_3: string | null; synergy_degats: string | null; synergy_quantite: string | null; synergy_force: string | null; synergy_choix: string | null; synergy_autre: string | null; synergy_trigger: string | null
   created_at: string
   updated_at: string
 }
@@ -67,6 +67,7 @@ export interface Team {
   mid_character: string | null;   mid_build: string | null;   mid_support: string | null;   mid_boost: string | null
   right_character: string | null; right_build: string | null; right_support: string | null; right_boost: string | null
   strategie: string | null
+  winfinite: string | null
   hn1: string | null
   hn2: string | null
   hn3: string | null

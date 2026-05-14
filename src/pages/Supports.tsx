@@ -17,13 +17,13 @@ function emptyEffect(): EffectData {
 
 const EMPTY: Omit<Support, 'id' | 'created_at' | 'updated_at'> = {
   name: '', rang: 5, niveau: 250, restriction: '/',
-  effect_1_category: null, effect_1_sous_category: null, effect_1_sous_category_2: null, effect_1_degats: null, effect_1_quantite: null, effect_1_force: null, effect_1_choix: null, effect_1_autre: null, effect_1_trigger: null,
-  effect_2_category: null, effect_2_sous_category: null, effect_2_sous_category_2: null, effect_2_degats: null, effect_2_quantite: null, effect_2_force: null, effect_2_choix: null, effect_2_autre: null, effect_2_trigger: null,
-  effect_3_category: null, effect_3_sous_category: null, effect_3_sous_category_2: null, effect_3_degats: null, effect_3_quantite: null, effect_3_force: null, effect_3_choix: null, effect_3_autre: null, effect_3_trigger: null,
-  effect_4_category: null, effect_4_sous_category: null, effect_4_sous_category_2: null, effect_4_degats: null, effect_4_quantite: null, effect_4_force: null, effect_4_choix: null, effect_4_autre: null, effect_4_trigger: null,
-  effect_5_category: null, effect_5_sous_category: null, effect_5_sous_category_2: null, effect_5_degats: null, effect_5_quantite: null, effect_5_force: null, effect_5_choix: null, effect_5_autre: null, effect_5_trigger: null,
+  effect_1_description: null, effect_1_category: null, effect_1_sous_category: null, effect_1_sous_category_2: null, effect_1_sous_category_3: null, effect_1_degats: null, effect_1_quantite: null, effect_1_force: null, effect_1_choix: null, effect_1_autre: null, effect_1_trigger: null,
+  effect_2_description: null, effect_2_category: null, effect_2_sous_category: null, effect_2_sous_category_2: null, effect_2_sous_category_3: null, effect_2_degats: null, effect_2_quantite: null, effect_2_force: null, effect_2_choix: null, effect_2_autre: null, effect_2_trigger: null,
+  effect_3_description: null, effect_3_category: null, effect_3_sous_category: null, effect_3_sous_category_2: null, effect_3_sous_category_3: null, effect_3_degats: null, effect_3_quantite: null, effect_3_force: null, effect_3_choix: null, effect_3_autre: null, effect_3_trigger: null,
+  effect_4_description: null, effect_4_category: null, effect_4_sous_category: null, effect_4_sous_category_2: null, effect_4_sous_category_3: null, effect_4_degats: null, effect_4_quantite: null, effect_4_force: null, effect_4_choix: null, effect_4_autre: null, effect_4_trigger: null,
+  effect_5_description: null, effect_5_category: null, effect_5_sous_category: null, effect_5_sous_category_2: null, effect_5_sous_category_3: null, effect_5_degats: null, effect_5_quantite: null, effect_5_force: null, effect_5_choix: null, effect_5_autre: null, effect_5_trigger: null,
   synergy_restriction: null,
-  synergy_category: null, synergy_sous_category: null, synergy_sous_category_2: null, synergy_degats: null, synergy_quantite: null, synergy_force: null, synergy_choix: null, synergy_autre: null, synergy_trigger: null,
+  synergy_description: null, synergy_category: null, synergy_sous_category: null, synergy_sous_category_2: null, synergy_sous_category_3: null, synergy_degats: null, synergy_quantite: null, synergy_force: null, synergy_choix: null, synergy_autre: null, synergy_trigger: null,
 }
 
 function SortIcon({ col, current, dir }: { col: SortCol; current: SortCol; dir: SortDir }) {
@@ -33,10 +33,11 @@ function SortIcon({ col, current, dir }: { col: SortCol; current: SortCol; dir: 
 
 function getEffectData(s: Support, n: EffectNum): EffectData {
   return {
+    description:     s[`effect_${n}_description`]    as string | null,
     category:        s[`effect_${n}_category`]        as string | null,
     sous_category:   s[`effect_${n}_sous_category`]   as string | null,
     sous_category_2: s[`effect_${n}_sous_category_2`] as string | null,
-    sous_category_3: null,
+    sous_category_3: s[`effect_${n}_sous_category_3`] as string | null,
     degats:          s[`effect_${n}_degats`]          as string | null,
     quantite:        s[`effect_${n}_quantite`]        as string | null,
     force:           s[`effect_${n}_force`]           as string | null,
@@ -113,6 +114,23 @@ export default function Supports() {
   }, {})
   Object.keys(sousMap).forEach(k => sousMap[k].sort())
 
+  const sousMap2 = supports.reduce<Record<string, string[]>>((acc, s) => {
+    EFFECTS.forEach(n => {
+      const sub2 = s[`effect_${n}_sous_category_2`] as string | null
+      const sub3 = s[`effect_${n}_sous_category_3`] as string | null
+      if (sub2 && sub3) {
+        if (!acc[sub2]) acc[sub2] = []
+        if (!acc[sub2].includes(sub3)) acc[sub2].push(sub3)
+      }
+    })
+    if (s.synergy_sous_category_2 && s.synergy_sous_category_3) {
+      if (!acc[s.synergy_sous_category_2]) acc[s.synergy_sous_category_2] = []
+      if (!acc[s.synergy_sous_category_2].includes(s.synergy_sous_category_3)) acc[s.synergy_sous_category_2].push(s.synergy_sous_category_3)
+    }
+    return acc
+  }, {})
+  Object.keys(sousMap2).forEach(k => sousMap2[k].sort())
+
   const allTriggers = [...new Set(supports.flatMap(s =>
     [...EFFECTS.map(n => s[`effect_${n}_trigger`] as string | null), s.synergy_trigger].filter(Boolean) as string[]
   ))].sort()
@@ -159,11 +177,14 @@ export default function Supports() {
   }
   function getSynergyData(): EffectData {
     return {
-      category: form.synergy_category, sous_category: form.synergy_sous_category,
-      sous_category_2: form.synergy_sous_category_2, sous_category_3: null,
-      degats: form.synergy_degats,
-      quantite: form.synergy_quantite, force: form.synergy_force,
-      choix: form.synergy_choix, autre: form.synergy_autre, trigger: form.synergy_trigger,
+      description:     form.synergy_description,
+      category:        form.synergy_category,
+      sous_category:   form.synergy_sous_category,
+      sous_category_2: form.synergy_sous_category_2,
+      sous_category_3: form.synergy_sous_category_3,
+      degats: form.synergy_degats, quantite: form.synergy_quantite,
+      force: form.synergy_force, choix: form.synergy_choix,
+      autre: form.synergy_autre, trigger: form.synergy_trigger,
     }
   }
 
@@ -328,10 +349,11 @@ export default function Supports() {
                       key={n}
                       label={`Effect ${n}`}
                       data={{
+                        description:     form[`effect_${n}_description`],
                         category:        form[`effect_${n}_category`],
                         sous_category:   form[`effect_${n}_sous_category`],
                         sous_category_2: form[`effect_${n}_sous_category_2`],
-                        sous_category_3: null,
+                        sous_category_3: form[`effect_${n}_sous_category_3`],
                         degats:          form[`effect_${n}_degats`],
                         quantite:        form[`effect_${n}_quantite`],
                         force:           form[`effect_${n}_force`],
@@ -343,7 +365,7 @@ export default function Supports() {
                       allCategories={allCategories}
                       categoryMap={categoryMap}
                     sousMap={sousMap}
-                    sousMap2={{}}
+                    sousMap2={sousMap2}
                       allTriggers={allTriggers}
                     />
                   ))}
@@ -365,7 +387,7 @@ export default function Supports() {
                     allCategories={allCategories}
                     categoryMap={categoryMap}
                     sousMap={sousMap}
-                    sousMap2={{}}
+                    sousMap2={sousMap2}
                     allTriggers={allTriggers}
                   />
                 </div>

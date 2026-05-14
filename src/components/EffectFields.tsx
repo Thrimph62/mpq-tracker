@@ -2,20 +2,23 @@ import React from 'react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface EffectData {
+  description:     string | null  // free text, shown before category chain
   category:        string | null
   sous_category:   string | null
   sous_category_2: string | null
-  sous_category_3: string | null  // Powers only
-  degats:          string | null  // Supports only
-  quantite:        string | null  // Supports only
-  force:           string | null  // Supports only
-  choix:           string | null  // Supports only
-  autre:           string | null  // Supports only
-  trigger:         string | null  // Supports only
+  sous_category_3: string | null
+  // Supports only
+  degats:   string | null
+  quantite: string | null
+  force:    string | null
+  choix:    string | null
+  autre:    string | null
+  trigger:  string | null
 }
 
 export const EMPTY_EFFECT: EffectData = {
-  category: null, sous_category: null, sous_category_2: null, sous_category_3: null,
+  description: null, category: null, sous_category: null,
+  sous_category_2: null, sous_category_3: null,
   degats: null, quantite: null, force: null, choix: null, autre: null, trigger: null,
 }
 
@@ -37,21 +40,56 @@ export function catColor(cat: string | null): string {
 interface EffectDisplayProps extends EffectData {
   cout?: number | null
   center?: boolean
+  simplified?: boolean  // true = Powers: one-line MP + category chain, no other fields
 }
 
 export function EffectDisplay({
-  cout, category, sous_category, sous_category_2, sous_category_3,
-  degats, quantite, force, choix, autre, trigger, center = false
+  cout, description, category, sous_category, sous_category_2, sous_category_3,
+  degats, quantite, force, choix, autre, trigger,
+  center = false, simplified = false
 }: EffectDisplayProps) {
-  const hasContent = cout || category || sous_category || sous_category_2 || sous_category_3 ||
+  const hasContent = cout || description || category || sous_category || sous_category_2 || sous_category_3 ||
     degats || quantite || force || choix || autre || trigger
   if (!hasContent) return <span className="text-[#444]">—</span>
 
+  if (simplified) {
+    // Powers mode: one line — X MP  Category → Sub Category → Sub Category 2 → Sub Category 3
+    const parts: React.ReactNode[] = []
+    if (cout !== null && cout !== undefined)
+      parts.push(<span key="mp" className="text-marvel-gold font-bold">{cout} MP</span>)
+    if (category)
+      parts.push(<span key="cat" className={`badge border ${catColor(category)}`}>{category}</span>)
+    if (sous_category)
+      parts.push(<span key="sub" className="badge border bg-indigo-900/40 text-indigo-200 border-indigo-700">{sous_category}</span>)
+    if (sous_category_2)
+      parts.push(<span key="sub2" className="badge border bg-violet-900/40 text-violet-200 border-violet-700">{sous_category_2}</span>)
+    if (sous_category_3)
+      parts.push(<span key="sub3" className="badge border bg-fuchsia-900/40 text-fuchsia-200 border-fuchsia-700">{sous_category_3}</span>)
+
+    return (
+      <div className={`space-y-0.5 text-xs ${center ? 'text-center' : ''}`}>
+        {description && <div><span className="text-[#C8C8E0] italic">{description}</span></div>}
+        {parts.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1">
+            {parts.map((part, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && i === 1 && <span className="text-[#555] select-none text-xs"> </span>}
+                {i > 1 && <span className="text-[#555] select-none text-xs">→</span>}
+                {part}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Supports mode: stacked
   return (
     <div className={'space-y-1 text-xs' + (center ? ' text-center' : '')}>
-      {cout !== null && cout !== undefined && <div><span className="text-marvel-gold font-bold">{cout} MP</span></div>}
-      {category        && <div><span className={`badge border ${catColor(category)}`}>{category}</span></div>}
-      {sous_category   && <div><span className="badge border bg-indigo-900/40 text-indigo-200 border-indigo-700">{sous_category}</span></div>}
+      {description   && <div><span className="text-[#C8C8E0] italic">{description}</span></div>}
+      {category      && <div><span className={`badge border ${catColor(category)}`}>{category}</span></div>}
+      {sous_category && <div><span className="badge border bg-indigo-900/40 text-indigo-200 border-indigo-700">{sous_category}</span></div>}
       {sous_category_2 && <div><span className="badge border bg-violet-900/40 text-violet-200 border-violet-700">{sous_category_2}</span></div>}
       {sous_category_3 && <div><span className="badge border bg-fuchsia-900/40 text-fuchsia-200 border-fuchsia-700">{sous_category_3}</span></div>}
       {degats   && <div><span className="text-[#D8D8EE]">Dmg: {degats}</span></div>}
@@ -74,7 +112,7 @@ interface DynamicSelectProps {
 }
 
 export function DynamicSelect({ value, onChange, options, placeholder, disabled = false }: DynamicSelectProps) {
-  const isNew    = value !== null && value !== '' && !options.includes(value)
+  const isNew     = value !== null && value !== '' && !options.includes(value)
   const showInput = isNew || value === ''
 
   if (disabled) {
@@ -111,7 +149,7 @@ interface StableInputProps {
   className?: string
 }
 
-function StableInput({ initialValue, onCommit, placeholder, autoFocus, type = 'text', className = 'input text-sm' }: StableInputProps) {
+export function StableInput({ initialValue, onCommit, placeholder, autoFocus, type = 'text', className = 'input text-sm' }: StableInputProps) {
   const [val, setVal] = React.useState(initialValue)
   const prevInit = React.useRef(initialValue)
   if (prevInit.current !== initialValue) { prevInit.current = initialValue; setVal(initialValue) }
@@ -127,22 +165,22 @@ interface EffectFormProps {
   data: EffectData
   onChange: (field: keyof EffectData, val: string | null) => void
   allCategories: string[]
-  categoryMap: Record<string, string[]>   // category → sous_categories
-  sousMap: Record<string, string[]>       // sous_category → sous_category_2
-  sousMap2: Record<string, string[]>      // sous_category_2 → sous_category_3
+  categoryMap: Record<string, string[]>
+  sousMap: Record<string, string[]>
+  sousMap2: Record<string, string[]>
   allTriggers: string[]
   coutValue?: number | null
   onCoutChange?: (val: number | null) => void
-  simplified?: boolean  // true = Powers mode (only cat/sub chain, no dmg/qte/force/choice/other/trigger)
+  simplified?: boolean  // true = Powers (no dmg/qte/force/choice/other/trigger)
 }
 
 export function EffectForm({
   label, data, onChange, allCategories, categoryMap, sousMap, sousMap2,
   allTriggers, coutValue, onCoutChange, simplified = false
 }: EffectFormProps) {
-  const availableSous  = data.category        ? (categoryMap[data.category]              ?? []) : []
-  const availableSous2 = data.sous_category   ? (sousMap[data.sous_category]             ?? []) : []
-  const availableSous3 = data.sous_category_2 ? (sousMap2[data.sous_category_2]          ?? []) : []
+  const availableSous  = data.category        ? (categoryMap[data.category]     ?? []) : []
+  const availableSous2 = data.sous_category   ? (sousMap[data.sous_category]    ?? []) : []
+  const availableSous3 = data.sous_category_2 ? (sousMap2[data.sous_category_2] ?? []) : []
 
   function handleCategoryChange(val: string | null) {
     onChange('category', val)
@@ -151,7 +189,6 @@ export function EffectForm({
       onChange('sous_category', null); onChange('sous_category_2', null); onChange('sous_category_3', null)
     }
   }
-
   function handleSousChange(val: string | null) {
     onChange('sous_category', val)
     const valid = val ? (sousMap[val] ?? []) : []
@@ -159,7 +196,6 @@ export function EffectForm({
       onChange('sous_category_2', null); onChange('sous_category_3', null)
     }
   }
-
   function handleSous2Change(val: string | null) {
     onChange('sous_category_2', val)
     const valid = val ? (sousMap2[val] ?? []) : []
@@ -183,6 +219,11 @@ export function EffectForm({
         )}
       </div>
       <div className="grid grid-cols-2 gap-2">
+        {/* Description */}
+        <div className="col-span-2">
+          <label className="text-xs text-[#C8C8E0] mb-1 block">Description</label>
+          <StableInput initialValue={data.description ?? ''} onCommit={v => onChange('description', v || null)} placeholder="Free text..." />
+        </div>
         {/* Category */}
         <div>
           <label className="text-xs text-[#C8C8E0] mb-1 block">Category</label>
@@ -202,14 +243,12 @@ export function EffectForm({
           <DynamicSelect value={data.sous_category_2} onChange={handleSous2Change}
             options={availableSous2} placeholder="Sub Category 2" />
         </div>
-        {/* Sub Category 3 — Powers only */}
-        {simplified && (
-          <div>
-            <label className="text-xs text-[#C8C8E0] mb-1 block">Sub Category 3</label>
-            <DynamicSelect value={data.sous_category_3} onChange={v => onChange('sous_category_3', v)}
-              options={availableSous3} placeholder="Sub Category 3" />
-          </div>
-        )}
+        {/* Sub Category 3 */}
+        <div>
+          <label className="text-xs text-[#C8C8E0] mb-1 block">Sub Category 3</label>
+          <DynamicSelect value={data.sous_category_3} onChange={v => onChange('sous_category_3', v)}
+            options={availableSous3} placeholder="Sub Category 3" />
+        </div>
         {/* Supports-only fields */}
         {!simplified && (
           <>

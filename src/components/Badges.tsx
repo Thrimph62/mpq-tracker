@@ -98,8 +98,8 @@ export function PowerColorDot({ couleur }: { couleur: string | null }) {
 export function OkBadge({ value }: { value: string | null }) {
   if (!value) return <span className="text-[#C8C8E0] text-xs">—</span>
   const v = value.toLowerCase()
-  if (v.includes('partiellement')) return <span className="badge bg-yellow-900/60 text-yellow-300">~</span>
-  const isOk = v.includes('oui') || v.includes('yes')
+  if (v === 'partial' || v.includes('partiellement')) return <span className="badge bg-yellow-900/60 text-yellow-300">~</span>
+  const isOk = v === 'yes' || v.includes('oui')
   return (
     <span className={`badge ${isOk ? 'bg-green-900/60 text-green-300' : 'bg-red-900/60 text-red-300'}`}>
       {isOk ? '✓' : '✗'}

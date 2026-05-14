@@ -11,7 +11,7 @@ const EMPTY_FORM: Omit<Team, 'id' | 'created_at' | 'updated_at'> = {
   left_character: null,  left_build: null,  left_support: null,  left_boost: null,
   mid_character: null,   mid_build: null,   mid_support: null,   mid_boost: null,
   right_character: null, right_build: null, right_support: null, right_boost: null,
-  strategie: null, hn1: null, hn2: null, hn3: null, cn: null,
+  strategie: null, winfinite: null, hn1: null, hn2: null, hn3: null, cn: null,
   all_3_non_boosted: null, note_additionnelle: null,
 }
 
@@ -222,7 +222,7 @@ export default function Teams() {
       {/* Modal */}
       {modal && (
         <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
-          <div className="card w-full max-w-2xl my-4">
+          <div className="card w-full max-w-4xl my-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Team' : 'Edit Équipe'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
@@ -233,30 +233,42 @@ export default function Teams() {
                 <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Char 1 / Char 2 / Char 3" />
               </div>
 
-              <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Status</label>
-                <select className="input w-auto" value={form.status} onChange={f('status')}>
-                  <option value="active">Active</option>
-                  <option value="to_test">To Test</option>
-                  <option value="archived">Archived</option>
-                </select>
+              {/* Status + Winfinite on same line */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Status</label>
+                  <select className="input" value={form.status} onChange={f('status')}>
+                    <option value="active">Active</option>
+                    <option value="to_test">To Test</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Winfinite</label>
+                  <select className="input" value={form.winfinite ?? ''} onChange={f('winfinite')}>
+                    <option value="">—</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
               </div>
 
-              {(['left', 'mid', 'right'] as Pos[]).map(pos => (
-                <div key={pos} className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
-                  <p className="text-xs font-semibold text-marvel-gold uppercase">{POS_LABELS[pos]}</p>
-                  <div className="grid grid-cols-2 gap-2">
+              {/* Slots side by side */}
+              <div className="grid grid-cols-3 gap-3">
+                {(['left', 'mid', 'right'] as Pos[]).map(pos => (
+                  <div key={pos} className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
+                    <p className="text-xs font-semibold text-marvel-gold uppercase">{POS_LABELS[pos]}</p>
                     <div>
                       <label className="text-xs text-[#C8C8E0] mb-1 block">Character</label>
                       <SearchDropdown
                         value={form[`${pos}_character`]}
                         onChange={v => setSlot(pos, 'character', v)}
                         options={charOptions}
-                        placeholder="Search for a character..."
+                        placeholder="Search..."
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-[#C8C8E0] mb-1 block">Build (ex: 5/3/5)</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Build</label>
                       <input className="input text-sm" placeholder="5/3/5"
                         value={form[`${pos}_build`] ?? ''}
                         onChange={e => setSlot(pos, 'build', e.target.value || null)} />
@@ -267,7 +279,7 @@ export default function Teams() {
                         value={form[`${pos}_support`]}
                         onChange={v => setSlot(pos, 'support', v)}
                         options={supportOptions}
-                        placeholder="Search for a support..."
+                        placeholder="Search..."
                       />
                     </div>
                     <div>
@@ -280,8 +292,8 @@ export default function Teams() {
                       </select>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
 
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Strategy</label>
@@ -293,9 +305,9 @@ export default function Teams() {
                     <label className="text-xs text-[#C8C8E0] mb-1 block">{key.toUpperCase()}</label>
                     <select className="input" value={form[key] ?? ''} onChange={f(key)}>
                       <option value="">—</option>
-                      <option value="Non">Non</option>
-                      <option value="Oui">Oui</option>
-                      <option value="Partiellement">Partiellement</option>
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="Partial">Partial</option>
                     </select>
                   </div>
                 ))}
