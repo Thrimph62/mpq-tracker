@@ -19,19 +19,23 @@ export default function Dashboard() {
   const [summary, setSummary] = useState<RosterSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [recent, setRecent]   = useState<Character[]>([])
+  const [dupeCount, setDupeCount] = useState(0)
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.from('mpq_tracker_characters').select('stars, status, ascended')
+      const { data } = await supabase.from('mpq_tracker_characters').select('stars, status, ascended, is_duplicate')
       if (data) {
+        // Stats only count originals (is_duplicate = false)
+        const originals = data.filter(c => !c.is_duplicate)
         setSummary(STAR_TIERS.map(s => ({
           stars:     s,
-          max_champ: data.filter(c => c.stars === s && c.status === 'max_champ').length,
-          champ:     data.filter(c => c.stars === s && c.status === 'champ').length,
-          rostered:  data.filter(c => c.stars === s && c.status === 'rostered').length,
-          not_owned: data.filter(c => c.stars === s && c.status === 'not_owned').length,
-          ascended:  data.filter(c => c.stars === s && c.ascended).length,
+          max_champ: originals.filter(c => c.stars === s && c.status === 'max_champ').length,
+          champ:     originals.filter(c => c.stars === s && c.status === 'champ').length,
+          rostered:  originals.filter(c => c.stars === s && c.status === 'rostered').length,
+          not_owned: originals.filter(c => c.stars === s && c.status === 'not_owned').length,
+          ascended:  originals.filter(c => c.stars === s && c.ascended).length,
         })))
+        setDupeCount(data.filter(c => c.is_duplicate).length)
       }
       const { data: rec } = await supabase.from('mpq_tracker_characters').select('*')
         .order('updated_at', { ascending: false }).limit(5)
@@ -51,7 +55,7 @@ export default function Dashboard() {
       <h1 className="page-title">Dashboard</h1>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         {STATUS_COLS.map(s => (
           <div key={s} className="card text-center">
             <p className={`text-2xl font-bold ${STATUS_COLORS[s]}`}>
@@ -63,6 +67,10 @@ export default function Dashboard() {
         <div className="card text-center">
           <p className="text-2xl font-bold text-cyan-400">{totalAscended}</p>
           <p className="text-xs text-[#C8C8E0] mt-1">⬆ Ascended</p>
+        </div>
+        <div className="card text-center">
+          <p className="text-2xl font-bold text-[#888]">{dupeCount}</p>
+          <p className="text-xs text-[#C8C8E0] mt-1">Duplicates</p>
         </div>
       </div>
 
