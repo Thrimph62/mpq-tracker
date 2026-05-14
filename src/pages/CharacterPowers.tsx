@@ -329,17 +329,7 @@ export default function CharacterPowers() {
                 {isOpen && (
                   <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-2">
                     {sorted.map(p => (
-                      <div key={p.id} className="flex items-start gap-2">
-                        {/* Color badge as a side indicator */}
-                        {p.couleur && (
-                          <span className={`mt-1 shrink-0 badge text-xs ${COULEUR_STYLES[p.couleur as Couleur] ?? 'bg-gray-700 text-white'}`}>
-                            {p.couleur}
-                          </span>
-                        )}
-                        <div className="flex-1">
-                          <PowerCard p={p} />
-                        </div>
-                      </div>
+                      <PowerCard key={p.id} p={p} />
                     ))}
                   </div>
                 )}

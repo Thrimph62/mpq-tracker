@@ -27,6 +27,7 @@ export default function Teams() {
   const [tab, setTab]             = useState<Tab>('active')
   const [search, setSearch]       = useState('')
   const [filterFavorite, setFilterFavorite] = useState<'all' | 'yes' | 'no'>('all')
+  const [filterWinfinite, setFilterWinfinite] = useState<'all' | 'yes' | 'no'>('all')
   const [expanded, setExpanded]   = useState<string | null>(null)
   const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
   const [form, setForm]           = useState<typeof EMPTY_FORM>(EMPTY_FORM)
@@ -66,9 +67,11 @@ export default function Teams() {
     const matchSearch   = t.name.toLowerCase().includes(search.toLowerCase()) ||
       [t.left_character, t.mid_character, t.right_character]
         .some(c => c?.toLowerCase().includes(search.toLowerCase()))
-    const matchFavorite = filterFavorite === 'all' ||
+    const matchFavorite  = filterFavorite === 'all' ||
       (filterFavorite === 'yes' ? t.favorite : !t.favorite)
-    return matchTab && matchSearch && matchFavorite
+    const matchWinfinite = filterWinfinite === 'all' ||
+      (filterWinfinite === 'yes' ? t.winfinite === 'Yes' : t.winfinite !== 'Yes')
+    return matchTab && matchSearch && matchFavorite && matchWinfinite
   })
 
   async function toggleFavorite(id: string, current: boolean) {
@@ -145,6 +148,17 @@ export default function Teams() {
             </button>
           ))}
         </div>
+        {/* Winfinite filter */}
+        <div className="flex gap-1 bg-[#1E1E38] p-1 rounded-lg">
+          {(['all', 'yes', 'no'] as const).map(v => (
+            <button key={v} onClick={() => setFilterWinfinite(v)}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                filterWinfinite === v ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'
+              }`}>
+              {v === 'all' ? 'All' : v === 'yes' ? 'Winfinite ✓' : 'Winfinite ✗'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? <Spinner /> : (
@@ -167,6 +181,7 @@ export default function Teams() {
                       <span>HN2: <OkBadge value={team.hn2} /></span>
                       <span>HN3: <OkBadge value={team.hn3} /></span>
                       <span>CN: <OkBadge value={team.cn} /></span>
+                      {team.winfinite && <span>Winfinite: <OkBadge value={team.winfinite === 'Yes' ? 'yes' : 'no'} /></span>}
                     </div>
                   )}
                 </div>

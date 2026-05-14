@@ -159,6 +159,22 @@ export function StableInput({ initialValue, onCommit, placeholder, autoFocus, ty
   )
 }
 
+// ── DescriptionArea — multiline textarea with stable focus ───────────────────
+function DescriptionArea({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
+  const [val, setVal] = React.useState(value ?? '')
+  const prevVal = React.useRef(value ?? '')
+  if (prevVal.current !== (value ?? '')) { prevVal.current = value ?? ''; setVal(value ?? '') }
+  return (
+    <textarea
+      className="input resize-none h-20 text-sm"
+      placeholder="Free text..."
+      value={val}
+      onChange={e => setVal(e.target.value)}
+      onBlur={e => onChange(e.target.value || null)}
+    />
+  )
+}
+
 // ── EffectForm ────────────────────────────────────────────────────────────────
 interface EffectFormProps {
   label: string
@@ -222,7 +238,7 @@ export function EffectForm({
         {/* Description */}
         <div className="col-span-2">
           <label className="text-xs text-[#C8C8E0] mb-1 block">Description</label>
-          <StableInput initialValue={data.description ?? ''} onCommit={v => onChange('description', v || null)} placeholder="Free text..." />
+          <DescriptionArea value={data.description} onChange={v => onChange('description', v)} />
         </div>
         {/* Category */}
         <div>
@@ -249,35 +265,7 @@ export function EffectForm({
           <DynamicSelect value={data.sous_category_3} onChange={v => onChange('sous_category_3', v)}
             options={availableSous3} placeholder="Sub Category 3" />
         </div>
-        {/* Supports-only fields */}
-        {!simplified && (
-          <>
-            <div>
-              <label className="text-xs text-[#C8C8E0] mb-1 block">Damage <span className="text-[#555]">(Dmg: xxx)</span></label>
-              <StableInput initialValue={data.degats ?? ''} onCommit={v => onChange('degats', v || null)} placeholder="Ex: 2500" />
-            </div>
-            <div>
-              <label className="text-xs text-[#C8C8E0] mb-1 block">Quantity <span className="text-[#555]">(qte: xxx)</span></label>
-              <StableInput initialValue={data.quantite ?? ''} onCommit={v => onChange('quantite', v || null)} placeholder="Ex: 3" />
-            </div>
-            <div>
-              <label className="text-xs text-[#C8C8E0] mb-1 block">Force <span className="text-[#555]">(Force: xxx)</span></label>
-              <StableInput initialValue={data.force ?? ''} onCommit={v => onChange('force', v || null)} placeholder="Ex: x2" />
-            </div>
-            <div>
-              <label className="text-xs text-[#C8C8E0] mb-1 block">Choice</label>
-              <StableInput initialValue={data.choix ?? ''} onCommit={v => onChange('choix', v || null)} placeholder="Free text..." />
-            </div>
-            <div>
-              <label className="text-xs text-[#C8C8E0] mb-1 block">Other</label>
-              <StableInput initialValue={data.autre ?? ''} onCommit={v => onChange('autre', v || null)} placeholder="Free text..." />
-            </div>
-            <div className="col-span-2">
-              <label className="text-xs text-[#C8C8E0] mb-1 block">Trigger <span className="text-[#555]">(Trigger: xxx)</span></label>
-              <DynamicSelect value={data.trigger} onChange={v => onChange('trigger', v)} options={allTriggers} placeholder="Trigger" />
-            </div>
-          </>
-        )}
+
       </div>
     </div>
   )
