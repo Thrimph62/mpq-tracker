@@ -37,7 +37,7 @@ export function AscendedBadge() {
 }
 
 // Clickable status — cycles through the 4 statuses on click
-const STATUS_ORDER: CharacterStatus[] = ['max_champ', 'champ', 'rostered', 'not_owned']
+const STATUS_ORDER: CharacterStatus[] = ['not_owned', 'rostered', 'champ', 'max_champ']
 
 interface InlineStatusProps {
   status: CharacterStatus | null
@@ -72,9 +72,9 @@ export function InlineAscendedBadge({ ascended, onChange }: InlineAscendedProps)
     onChange(!ascended)
   }
   if (!ascended) return (
-    <button onClick={handleClick} title="Cliquer pour marquer comme Ascended"
-      className="badge border border-dashed border-[#444] text-[#666] hover:border-cyan-600 hover:text-cyan-400 transition-colors cursor-pointer select-none">
-      ⬆
+    <button onClick={handleClick} title="Click to mark as Ascended"
+      className="badge border border-[#444] text-[#888] hover:border-cyan-600 hover:text-cyan-400 transition-colors cursor-pointer select-none">
+      No
     </button>
   )
   return (

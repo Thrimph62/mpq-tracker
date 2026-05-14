@@ -4,7 +4,7 @@ import { Character, CharacterStatus, Stars } from '../types'
 import { StarBadge, InlineStatusBadge, InlineAscendedBadge } from '../components/Badges'
 import { Plus, Search, X, Pencil, Trash2, Layers, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 
-const STATUSES: CharacterStatus[] = ['max_champ', 'champ', 'rostered', 'not_owned']
+const STATUSES: CharacterStatus[] = ['not_owned', 'rostered', 'champ', 'max_champ']
 const STARS_OPTIONS: Stars[] = [6, 5, 4, 3, 2, 1]
 
 const STATUS_FR: Record<CharacterStatus, string> = {
@@ -308,16 +308,20 @@ export default function Characters() {
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-3">
-              <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Full name <span className="text-[#555]">(ex: Spider-Man (Classic))</span></label>
-                <input className="input" value={form.name} onChange={e => handleNameChange(e.target.value)} placeholder="Character (Version)" />
-              </div>
-              {form.base_name && (
-                <div className="bg-[#1C1C2E] rounded-lg px-3 py-2 flex gap-4 text-xs">
-                  <span className="text-[#C8C8E0]">Base: <span className="text-white">{form.base_name}</span></span>
-                  {form.version && <span className="text-[#C8C8E0]">Version: <span className="text-marvel-gold">{form.version}</span></span>}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Name *</label>
+                  <input className="input" value={form.base_name}
+                    onChange={e => setForm(f => ({ ...f, base_name: e.target.value, name: e.target.value + (f.version ? ` (${f.version})` : '') }))}
+                    placeholder="Ex: Spider-Man" />
                 </div>
-              )}
+                <div>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Version <span className="text-[#555]">(optional)</span></label>
+                  <input className="input" value={form.version ?? ''}
+                    onChange={e => setForm(f => ({ ...f, version: e.target.value || null, name: f.base_name + (e.target.value ? ` (${e.target.value})` : '') }))}
+                    placeholder="Ex: Classic" />
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Stars</label>
@@ -355,7 +359,7 @@ export default function Characters() {
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={closeModal} className="btn-secondary flex-1">Cancel</button>
-                <button onClick={save} disabled={saving || !form.name} className="btn-primary flex-1">
+                <button onClick={save} disabled={saving || !form.base_name} className="btn-primary flex-1">
                   {saving ? 'Saving...' : 'Save'}
                 </button>
               </div>
