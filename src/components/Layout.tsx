@@ -5,12 +5,12 @@ import {
 } from 'lucide-react'
 
 const NAV = [
-  { to: '/',           icon: LayoutDashboard, label: 'Tableau de Bord' },
-  { to: '/characters', icon: Users,           label: 'Personnages'     },
-  { to: '/powers',     icon: Zap,             label: 'Pouvoirs'        },
+  { to: '/',           icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/characters', icon: Users,           label: 'Characters'     },
+  { to: '/powers',     icon: Zap,             label: 'Powers'        },
   { to: '/supports',   icon: Shield,          label: 'Supports'        },
-  { to: '/teams',      icon: Swords,          label: 'Équipes'         },
-  { to: '/quetes',     icon: Scroll,          label: 'Quêtes'          },
+  { to: '/teams',      icon: Swords,          label: 'Teams'         },
+  { to: '/quetes',     icon: Scroll,          label: 'Quests'          },
   { to: '/gauntlet',   icon: Puzzle,          label: 'Puzzle Gauntlet' },
   { to: '/import',     icon: Upload,          label: 'Import Excel'    },
 ]
@@ -39,7 +39,7 @@ export default function Layout() {
         <div className="p-3 border-t border-[#3D3D60]">
           <button onClick={signOut}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#C8C8E0] hover:bg-[#252540] hover:text-white transition-all w-full">
-            <LogOut size={16} />Déconnexion
+            <LogOut size={16} />Sign Out
           </button>
         </div>
       </aside>

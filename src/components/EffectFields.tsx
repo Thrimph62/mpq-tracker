@@ -22,7 +22,7 @@ export const EMPTY_EFFECT: EffectData = {
 export function catColor(cat: string | null): string {
   if (!cat) return 'bg-[#3D3D60] text-[#C8C8E0] border-[#555]'
   if (cat.includes('Gain MP'))       return 'bg-blue-900/50   text-blue-300   border-blue-700'
-  if (cat.includes('Dégâts'))        return 'bg-red-900/50    text-red-300    border-red-700'
+  if (cat.includes('Damage'))        return 'bg-red-900/50    text-red-300    border-red-700'
   if (cat.includes('Création'))      return 'bg-green-900/50  text-green-300  border-green-700'
   if (cat.includes('Destruction'))   return 'bg-orange-900/50 text-orange-300 border-orange-700'
   if (cat.includes('Conversion'))    return 'bg-yellow-900/50 text-yellow-300 border-yellow-700'
@@ -82,14 +82,14 @@ export function DynamicSelect({ value, onChange, options, placeholder, disabled 
   const showInput = isNew || value === ''
 
   if (disabled) {
-    return <div className="input text-sm text-[#555] cursor-not-allowed opacity-50">— Sélectionner d'abord —</div>
+    return <div className="input text-sm text-[#555] cursor-not-allowed opacity-50">— Select first —</div>
   }
   return (
     <div className="space-y-1">
       <select className="input text-sm"
         value={isNew ? '__new__' : (value ?? '')}
         onChange={e => { if (e.target.value === '__new__') onChange(''); else onChange(e.target.value || null) }}>
-        <option value="">— Aucun —</option>
+        <option value="">— None —</option>
         {options.map(c => <option key={c} value={c}>{c}</option>)}
         <option value="__new__">+ Nouveau {placeholder.toLowerCase()}...</option>
       </select>
@@ -191,35 +191,35 @@ export function EffectForm({
         )}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {/* Catégorie */}
+        {/* Category */}
         <div>
-          <label className="text-xs text-[#C8C8E0] mb-1 block">Catégorie</label>
-          <DynamicSelect value={data.category} onChange={handleCategoryChange} options={allCategories} placeholder="Catégorie" />
+          <label className="text-xs text-[#C8C8E0] mb-1 block">Category</label>
+          <DynamicSelect value={data.category} onChange={handleCategoryChange} options={allCategories} placeholder="Category" />
         </div>
-        {/* Sous Catégorie — linked to Catégorie */}
+        {/* Sous Category — linked to Category */}
         <div>
           <label className="text-xs text-[#C8C8E0] mb-1 block">
-            Sous Catégorie {!data.category && <span className="text-[#555]">(choisir catégorie d'abord)</span>}
+            Sous Category {!data.category && <span className="text-[#555]">(select category first)</span>}
           </label>
           <DynamicSelect value={data.sous_category} onChange={handleSousChange}
-            options={availableSous} placeholder="Sous Catégorie" disabled={!data.category} />
+            options={availableSous} placeholder="Sous Category" disabled={!data.category} />
         </div>
-        {/* Sous Catégorie 2 — linked to Sous Catégorie */}
+        {/* Sous Category 2 — linked to Sous Category */}
         <div>
           <label className="text-xs text-[#C8C8E0] mb-1 block">
-            Sous Catégorie 2
+            Sous Category 2
           </label>
           <DynamicSelect value={data.sous_category_2} onChange={v => onChange('sous_category_2', v)}
-            options={availableSous2} placeholder="Sous Catégorie 2" />
+            options={availableSous2} placeholder="Sous Category 2" />
         </div>
-        {/* Dégâts */}
+        {/* Damage */}
         <div>
-          <label className="text-xs text-[#C8C8E0] mb-1 block">Dégâts <span className="text-[#555]">(Dmg: xxx)</span></label>
+          <label className="text-xs text-[#C8C8E0] mb-1 block">Damage <span className="text-[#555]">(Dmg: xxx)</span></label>
           <StableInput initialValue={data.degats ?? ''} onCommit={v => onChange('degats', v || null)} placeholder="Ex: 2500" />
         </div>
-        {/* Quantité */}
+        {/* Quantity */}
         <div>
-          <label className="text-xs text-[#C8C8E0] mb-1 block">Quantité <span className="text-[#555]">(qte: xxx)</span></label>
+          <label className="text-xs text-[#C8C8E0] mb-1 block">Quantity <span className="text-[#555]">(qte: xxx)</span></label>
           <StableInput initialValue={data.quantite ?? ''} onCommit={v => onChange('quantite', v || null)} placeholder="Ex: 3" />
         </div>
         {/* Force */}
@@ -227,15 +227,15 @@ export function EffectForm({
           <label className="text-xs text-[#C8C8E0] mb-1 block">Force <span className="text-[#555]">(Force: xxx)</span></label>
           <StableInput initialValue={data.force ?? ''} onCommit={v => onChange('force', v || null)} placeholder="Ex: x2" />
         </div>
-        {/* Choix */}
+        {/* Choice */}
         <div>
-          <label className="text-xs text-[#C8C8E0] mb-1 block">Choix</label>
-          <StableInput initialValue={data.choix ?? ''} onCommit={v => onChange('choix', v || null)} placeholder="Description libre..." />
+          <label className="text-xs text-[#C8C8E0] mb-1 block">Choice</label>
+          <StableInput initialValue={data.choix ?? ''} onCommit={v => onChange('choix', v || null)} placeholder="Free text..." />
         </div>
-        {/* Autre */}
+        {/* Other */}
         <div>
-          <label className="text-xs text-[#C8C8E0] mb-1 block">Autre</label>
-          <StableInput initialValue={data.autre ?? ''} onCommit={v => onChange('autre', v || null)} placeholder="Description libre..." />
+          <label className="text-xs text-[#C8C8E0] mb-1 block">Other</label>
+          <StableInput initialValue={data.autre ?? ''} onCommit={v => onChange('autre', v || null)} placeholder="Free text..." />
         </div>
         {/* Trigger */}
         <div className="col-span-2">

@@ -7,16 +7,16 @@ import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-
 
 const EMPTY: Omit<PGType, 'id' | 'created_at' | 'updated_at'> = {
   categorie: null, node: null, condition_victoire: null,
-  gauche_personnage: null, gauche_build: null, gauche_support: null,
-  milieu_personnage: null, milieu_build: null, milieu_support: null,
-  droite_personnage: null, droite_build: null, droite_support: null,
+  gauche_character: null, gauche_build: null, gauche_support: null,
+  milieu_character: null, milieu_build: null, milieu_support: null,
+  droite_character: null, droite_build: null, droite_support: null,
   equipe_utilisee: null, note: null,
 }
 
 const SLOTS = [
-  { pos: 'gauche', label: 'Gauche' },
-  { pos: 'milieu', label: 'Milieu' },
-  { pos: 'droite', label: 'Droite' },
+  { pos: 'gauche', label: 'Left' },
+  { pos: 'milieu', label: 'Middle' },
+  { pos: 'droite', label: 'Right' },
 ] as const
 
 export default function PuzzleGauntlet() {
@@ -49,7 +49,7 @@ export default function PuzzleGauntlet() {
 
   const visible = nodes.filter(n => {
     const matchSearch = !search || [n.node, n.categorie, n.condition_victoire,
-      n.gauche_personnage, n.milieu_personnage, n.droite_personnage]
+      n.gauche_character, n.milieu_character, n.droite_character]
       .some(v => v?.toLowerCase().includes(search.toLowerCase()))
     const matchCat = !filterCat || n.categorie === filterCat
     return matchSearch && matchCat
@@ -67,7 +67,7 @@ export default function PuzzleGauntlet() {
   }
   function closeModal() { setModal(null); setEditId(null) }
 
-  function setSlot(pos: 'gauche' | 'milieu' | 'droite', field: 'personnage' | 'build' | 'support', val: string | null) {
+  function setSlot(pos: 'gauche' | 'milieu' | 'droite', field: 'character' | 'build' | 'support', val: string | null) {
     setForm(f => ({ ...f, [`${pos}_${field}`]: val }))
   }
 
@@ -79,7 +79,7 @@ export default function PuzzleGauntlet() {
   }
 
   async function remove(id: string) {
-    if (!confirm('Supprimer ce node ?')) return
+    if (!confirm('Delete this node?')) return
     await supabase.from('mpq_tracker_puzzle_gauntlet').delete().eq('id', id)
     setNodes(prev => prev.filter(n => n.id !== id))
   }
@@ -91,16 +91,16 @@ export default function PuzzleGauntlet() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="page-title">Puzzle Gauntlet</h1>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Add</button>
       </div>
 
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
-          <input className="input pl-9" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input className="input pl-9" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select className="input w-auto" value={filterCat} onChange={e => setFilterCat(e.target.value)}>
-          <option value="">Toutes catégories</option>
+          <option value="">All categories</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
@@ -135,19 +135,19 @@ export default function PuzzleGauntlet() {
                       {expanded === n.id && (
                         <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
                           <div className="grid grid-cols-3 gap-3">
-                            <TeamSlot character={n.gauche_personnage} build={n.gauche_build} support={n.gauche_support} />
-                            <TeamSlot character={n.milieu_personnage} build={n.milieu_build} support={n.milieu_support} />
-                            <TeamSlot character={n.droite_personnage} build={n.droite_build} support={n.droite_support} />
+                            <TeamSlot character={n.gauche_character} build={n.gauche_build} support={n.gauche_support} />
+                            <TeamSlot character={n.milieu_character} build={n.milieu_build} support={n.milieu_support} />
+                            <TeamSlot character={n.droite_character} build={n.droite_build} support={n.droite_support} />
                           </div>
                           {n.equipe_utilisee && (
                             <div className="bg-purple-900/20 border border-purple-700/40 rounded-lg p-3">
-                              <p className="text-xs text-purple-300 font-semibold mb-1">Équipe utilisée</p>
+                              <p className="text-xs text-purple-300 font-semibold mb-1">Team used</p>
                               <p className="text-sm text-white">{n.equipe_utilisee}</p>
                             </div>
                           )}
                           {n.note && (
                             <div className="bg-[#1C1C2E] rounded-lg p-3">
-                              <p className="text-xs text-marvel-gold font-semibold mb-1">Stratégie</p>
+                              <p className="text-xs text-marvel-gold font-semibold mb-1">Strategy</p>
                               <p className="text-sm text-[#E8E8F8] whitespace-pre-line leading-relaxed">{n.note}</p>
                             </div>
                           )}
@@ -159,7 +159,7 @@ export default function PuzzleGauntlet() {
               </div>
             )
           })}
-          {visible.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">Aucun node trouvé</div>}
+          {visible.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No nodes found</div>}
         </div>
       )}
 
@@ -167,13 +167,13 @@ export default function PuzzleGauntlet() {
         <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-xl my-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouveau Node' : 'Modifier Node'}</h2>
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Node' : 'Edit Node'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Catégorie</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Category</label>
                   <input className="input text-sm" value={form.categorie ?? ''}
                     onChange={e => setForm(f => ({ ...f, categorie: e.target.value || null }))} />
                 </div>
@@ -183,7 +183,7 @@ export default function PuzzleGauntlet() {
                     onChange={e => setForm(f => ({ ...f, node: e.target.value || null }))} />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Condition de victoire</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Victory condition</label>
                   <input className="input text-sm" value={form.condition_victoire ?? ''}
                     onChange={e => setForm(f => ({ ...f, condition_victoire: e.target.value || null }))} />
                 </div>
@@ -193,12 +193,12 @@ export default function PuzzleGauntlet() {
                 <div key={pos} className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
                   <p className="text-xs font-semibold text-marvel-gold">{label}</p>
                   <div>
-                    <label className="text-xs text-[#C8C8E0] mb-1 block">Personnage</label>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">Character</label>
                     <SearchDropdown
-                      value={form[`${pos}_personnage`]}
-                      onChange={v => setSlot(pos, 'personnage', v)}
+                      value={form[`${pos}_character`]}
+                      onChange={v => setSlot(pos, 'character', v)}
                       options={charOptions}
-                      placeholder="Rechercher un personnage..."
+                      placeholder="Search for a character..."
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -214,7 +214,7 @@ export default function PuzzleGauntlet() {
                         value={form[`${pos}_support`]}
                         onChange={v => setSlot(pos, 'support', v)}
                         options={supportOptions}
-                        placeholder="Rechercher un support..."
+                        placeholder="Search for a support..."
                       />
                     </div>
                   </div>
@@ -222,20 +222,20 @@ export default function PuzzleGauntlet() {
               ))}
 
               <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Équipe utilisée</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Team used</label>
                 <input className="input text-sm" value={form.equipe_utilisee ?? ''}
                   onChange={e => setForm(f => ({ ...f, equipe_utilisee: e.target.value || null }))} />
               </div>
               <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Stratégie / Note</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Strategy / Note</label>
                 <textarea className="input resize-none h-24 text-sm" value={form.note ?? ''}
                   onChange={e => setForm(f => ({ ...f, note: e.target.value || null }))} />
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
+                <button onClick={closeModal} className="btn-secondary flex-1">Cancel</button>
                 <button onClick={save} disabled={saving} className="btn-primary flex-1">
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                  {saving ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </div>

@@ -7,14 +7,14 @@ import { EffectDisplay, EffectForm, EffectData } from '../components/EffectField
 import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp, List, LayoutGrid, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 
 const COULEURS = ['Bleu', 'Rouge', 'Vert', 'Noir', 'Jaune', 'Violet'] as const
-type Couleur = typeof COULEURS[number]
+type Color = typeof COULEURS[number]
 
-const COULEUR_STYLES: Record<Couleur, string> = {
+const COULEUR_STYLES: Record<Color, string> = {
   Bleu:   'bg-blue-600   text-white', Rouge:  'bg-red-600    text-white',
   Vert:   'bg-green-600  text-white', Noir:   'bg-gray-600   text-white',
   Jaune:  'bg-yellow-500 text-black', Violet: 'bg-purple-600 text-white',
 }
-const COULEUR_BORDER: Record<Couleur, string> = {
+const COULEUR_BORDER: Record<Color, string> = {
   Bleu:   'border-blue-700',   Rouge:  'border-red-700',
   Vert:   'border-green-700',  Noir:   'border-gray-600',
   Jaune:  'border-yellow-600', Violet: 'border-purple-700',
@@ -35,9 +35,9 @@ type ViewMode = 'table' | 'byCharacter'
 type SortCol  = 'character' | 'power_name' | 'couleur' | 'position'
 type SortDir  = 'asc' | 'desc'
 
-function CouleurBadge({ couleur }: { couleur: string | null }) {
+function ColorBadge({ couleur }: { couleur: string | null }) {
   if (!couleur) return null
-  return <span className={`badge font-semibold ${COULEUR_STYLES[couleur as Couleur] ?? 'bg-gray-700 text-white'}`}>{couleur}</span>
+  return <span className={`badge font-semibold ${COULEUR_STYLES[couleur as Color] ?? 'bg-gray-700 text-white'}`}>{couleur}</span>
 }
 
 function SortIcon({ col, current, dir }: { col: SortCol; current: SortCol; dir: SortDir }) {
@@ -64,7 +64,7 @@ export default function CharacterPowers() {
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading]       = useState(true)
   const [search, setSearch]         = useState('')
-  const [filterCouleur, setFilterCouleur]   = useState('')
+  const [filterColor, setFilterColor]   = useState('')
   const [filterCategory, setFilterCategory] = useState('')
   const [viewMode, setViewMode]     = useState<ViewMode>('byCharacter')
   const [sortCol, setSortCol]       = useState<SortCol>('character')
@@ -130,9 +130,9 @@ export default function CharacterPowers() {
       name, p.power_name, p.couleur,
       ...EFFECTS.flatMap(n => [p[`effect_${n}_category`], p[`effect_${n}_sous_category`], p[`effect_${n}_quantite`], p[`effect_${n}_force`], p[`effect_${n}_autre`], p[`effect_${n}_trigger`]]),
     ].some(v => v && String(v).toLowerCase().includes(search.toLowerCase()))
-    const matchCouleur  = !filterCouleur  || p.couleur === filterCouleur
+    const matchColor  = !filterColor  || p.couleur === filterColor
     const matchCategory = !filterCategory || EFFECTS.some(n => p[`effect_${n}_category`] === filterCategory)
-    return matchSearch && matchCouleur && matchCategory
+    return matchSearch && matchColor && matchCategory
   })
 
   function toggleSort(col: SortCol) {
@@ -182,7 +182,7 @@ export default function CharacterPowers() {
   }
 
   async function remove(id: string) {
-    if (!confirm('Supprimer ce pouvoir ?')) return
+    if (!confirm('Delete ce power ?')) return
     await supabase.from('mpq_tracker_character_powers').delete().eq('id', id)
     setPowers(prev => prev.filter(p => p.id !== id))
   }
@@ -203,37 +203,37 @@ export default function CharacterPowers() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="page-title">Pouvoirs</h1>
-        <button onClick={() => openAdd()} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
+        <h1 className="page-title">Powers</h1>
+        <button onClick={() => openAdd()} className="btn-primary flex items-center gap-2"><Plus size={16} /> Add</button>
       </div>
 
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
-          <input className="input pl-9" placeholder="Rechercher perso, pouvoir, effet..."
+          <input className="input pl-9" placeholder="Rechercher perso, power, effet..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select className="input w-auto" value={filterCouleur} onChange={e => setFilterCouleur(e.target.value)}>
-          <option value="">Toutes couleurs</option>
+        <select className="input w-auto" value={filterColor} onChange={e => setFilterColor(e.target.value)}>
+          <option value="">All colors</option>
           {COULEURS.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
         <select className="input w-auto" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
-          <option value="">Tous les effets</option>
+          <option value="">All effects</option>
           {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
         <div className="flex gap-1 bg-[#1E1E38] p-1 rounded-lg">
           <button onClick={() => setViewMode('byCharacter')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${viewMode === 'byCharacter' ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'}`}>
-            <LayoutGrid size={13} /> Par perso
+            <LayoutGrid size={13} /> By character
           </button>
           <button onClick={() => setViewMode('table')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${viewMode === 'table' ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'}`}>
-            <List size={13} /> Tableau
+            <List size={13} /> Table
           </button>
         </div>
       </div>
 
-      <p className="text-sm text-[#C8C8E0]">{filtered.length} pouvoir{filtered.length !== 1 ? 's' : ''}</p>
+      <p className="text-sm text-[#C8C8E0]">{filtered.length} power{filtered.length !== 1 ? 's' : ''}</p>
 
       {loading ? <Spinner /> : viewMode === 'byCharacter' ? (
         <div className="space-y-2">
@@ -241,7 +241,7 @@ export default function CharacterPowers() {
             const char   = cm[charId]
             const isOpen = expanded === charId
             const sortedPowers = [...charPowers].sort((a, b) => (a.position ?? 99) - (b.position ?? 99))
-            const byCouleur = sortedPowers.reduce<Record<string, CharacterPower[]>>((acc, p) => {
+            const byColor = sortedPowers.reduce<Record<string, CharacterPower[]>>((acc, p) => {
               const key = p.couleur ?? 'Inconnu'; acc[key] = acc[key] ?? []; acc[key].push(p); return acc
             }, {})
             return (
@@ -251,11 +251,11 @@ export default function CharacterPowers() {
                     <div className="flex items-center gap-2">
                       {char && <StarBadge stars={char.stars as Stars} />}
                       <span className="font-semibold text-white group-hover:text-marvel-gold transition-colors">{char?.name ?? charId}</span>
-                      <span className="text-xs text-[#C8C8E0]">({charPowers.length} pouvoir{charPowers.length !== 1 ? 's' : ''})</span>
+                      <span className="text-xs text-[#C8C8E0]">({charPowers.length} power{charPowers.length !== 1 ? 's' : ''})</span>
                     </div>
                     <div className="flex gap-1 mt-1 flex-wrap">
-                      {Object.keys(byCouleur).map(col => (
-                        <span key={col} className={`badge text-xs ${COULEUR_STYLES[col as Couleur] ?? 'bg-gray-700 text-white'}`}>{col} ({byCouleur[col].length})</span>
+                      {Object.keys(byColor).map(col => (
+                        <span key={col} className={`badge text-xs ${COULEUR_STYLES[col as Color] ?? 'bg-gray-700 text-white'}`}>{col} ({byColor[col].length})</span>
                       ))}
                     </div>
                   </div>
@@ -270,13 +270,13 @@ export default function CharacterPowers() {
 
                 {isOpen && (
                   <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
-                    {COULEURS.filter(col => byCouleur[col]).map(col => (
+                    {COULEURS.filter(col => byColor[col]).map(col => (
                       <div key={col}>
-                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border mb-2 ${COULEUR_BORDER[col as Couleur]} bg-[#1C1C2E]`}>
-                          <CouleurBadge couleur={col} />
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border mb-2 ${COULEUR_BORDER[col as Color]} bg-[#1C1C2E]`}>
+                          <ColorBadge couleur={col} />
                         </div>
                         <div className="space-y-2 pl-2">
-                          {byCouleur[col].sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).map(p => (
+                          {byColor[col].sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).map(p => (
                             <div key={p.id} className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
                               <div className="flex-1 space-y-2">
                                 <div className="flex items-center gap-2">
@@ -311,18 +311,18 @@ export default function CharacterPowers() {
               </div>
             )
           })}
-          {groupedEntries.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">Aucun pouvoir trouvé</div>}
+          {groupedEntries.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">Aucun power trouvé</div>}
         </div>
       ) : (
         <div className="card overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[#3D3D60]">
-                <Th col="character"  label="Personnage" />
+                <Th col="character"  label="Character" />
                 <Th col="position"   label="Pos." />
-                <Th col="power_name" label="Nom du pouvoir" />
-                <Th col="couleur"    label="Couleur" />
-                {EFFECTS.map(n => <th key={n} className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Effet {n}</th>)}
+                <Th col="power_name" label="Name du power" />
+                <Th col="couleur"    label="Color" />
+                {EFFECTS.map(n => <th key={n} className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Effect {n}</th>)}
                 <th className="py-2 px-2 font-normal text-center text-[#C8C8E0] sticky right-0 bg-[#252540] z-10">Actions</th>
               </tr>
             </thead>
@@ -332,7 +332,7 @@ export default function CharacterPowers() {
                   <td className="py-2 px-2 font-medium text-white text-center">{cm[p.character_id]?.name ?? '—'}</td>
                   <td className="py-2 px-2 text-center text-marvel-gold font-bold">{p.position ?? '—'}</td>
                   <td className="py-2 px-2 text-[#D8D8EE] text-center">{p.power_name ?? '—'}</td>
-                  <td className="py-2 px-2 text-center"><CouleurBadge couleur={p.couleur} /></td>
+                  <td className="py-2 px-2 text-center"><ColorBadge couleur={p.couleur} /></td>
                   {EFFECTS.map(n => (
                     <td key={n} className="py-2 px-1 text-center align-top">
                       <EffectDisplay
@@ -352,7 +352,7 @@ export default function CharacterPowers() {
               ))}
             </tbody>
           </table>
-          {sortedFiltered.length === 0 && <p className="text-center text-[#C8C8E0] py-8">Aucun pouvoir trouvé</p>}
+          {sortedFiltered.length === 0 && <p className="text-center text-[#C8C8E0] py-8">Aucun power trouvé</p>}
         </div>
       )}
 
@@ -360,27 +360,27 @@ export default function CharacterPowers() {
         <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-2xl my-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouveau Pouvoir' : 'Modifier Pouvoir'}</h2>
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Power' : 'Edit Pouvoir'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Personnage *</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Character *</label>
                 <SearchDropdown
                   value={form.character_id ? (characters.find(c => c.id === form.character_id)?.name ?? '') : ''}
                   onChange={() => {}}
                   onSelectId={id => setForm(f => ({ ...f, character_id: id ?? '' }))}
-                  options={charOptions} placeholder="Rechercher un personnage..." allowFreeText={false} />
+                  options={charOptions} placeholder="Search for a character..." allowFreeText={false} />
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Nom du pouvoir</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Name du power</label>
                   <input className="input" value={form.power_name ?? ''} onChange={e => setForm(f => ({ ...f, power_name: e.target.value || null }))} placeholder="Ex: Assaut Cosmique" />
                 </div>
                 <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Couleur</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Color</label>
                   <select className="input" value={form.couleur ?? ''} onChange={e => setForm(f => ({ ...f, couleur: e.target.value || null }))}>
-                    <option value="">— Aucune —</option>
+                    <option value="">— None —</option>
                     {COULEURS.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -394,12 +394,12 @@ export default function CharacterPowers() {
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-marvel-gold mb-2">Effets (jusqu'à 4)</p>
+                <p className="text-xs font-semibold text-marvel-gold mb-2">Effects (up to 4)</p>
                 <div className="space-y-2">
                   {EFFECTS.map(n => (
                     <EffectForm
                       key={n}
-                      label={`Effet ${n}`}
+                      label={`Effect ${n}`}
                       data={{
                         category:        form[`effect_${n}_category`],
                         sous_category:   form[`effect_${n}_sous_category`],
@@ -424,8 +424,8 @@ export default function CharacterPowers() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
-                <button onClick={save} disabled={saving || !form.character_id} className="btn-primary flex-1">{saving ? 'Sauvegarde...' : 'Sauvegarder'}</button>
+                <button onClick={closeModal} className="btn-secondary flex-1">Cancel</button>
+                <button onClick={save} disabled={saving || !form.character_id} className="btn-primary flex-1">{saving ? 'Saving...' : 'Save'}</button>
               </div>
             </div>
           </div>

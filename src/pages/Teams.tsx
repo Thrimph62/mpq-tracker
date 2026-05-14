@@ -17,7 +17,7 @@ const EMPTY_FORM: Omit<Team, 'id' | 'created_at' | 'updated_at'> = {
 
 type Tab = 'active' | 'to_test'
 type Pos = 'left' | 'mid' | 'right'
-const POS_LABELS: Record<Pos, string> = { left: 'Gauche', mid: 'Milieu', right: 'Droite' }
+const POS_LABELS: Record<Pos, string> = { left: 'Left', mid: 'Middle', right: 'Right' }
 
 export default function Teams() {
   const [teams, setTeams]         = useState<Team[]>([])
@@ -92,7 +92,7 @@ export default function Teams() {
   }
 
   async function remove(id: string) {
-    if (!confirm('Supprimer cette équipe ?')) return
+    if (!confirm('Delete this team?')) return
     await supabase.from('mpq_tracker_teams').delete().eq('id', id)
     setTeams(prev => prev.filter(t => t.id !== id))
   }
@@ -112,15 +112,15 @@ export default function Teams() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="page-title">Équipes</h1>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
+        <h1 className="page-title">Teams</h1>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Add</button>
       </div>
 
       <div className="flex gap-1 bg-[#1E1E38] p-1 rounded-lg w-fit">
         {(['active', 'to_test'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === t ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'}`}>
-            {t === 'active' ? 'Équipes Actives' : 'À Tester'}
+            {t === 'active' ? 'Teams Actives' : 'To Test'}
             <span className="ml-2 text-xs opacity-70">({teams.filter(x => x.status === t).length})</span>
           </button>
         ))}
@@ -129,7 +129,7 @@ export default function Teams() {
       <div className="flex gap-3 flex-wrap">
         <div className="relative max-w-sm flex-1">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
-          <input className="input pl-9" placeholder="Rechercher une équipe ou un perso..."
+          <input className="input pl-9" placeholder="Search a team or character..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         {/* Favorite filter */}
@@ -139,9 +139,9 @@ export default function Teams() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                 filterFavorite === v ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'
               }`}>
-              {v === 'all' && 'Tous'}
-              {v === 'yes' && <><Star size={12} className="fill-yellow-400 text-yellow-400" /> Favoris</>}
-              {v === 'no'  && 'Non favoris'}
+              {v === 'all' && 'All'}
+              {v === 'yes' && <><Star size={12} className="fill-yellow-400 text-yellow-400" /> Favorites</>}
+              {v === 'no'  && 'Not favorites'}
             </button>
           ))}
         </div>
@@ -149,7 +149,7 @@ export default function Teams() {
 
       {loading ? <Spinner /> : (
         <div className="space-y-3">
-          {visible.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">Aucune équipe trouvée</div>}
+          {visible.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No teams found</div>}
           {visible.map(team => (
             <div key={team.id} className="card">
               <div className="flex items-start justify-between gap-4">
@@ -174,7 +174,7 @@ export default function Teams() {
                   {/* Favorite toggle */}
                   <button
                     onClick={() => toggleFavorite(team.id, team.favorite)}
-                    title={team.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    title={team.favorite ? 'Remove from favorites' : 'Add aux favoris'}
                     className="p-1 transition-colors hover:scale-110"
                   >
                     <Star
@@ -185,7 +185,7 @@ export default function Teams() {
                   {tab === 'to_test' && (
                     <button onClick={() => moveToActive(team.id)}
                       className="text-xs bg-green-900/40 text-green-300 border border-green-700 px-2 py-1 rounded hover:bg-green-900/60 transition-colors">
-                      ✓ Testé
+                      ✓ Tested
                     </button>
                   )}
                   <button onClick={() => openEdit(team)} className="text-[#C8C8E0] hover:text-white p-1"><Pencil size={14} /></button>
@@ -202,7 +202,7 @@ export default function Teams() {
                   </div>
                   {team.strategie && (
                     <div className="bg-[#1C1C2E] rounded-lg p-3">
-                      <p className="text-xs text-marvel-gold font-semibold mb-1">Stratégie</p>
+                      <p className="text-xs text-marvel-gold font-semibold mb-1">Strategy</p>
                       <p className="text-sm text-[#E8E8F8] whitespace-pre-line leading-relaxed">{team.strategie}</p>
                     </div>
                   )}
@@ -224,21 +224,21 @@ export default function Teams() {
         <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-2xl my-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouvelle Équipe' : 'Modifier Équipe'}</h2>
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Team' : 'Edit Équipe'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Nom de l'équipe <span className="text-[#555]">(rempli automatiquement)</span></label>
-                <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Perso 1 / Perso 2 / Perso 3" />
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Team name <span className="text-[#555]">(auto-filled)</span></label>
+                <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Char 1 / Char 2 / Char 3" />
               </div>
 
               <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Statut</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Status</label>
                 <select className="input w-auto" value={form.status} onChange={f('status')}>
                   <option value="active">Active</option>
-                  <option value="to_test">À Tester</option>
-                  <option value="archived">Archivée</option>
+                  <option value="to_test">To Test</option>
+                  <option value="archived">Archived</option>
                 </select>
               </div>
 
@@ -247,12 +247,12 @@ export default function Teams() {
                   <p className="text-xs font-semibold text-marvel-gold uppercase">{POS_LABELS[pos]}</p>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-[#C8C8E0] mb-1 block">Personnage</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Character</label>
                       <SearchDropdown
                         value={form[`${pos}_character`]}
                         onChange={v => setSlot(pos, 'character', v)}
                         options={charOptions}
-                        placeholder="Rechercher un personnage..."
+                        placeholder="Search for a character..."
                       />
                     </div>
                     <div>
@@ -267,7 +267,7 @@ export default function Teams() {
                         value={form[`${pos}_support`]}
                         onChange={v => setSlot(pos, 'support', v)}
                         options={supportOptions}
-                        placeholder="Rechercher un support..."
+                        placeholder="Search for a support..."
                       />
                     </div>
                     <div>
@@ -275,8 +275,8 @@ export default function Teams() {
                       <select className="input text-sm"
                         value={form[`${pos}_boost`] ?? 'Not Required'}
                         onChange={e => setSlot(pos, 'boost', e.target.value)}>
-                        <option value="Not Required">Non Requis</option>
-                        <option value="Required">Requis</option>
+                        <option value="Not Required">Not Required</option>
+                        <option value="Required">Required</option>
                       </select>
                     </div>
                   </div>
@@ -284,7 +284,7 @@ export default function Teams() {
               ))}
 
               <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Stratégie</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Strategy</label>
                 <textarea className="input resize-none h-28" value={form.strategie ?? ''} onChange={f('strategie')} />
               </div>
               <div className="grid grid-cols-4 gap-3">
@@ -301,14 +301,14 @@ export default function Teams() {
                 ))}
               </div>
               <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Note additionnelle</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Additional note</label>
                 <textarea className="input resize-none h-16" value={form.note_additionnelle ?? ''} onChange={f('note_additionnelle')} />
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
+                <button onClick={closeModal} className="btn-secondary flex-1">Cancel</button>
                 <button onClick={save} disabled={saving || !form.name} className="btn-primary flex-1">
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                  {saving ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </div>

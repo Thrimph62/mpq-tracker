@@ -8,7 +8,7 @@ const STATUSES: CharacterStatus[] = ['max_champ', 'champ', 'rostered', 'not_owne
 const STARS_OPTIONS: Stars[] = [6, 5, 4, 3, 2, 1]
 
 const STATUS_FR: Record<CharacterStatus, string> = {
-  max_champ: 'Max Champ', champ: 'Champ', rostered: 'Roster', not_owned: 'Non Possédé',
+  max_champ: 'Max Champ', champ: 'Champ', rostered: 'Roster', not_owned: 'Not Owned',
 }
 
 function parseBaseName(name: string): { base: string; version: string | null } {
@@ -73,7 +73,7 @@ function SortBtn({ field, current, dir, onClick }: {
   const active = field === current
   return (
     <button onClick={onClick} className={`flex items-center gap-1 text-xs font-medium transition-colors ${active ? 'text-marvel-gold' : 'text-[#C8C8E0] hover:text-white'}`}>
-      {field === 'base_name' ? 'Nom' : field === 'stars' ? 'Étoiles' : 'Niveau'}
+      {field === 'base_name' ? 'Name' : field === 'stars' ? 'Stars' : 'Level'}
       {active ? (dir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
     </button>
   )
@@ -154,7 +154,7 @@ export default function Characters() {
   }
 
   async function remove(id: string) {
-    if (!confirm('Supprimer ce personnage ?')) return
+    if (!confirm('Delete this character?')) return
     await supabase.from('mpq_tracker_characters').delete().eq('id', id)
     setChars(prev => prev.filter(c => c.id !== id))
   }
@@ -177,43 +177,43 @@ export default function Characters() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="page-title">Personnages</h1>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
+        <h1 className="page-title">Characters</h1>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Add</button>
       </div>
 
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
-          <input className="input pl-9" placeholder="Rechercher par nom ou version..."
+          <input className="input pl-9" placeholder="Search by name or version..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select value={filterStars} onChange={e => setFilterStars(Number(e.target.value) as Stars | 0)} className="input w-auto">
-          <option value={0}>Toutes les ★</option>
+          <option value={0}>All ★</option>
           {STARS_OPTIONS.map(s => <option key={s} value={s}>{'★'.repeat(s)}</option>)}
         </select>
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as CharacterStatus | '')} className="input w-auto">
-          <option value="">Tous les statuts</option>
+          <option value="">All statuses</option>
           {STATUSES.map(s => <option key={s} value={s}>{STATUS_FR[s]}</option>)}
         </select>
         <select value={filterAscended} onChange={e => setFilterAscended(e.target.value as 'all' | 'yes' | 'no')} className="input w-auto">
-          <option value="all">Ascended : tous</option>
-          <option value="yes">Ascended uniquement</option>
-          <option value="no">Non ascended</option>
+          <option value="all">Ascended: all</option>
+          <option value="yes">Ascended only</option>
+          <option value="no">Not ascended</option>
         </select>
         <button onClick={() => setViewMode(v => v === 'list' ? 'grouped' : 'list')}
           className={`btn-secondary flex items-center gap-2 ${viewMode === 'grouped' ? 'bg-marvel-red/20 border-marvel-red/40 text-white' : ''}`}>
-          <Layers size={14} /> {viewMode === 'grouped' ? 'Groupé' : 'Liste'}
+          <Layers size={14} /> {viewMode === 'grouped' ? 'Grouped' : 'List'}
         </button>
       </div>
 
       <div className="flex items-center gap-2 text-xs text-[#C8C8E0]">
-        <span>Trier par :</span>
+        <span>Sort by:</span>
         <div className="flex gap-3 bg-[#1E1E38] px-3 py-1.5 rounded-lg">
           {(['base_name', 'stars', 'level'] as SortField[]).map(f => (
             <SortBtn key={f} field={f} current={sortField} dir={sortDir} onClick={() => toggleSort(f)} />
           ))}
         </div>
-        <span className="ml-1 text-[#555]">{filtered.length} résultat{filtered.length !== 1 ? 's' : ''}</span>
+        <span className="ml-1 text-[#555]">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
       {loading ? <Spinner /> : viewMode === 'list' ? (
@@ -223,7 +223,7 @@ export default function Characters() {
               <tr className="border-b border-[#3D3D60] text-[#C8C8E0]">
                 <th className="text-center py-2 font-normal">
                   <button onClick={() => toggleSort('base_name')} className="flex items-center gap-1 mx-auto hover:text-white transition-colors">
-                    Personnage {sortField === 'base_name' ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
+                    Character {sortField === 'base_name' ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
                   </button>
                 </th>
                 <th className="text-center py-2 font-normal text-xs">Version</th>
@@ -234,10 +234,10 @@ export default function Characters() {
                 </th>
                 <th className="text-center py-2 font-normal">
                   <button onClick={() => toggleSort('level')} className="flex items-center gap-1 mx-auto hover:text-white transition-colors">
-                    Niveau <span className="text-[#555] text-xs">(clic)</span> {sortField === 'level' ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
+                    Level <span className="text-[#555] text-xs">(clic)</span> {sortField === 'level' ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
                   </button>
                 </th>
-                <th className="text-center py-2 font-normal">Statut <span className="text-[#555] text-xs">(clic)</span></th>
+                <th className="text-center py-2 font-normal">Status <span className="text-[#555] text-xs">(clic)</span></th>
                 <th className="text-center py-2 font-normal">Asc. <span className="text-[#555] text-xs">(clic)</span></th>
                 <th className="text-center py-2 font-normal">Actions</th>
               </tr>
@@ -269,7 +269,7 @@ export default function Characters() {
               ))}
             </tbody>
           </table>
-          {filtered.length === 0 && <p className="text-center text-[#C8C8E0] py-8">Aucun personnage trouvé</p>}
+          {filtered.length === 0 && <p className="text-center text-[#C8C8E0] py-8">No characters found</p>}
         </div>
       ) : (
         <div className="space-y-2">
@@ -296,7 +296,7 @@ export default function Characters() {
               </div>
             </div>
           ))}
-          {Object.keys(grouped).length === 0 && <div className="card text-center text-[#C8C8E0] py-8">Aucun personnage trouvé</div>}
+          {Object.keys(grouped).length === 0 && <div className="card text-center text-[#C8C8E0] py-8">No characters found</div>}
         </div>
       )}
 
@@ -304,13 +304,13 @@ export default function Characters() {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="card w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Ajouter un personnage' : 'Modifier'}</h2>
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Add un character' : 'Edit'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Nom complet <span className="text-[#555]">(ex: Spider-Man (Classic))</span></label>
-                <input className="input" value={form.name} onChange={e => handleNameChange(e.target.value)} placeholder="Personnage (Version)" />
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Full name <span className="text-[#555]">(ex: Spider-Man (Classic))</span></label>
+                <input className="input" value={form.name} onChange={e => handleNameChange(e.target.value)} placeholder="Character (Version)" />
               </div>
               {form.base_name && (
                 <div className="bg-[#1C1C2E] rounded-lg px-3 py-2 flex gap-4 text-xs">
@@ -320,20 +320,20 @@ export default function Characters() {
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Étoiles</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Stars</label>
                   <select className="input" value={form.stars} onChange={e => setForm(f => ({ ...f, stars: Number(e.target.value) as Stars }))}>
                     {STARS_OPTIONS.map(s => <option key={s} value={s}>{s}★</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Niveau</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Level</label>
                   <input type="number" className="input" value={form.level ?? ''}
                     onChange={e => setForm(f => ({ ...f, level: e.target.value ? Number(e.target.value) : null }))} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Statut</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Status</label>
                   <select className="input" value={form.status ?? 'rostered'} onChange={e => setForm(f => ({ ...f, status: e.target.value as CharacterStatus }))}>
                     {STATUSES.map(s => <option key={s} value={s}>{STATUS_FR[s]}</option>)}
                   </select>
@@ -344,7 +344,7 @@ export default function Characters() {
                     className={`w-full py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
                       form.ascended ? 'bg-cyan-900/60 border-cyan-600 text-cyan-300' : 'bg-[#1C1C2E] border-[#3D3D60] text-[#C8C8E0] hover:border-cyan-600/50'
                     }`}>
-                    {form.ascended ? '⬆ Ascended' : '⬆ Non ascended'}
+                    {form.ascended ? '⬆ Ascended' : '⬆ Not ascended'}
                   </button>
                 </div>
               </div>
@@ -354,9 +354,9 @@ export default function Characters() {
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value || null }))} />
               </div>
               <div className="flex gap-3 pt-2">
-                <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
+                <button onClick={closeModal} className="btn-secondary flex-1">Cancel</button>
                 <button onClick={save} disabled={saving || !form.name} className="btn-primary flex-1">
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                  {saving ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </div>

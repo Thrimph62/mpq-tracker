@@ -8,7 +8,7 @@ const STATUS_COLS = ['max_champ', 'champ', 'rostered', 'not_owned'] as const
 type StatusCol = typeof STATUS_COLS[number]
 
 const STATUS_LABELS: Record<StatusCol, string> = {
-  max_champ: 'Max Champ', champ: 'Champ', rostered: 'Roster', not_owned: 'Non Possédé',
+  max_champ: 'Max Champ', champ: 'Champ', rostered: 'Roster', not_owned: 'Not Owned',
 }
 const STATUS_COLORS: Record<StatusCol, string> = {
   max_champ: 'text-purple-400', champ: 'text-orange-400',
@@ -48,7 +48,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="page-title">Tableau de Bord</h1>
+      <h1 className="page-title">Dashboard</h1>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -68,7 +68,7 @@ export default function Dashboard() {
 
       {/* Roster Table */}
       <div className="card overflow-x-auto">
-        <h2 className="font-marvel text-xl text-marvel-gold mb-4">Suivi Roster</h2>
+        <h2 className="font-marvel text-xl text-marvel-gold mb-4">Roster Tracker</h2>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#3D3D60]">
@@ -121,14 +121,14 @@ export default function Dashboard() {
       {/* Recently Updated */}
       {recent.length > 0 && (
         <div className="card">
-          <h2 className="font-marvel text-xl text-marvel-gold mb-4">Récemment Modifié</h2>
+          <h2 className="font-marvel text-xl text-marvel-gold mb-4">Recently Updated</h2>
           <div className="space-y-2">
             {recent.map(c => (
               <div key={c.id} className="flex items-center gap-3 text-sm">
                 <StarBadge stars={c.stars as Stars} />
                 <span className="flex-1">{c.name}</span>
                 {c.ascended && <span className="text-xs text-cyan-400 badge border border-cyan-700 bg-cyan-900/30">⬆ Asc.</span>}
-                <span className="text-[#C8C8E0]">Niv. {c.level ?? '—'}</span>
+                <span className="text-[#C8C8E0]">Lvl. {c.level ?? '—'}</span>
               </div>
             ))}
           </div>

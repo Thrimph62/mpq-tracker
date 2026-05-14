@@ -20,7 +20,7 @@ interface SearchDropdownProps {
   allowFreeText?: boolean
 }
 
-export function SearchDropdown({ value, onChange, onSelectId, options, placeholder = 'Rechercher...', allowFreeText = true }: SearchDropdownProps) {
+export function SearchDropdown({ value, onChange, onSelectId, options, placeholder = 'Search...', allowFreeText = true }: SearchDropdownProps) {
   const [query, setQuery] = useState('')
   const [open, setOpen]   = useState(false)
 
@@ -42,7 +42,7 @@ export function SearchDropdown({ value, onChange, onSelectId, options, placehold
         <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#252540] border border-[#3D3D60] rounded-lg shadow-xl max-h-52 overflow-y-auto">
           <button type="button" onMouseDown={() => { onChange(null); onSelectId?.(null); setOpen(false) }}
             className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60] text-[#C8C8E0]">
-            — Aucun —
+            — None —
           </button>
           {filtered.map(o => (
             <button key={o.id} type="button"

@@ -7,7 +7,7 @@ import { Plus, Search, X, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from
 
 const EFFECTS = [1, 2, 3, 4, 5] as const
 type EffectNum = typeof EFFECTS[number]
-const DEFAULT_RESTRICTIONS = ['/', 'Héros', 'Vilains']
+const DEFAULT_RESTRICTIONS = ['/', 'Heroes', 'Villains']
 type SortCol = 'name' | 'rang' | 'niveau' | 'restriction'
 type SortDir = 'asc' | 'desc'
 
@@ -174,7 +174,7 @@ export default function Supports() {
   }
 
   async function remove(id: string) {
-    if (!confirm('Supprimer ce support ?')) return
+    if (!confirm('Delete this support?')) return
     await supabase.from('mpq_tracker_supports').delete().eq('id', id)
     setSupports(prev => prev.filter(s => s.id !== id))
   }
@@ -194,17 +194,17 @@ export default function Supports() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="page-title">Supports</h1>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Add</button>
       </div>
 
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-56">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
-          <input className="input pl-9" placeholder="Rechercher nom, catégorie, trigger, synergie..."
+          <input className="input pl-9" placeholder="Search name, category, trigger, synergy..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select className="input w-auto" value={filterEffect} onChange={e => setFilterEffect(e.target.value)}>
-          <option value="">Tous les effets</option>
+          <option value="">All effects</option>
           {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
@@ -216,14 +216,14 @@ export default function Supports() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[#3D3D60]">
-                <Th col="name"        label="Nom"    />
+                <Th col="name"        label="Name"    />
                 <Th col="rang"        label="★"      />
-                <Th col="niveau"      label="Niv."   />
+                <Th col="niveau"      label="Lvl."   />
                 <Th col="restriction" label="Restr." />
                 {EFFECTS.map(n => (
-                  <th key={n} className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Effet {n}</th>
+                  <th key={n} className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Effect {n}</th>
                 ))}
-                <th className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Synergie</th>
+                <th className="py-2 px-1 font-normal text-center text-[#C8C8E0] min-w-28">Synergy</th>
                 <th className="py-2 px-2 font-normal text-center text-[#C8C8E0] sticky right-0 bg-[#252540] z-10">Actions</th>
               </tr>
             </thead>
@@ -238,8 +238,8 @@ export default function Supports() {
                   <td className="py-2 px-2 text-center">
                     {s.restriction && s.restriction !== '/' ? (
                       <span className={`badge border text-xs ${
-                        s.restriction === 'Héros'   ? 'bg-blue-900/40 text-blue-300 border-blue-700' :
-                        s.restriction === 'Vilains' ? 'bg-red-900/40  text-red-300  border-red-700'  :
+                        s.restriction === 'Heroes'   ? 'bg-blue-900/40 text-blue-300 border-blue-700' :
+                        s.restriction === 'Villains' ? 'bg-red-900/40  text-red-300  border-red-700'  :
                                                       'bg-[#3D3D60]   text-[#C8C8E0] border-[#555]'
                       }`}>{s.restriction}</span>
                     ) : <span className="text-[#555]">—</span>}
@@ -275,7 +275,7 @@ export default function Supports() {
               ))}
             </tbody>
           </table>
-          {visible.length === 0 && <p className="text-center text-[#C8C8E0] py-8">Aucun support trouvé</p>}
+          {visible.length === 0 && <p className="text-center text-[#C8C8E0] py-8">No supports found</p>}
         </div>
       )}
 
@@ -283,21 +283,21 @@ export default function Supports() {
         <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-2xl my-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouveau Support' : 'Modifier Support'}</h2>
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Support' : 'Edit Support'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
                 <div className="col-span-2">
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Nom *</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Name *</label>
                   <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Rang ★</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Rank ★</label>
                   <input type="number" className="input" value={form.rang ?? ''} onChange={e => setForm(f => ({ ...f, rang: Number(e.target.value) || null }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Niveau</label>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Level</label>
                   <input type="number" className="input" value={form.niveau ?? ''} onChange={e => setForm(f => ({ ...f, niveau: Number(e.target.value) || null }))} />
                 </div>
               </div>
@@ -307,7 +307,7 @@ export default function Supports() {
                   <select className="input" value={customRestr ? '__custom__' : (form.restriction ?? '/')}
                     onChange={e => { if (e.target.value === '__custom__') setCustomRestr(' '); else { setCustomRestr(''); setForm(f => ({ ...f, restriction: e.target.value })) } }}>
                     {allRestrictions.map(r => <option key={r} value={r}>{r}</option>)}
-                    <option value="__custom__">+ Nouvelle restriction...</option>
+                    <option value="__custom__">+ New restriction...</option>
                   </select>
                 </div>
                 {customRestr !== '' && (
@@ -319,12 +319,12 @@ export default function Supports() {
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-marvel-gold mb-2">Effets</p>
+                <p className="text-xs font-semibold text-marvel-gold mb-2">Effects</p>
                 <div className="space-y-2">
                   {EFFECTS.map(n => (
                     <EffectForm
                       key={n}
-                      label={`Effet ${n}`}
+                      label={`Effect ${n}`}
                       data={{
                         category:        form[`effect_${n}_category`],
                         sous_category:   form[`effect_${n}_sous_category`],
@@ -347,15 +347,15 @@ export default function Supports() {
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-marvel-gold mb-2">Synergie</p>
+                <p className="text-xs font-semibold text-marvel-gold mb-2">Synergy</p>
                 <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
                   <div>
-                    <label className="text-xs text-[#C8C8E0] mb-1 block">Avec (personnage / tag)</label>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">With (character / tag)</label>
                     <input className="input text-sm" value={form.synergy_restriction ?? ''}
-                      onChange={e => setForm(f => ({ ...f, synergy_restriction: e.target.value || null }))} placeholder="Ex: Spider-Ham, Héros..." />
+                      onChange={e => setForm(f => ({ ...f, synergy_restriction: e.target.value || null }))} placeholder="Ex: Spider-Ham, Heroes..." />
                   </div>
                   <EffectForm
-                    label="Effet synergie"
+                    label="Effect synergie"
                     data={getSynergyData()}
                     onChange={setSynergyField}
                     allCategories={allCategories}
@@ -367,8 +367,8 @@ export default function Supports() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
-                <button onClick={save} disabled={saving || !form.name} className="btn-primary flex-1">{saving ? 'Sauvegarde...' : 'Sauvegarder'}</button>
+                <button onClick={closeModal} className="btn-secondary flex-1">Cancel</button>
+                <button onClick={save} disabled={saving || !form.name} className="btn-primary flex-1">{saving ? 'Saving...' : 'Save'}</button>
               </div>
             </div>
           </div>

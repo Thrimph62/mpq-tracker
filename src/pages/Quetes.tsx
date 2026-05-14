@@ -7,16 +7,16 @@ import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-
 
 const EMPTY: Omit<Quete, 'id' | 'created_at' | 'updated_at'> = {
   nom: '',
-  gauche_personnage: null, gauche_build: null, gauche_support: null,
-  milieu_personnage: null, milieu_build: null, milieu_support: null,
-  droite_personnage: null, droite_build: null, droite_support: null,
+  gauche_character: null, gauche_build: null, gauche_support: null,
+  milieu_character: null, milieu_build: null, milieu_support: null,
+  droite_character: null, droite_build: null, droite_support: null,
   note: null,
 }
 
 const SLOTS = [
-  { pos: 'gauche', label: 'Gauche' },
-  { pos: 'milieu', label: 'Milieu' },
-  { pos: 'droite', label: 'Droite' },
+  { pos: 'gauche', label: 'Left' },
+  { pos: 'milieu', label: 'Middle' },
+  { pos: 'droite', label: 'Right' },
 ] as const
 
 export default function Quetes() {
@@ -46,7 +46,7 @@ export default function Quetes() {
 
   const visible = quetes.filter(q =>
     q.nom.toLowerCase().includes(search.toLowerCase()) ||
-    [q.gauche_personnage, q.milieu_personnage, q.droite_personnage]
+    [q.gauche_character, q.milieu_character, q.droite_character]
       .some(c => c?.toLowerCase().includes(search.toLowerCase()))
   )
 
@@ -57,7 +57,7 @@ export default function Quetes() {
   }
   function closeModal() { setModal(null); setEditId(null) }
 
-  function setSlot(pos: 'gauche' | 'milieu' | 'droite', field: 'personnage' | 'build' | 'support', val: string | null) {
+  function setSlot(pos: 'gauche' | 'milieu' | 'droite', field: 'character' | 'build' | 'support', val: string | null) {
     setForm(f => ({ ...f, [`${pos}_${field}`]: val }))
   }
 
@@ -69,7 +69,7 @@ export default function Quetes() {
   }
 
   async function remove(id: string) {
-    if (!confirm('Supprimer cette quête ?')) return
+    if (!confirm('Delete this quest?')) return
     await supabase.from('mpq_tracker_quetes').delete().eq('id', id)
     setQuetes(prev => prev.filter(q => q.id !== id))
   }
@@ -80,16 +80,16 @@ export default function Quetes() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="page-title">Quêtes</h1>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Ajouter</button>
+        <h1 className="page-title">Quests</h1>
+        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Add</button>
       </div>
 
       <div className="relative max-w-sm">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
-        <input className="input pl-9" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
+        <input className="input pl-9" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      <p className="text-sm text-[#C8C8E0]">{visible.length} quête{visible.length !== 1 ? 's' : ''}</p>
+      <p className="text-sm text-[#C8C8E0]">{visible.length} quest{visible.length !== 1 ? 's' : ''}</p>
 
       {loading ? <Spinner /> : (
         <div className="space-y-2">
@@ -110,9 +110,9 @@ export default function Quetes() {
               {expanded === q.id && (
                 <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
                   <div className="grid grid-cols-3 gap-3">
-                    <TeamSlot character={q.gauche_personnage} build={q.gauche_build} support={q.gauche_support} />
-                    <TeamSlot character={q.milieu_personnage} build={q.milieu_build} support={q.milieu_support} />
-                    <TeamSlot character={q.droite_personnage} build={q.droite_build} support={q.droite_support} />
+                    <TeamSlot character={q.gauche_character} build={q.gauche_build} support={q.gauche_support} />
+                    <TeamSlot character={q.milieu_character} build={q.milieu_build} support={q.milieu_support} />
+                    <TeamSlot character={q.droite_character} build={q.droite_build} support={q.droite_support} />
                   </div>
                   {q.note && (
                     <div className="bg-[#1C1C2E] rounded-lg p-3">
@@ -124,7 +124,7 @@ export default function Quetes() {
               )}
             </div>
           ))}
-          {visible.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">Aucune quête trouvée</div>}
+          {visible.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No quests found</div>}
         </div>
       )}
 
@@ -132,12 +132,12 @@ export default function Quetes() {
         <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-xl my-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'Nouvelle Quête' : 'Modifier Quête'}</h2>
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Quest' : 'Edit Quête'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Nom de la quête *</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Quest name *</label>
                 <input className="input" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
               </div>
 
@@ -146,12 +146,12 @@ export default function Quetes() {
                   <p className="text-xs font-semibold text-marvel-gold">{label}</p>
                   <div className="grid grid-cols-1 gap-2">
                     <div>
-                      <label className="text-xs text-[#C8C8E0] mb-1 block">Personnage</label>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Character</label>
                       <SearchDropdown
-                        value={form[`${pos}_personnage`]}
-                        onChange={v => setSlot(pos, 'personnage', v)}
+                        value={form[`${pos}_character`]}
+                        onChange={v => setSlot(pos, 'character', v)}
                         options={charOptions}
-                        placeholder="Rechercher un personnage..."
+                        placeholder="Search for a character..."
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -167,7 +167,7 @@ export default function Quetes() {
                           value={form[`${pos}_support`]}
                           onChange={v => setSlot(pos, 'support', v)}
                           options={supportOptions}
-                          placeholder="Rechercher un support..."
+                          placeholder="Search for a support..."
                         />
                       </div>
                     </div>
@@ -176,14 +176,14 @@ export default function Quetes() {
               ))}
 
               <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Note / Stratégie</label>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Note / Strategy</label>
                 <textarea className="input resize-none h-24" value={form.note ?? ''}
                   onChange={e => setForm(f => ({ ...f, note: e.target.value || null }))} />
               </div>
               <div className="flex gap-3 pt-2">
-                <button onClick={closeModal} className="btn-secondary flex-1">Annuler</button>
+                <button onClick={closeModal} className="btn-secondary flex-1">Cancel</button>
                 <button onClick={save} disabled={saving || !form.nom} className="btn-primary flex-1">
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                  {saving ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </div>

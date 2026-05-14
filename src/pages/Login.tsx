@@ -46,7 +46,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="text-xs text-[#C8C8E0] mb-1 block">Mot de passe</label>
+            <label className="text-xs text-[#C8C8E0] mb-1 block">Password</label>
             <input
               type="password"
               value={password}
@@ -64,7 +64,7 @@ export default function Login() {
           )}
 
           <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading ? 'Sign In...' : 'Sign In'}
           </button>
         </form>
       </div>
