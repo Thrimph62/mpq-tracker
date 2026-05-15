@@ -235,7 +235,7 @@ export default function CharacterPowers() {
             {p.power_name && <p className="text-sm font-semibold text-white">{p.power_name}</p>}
           </div>
           {p.description && (
-            <p className="text-xs text-[#C8C8E0] leading-relaxed border-l-2 border-[#3D3D60] pl-2 italic">{p.description}</p>
+            <p className="text-xs text-[#C8C8E0] leading-relaxed border-l-2 border-[#3D3D60] pl-2 italic whitespace-pre-line">{p.description}</p>
           )}
           {EFFECTS.map(n => {
             const cout = p[`effect_${n}_cout`] as number | null
