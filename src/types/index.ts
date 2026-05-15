@@ -63,9 +63,9 @@ export interface Support {
 export interface Team {
   id: string
   name: string
-  left_character: string | null;  left_build: string | null;  left_support: string | null;  left_boost: string | null
-  mid_character: string | null;   mid_build: string | null;   mid_support: string | null;   mid_boost: string | null
-  right_character: string | null; right_build: string | null; right_support: string | null; right_boost: string | null
+  left_character: string | null;  left_build: string | null;  left_support: string | null;  left_boost: string | null;  left_css: boolean;  left_strategy: string | null
+  mid_character: string | null;   mid_build: string | null;   mid_support: string | null;   mid_boost: string | null;   mid_css: boolean;   mid_strategy: string | null
+  right_character: string | null; right_build: string | null; right_support: string | null; right_boost: string | null; right_css: boolean; right_strategy: string | null
   strategie: string | null
   winfinite: string | null
   hn1: string | null
