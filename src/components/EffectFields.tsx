@@ -235,11 +235,13 @@ export function EffectForm({
         )}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {/* Description */}
-        <div className="col-span-2">
-          <label className="text-xs text-[#C8C8E0] mb-1 block">Description</label>
-          <DescriptionArea value={data.description} onChange={v => onChange('description', v)} />
-        </div>
+        {/* Description — Supports only */}
+        {!simplified && (
+          <div className="col-span-2">
+            <label className="text-xs text-[#C8C8E0] mb-1 block">Description</label>
+            <DescriptionArea value={data.description} onChange={v => onChange('description', v)} />
+          </div>
+        )}
         {/* Category */}
         <div>
           <label className="text-xs text-[#C8C8E0] mb-1 block">Category</label>

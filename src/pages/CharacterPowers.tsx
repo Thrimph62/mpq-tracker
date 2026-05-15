@@ -58,17 +58,18 @@ function SortIcon({ col, current, dir }: { col: SortCol; current: SortCol; dir: 
 
 function getEffectData(p: CharacterPower, n: EffectNum): EffectData {
   return {
+    description:     null,  // Powers use a single description field, not per-effect
     category:        p[`effect_${n}_category`]        as string | null,
     sous_category:   p[`effect_${n}_sous_category`]   as string | null,
     sous_category_2: p[`effect_${n}_sous_category_2`] as string | null,
     sous_category_3: p[`effect_${n}_sous_category_3`] as string | null,
-    // Powers don't use these fields
     degats: null, quantite: null, force: null, choix: null, autre: null, trigger: null,
   }
 }
 
 function getFormEffectData(form: typeof EMPTY, n: EffectNum): EffectData {
   return {
+    description:     null,
     category:        form[`effect_${n}_category`],
     sous_category:   form[`effect_${n}_sous_category`],
     sous_category_2: form[`effect_${n}_sous_category_2`],
