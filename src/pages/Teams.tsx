@@ -207,6 +207,9 @@ export default function Teams() {
                     className="text-left w-full group">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors truncate">{team.name}</h3>
+                      {team.winfinite === 'Yes' && (
+                        <span className="badge text-xs bg-cyan-900/60 text-cyan-300 border border-cyan-700 shrink-0">Winf.</span>
+                      )}
                       {expanded === team.id ? <ChevronUp size={14} className="text-[#C8C8E0] shrink-0" /> : <ChevronDown size={14} className="text-[#C8C8E0] shrink-0" />}
                     </div>
                   </button>
@@ -215,7 +218,6 @@ export default function Teams() {
                     {team.hn2       && <span>HN2: <OkBadge value={team.hn2} /></span>}
                     {team.hn3       && <span>HN3: <OkBadge value={team.hn3} /></span>}
                     {team.cn        && <span>CN: <OkBadge value={team.cn} /></span>}
-                    {team.winfinite && <span>Winfinite: <OkBadge value={team.winfinite === 'Yes' ? 'yes' : 'no'} /></span>}
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0 items-center">
