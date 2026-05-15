@@ -277,13 +277,12 @@ export default function Supports() {
                       {s.synergy_restriction && (
                         <span className="badge border bg-marvel-red/20 text-red-300 border-red-800 truncate max-w-28">{s.synergy_restriction}</span>
                       )}
-                      {s.synergy_category && <span className={`badge border ${catColor(s.synergy_category)}`}>{s.synergy_category}</span>}
-                      {s.synergy_sous_category && <span className="text-[#D8D8EE]">{s.synergy_sous_category}</span>}
-                      {s.synergy_quantite && <span className="text-[#D8D8EE]">qte: {s.synergy_quantite}</span>}
-                      {s.synergy_force && <span className="text-[#D8D8EE]">force: {s.synergy_force}</span>}
-                      {s.synergy_autre && <span className="text-[#D8D8EE]">{s.synergy_autre}</span>}
-                      {s.synergy_trigger && <span className="text-[#D8D8EE] italic">{s.synergy_trigger}</span>}
-                      {!s.synergy_restriction && !s.synergy_category && !s.synergy_sous_category && !s.synergy_quantite && !s.synergy_force && !s.synergy_autre && !s.synergy_trigger && (
+                      {s.synergy_description   && <span className="text-[#D8D8EE] italic">{s.synergy_description}</span>}
+                      {s.synergy_category      && <span className={`badge border ${catColor(s.synergy_category)}`}>{s.synergy_category}</span>}
+                      {s.synergy_sous_category && <span className="badge border bg-indigo-900/40 text-indigo-200 border-indigo-700">{s.synergy_sous_category}</span>}
+                      {s.synergy_sous_category_2 && <span className="badge border bg-violet-900/40 text-violet-200 border-violet-700">{s.synergy_sous_category_2}</span>}
+                      {s.synergy_sous_category_3 && <span className="badge border bg-fuchsia-900/40 text-fuchsia-200 border-fuchsia-700">{s.synergy_sous_category_3}</span>}
+                      {!s.synergy_restriction && !s.synergy_description && !s.synergy_category && !s.synergy_sous_category && !s.synergy_sous_category_2 && !s.synergy_sous_category_3 && (
                         <span className="text-[#444]">—</span>
                       )}
                     </div>
