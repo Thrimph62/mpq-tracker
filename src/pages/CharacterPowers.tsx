@@ -101,7 +101,7 @@ export default function CharacterPowers() {
       supabase.from('mpq_tracker_characters').select('*').order('base_name').order('version'),
     ])
     if (pw) setPowers(pw)
-    if (ch) setCharacters(ch)
+    if (ch) setCharacters(ch.filter((c: any) => !c.is_duplicate))
     setLoading(false)
   }
   useEffect(() => { load() }, [])
