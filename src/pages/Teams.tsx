@@ -85,7 +85,7 @@ export default function Teams() {
   function setSlot(pos: Pos, field: string, val: string | boolean | null) {
     setForm(prev => {
       const updated = { ...prev, [`${pos}_${field}`]: val }
-      if (field === 'character' && !updated.is_template) {
+      if (field === 'character') {
         const generated = autoName(updated)
         if (!prev.name || prev.name === autoName(prev)) updated.name = generated
       }
