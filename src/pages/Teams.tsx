@@ -118,6 +118,11 @@ export default function Teams() {
 
   const regularTeams = teams.filter(t => !t.is_template)
 
+  // Map character name → affiliations (must be before visible filter)
+  const charAffiliations: Record<string, string[]> = Object.fromEntries(
+    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
+  )
+
   const visible = regularTeams.filter(t => {
     const matchTab      = t.status === tab
     const matchSearch   = t.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -175,11 +180,6 @@ export default function Teams() {
 
   const charOptions    = toCharacterOptions(characters)
   const supportOptions = toSupportOptions(supports)
-
-  // Map character name → affiliations for display (handle NULL from DB)
-  const charAffiliations: Record<string, string[]> = Object.fromEntries(
-    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
-  )
 
   const TABS: { key: Tab; label: string }[] = [
     { key: 'active',   label: 'Active Teams' },
