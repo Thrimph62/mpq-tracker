@@ -20,6 +20,7 @@ export interface Character {
   status: CharacterStatus | null
   ascended: boolean
   is_duplicate: boolean
+  affiliations: string[]
   notes: string | null
   created_at: string
   updated_at: string

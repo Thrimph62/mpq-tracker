@@ -18,7 +18,7 @@ function parseBaseName(name: string): { base: string; version: string | null } {
 
 const EMPTY: Omit<Character, 'id' | 'created_at' | 'updated_at'> = {
   name: '', base_name: '', version: null, stars: 5,
-  level: null, status: 'rostered', ascended: false, is_duplicate: false, notes: null,
+  level: null, status: 'rostered', ascended: false, is_duplicate: false, affiliations: [], notes: null,
 }
 
 // Auto-assign duplicates within a name group
@@ -74,6 +74,74 @@ async function autoAssignDuplicates(chars: Character[], nameFilter?: string): Pr
   }
 
   return result
+}
+
+// ── AffiliationEditor ─────────────────────────────────────────────────────────
+function AffiliationEditor({ affiliations, onChange, allAffiliations }: {
+  affiliations: string[]
+  onChange: (v: string[]) => void
+  allAffiliations: string[]
+}) {
+  const [inputVal, setInputVal] = useState('')
+  const [open, setOpen]         = useState(false)
+
+  const suggestions = allAffiliations.filter(a =>
+    !affiliations.includes(a) && a.toLowerCase().includes(inputVal.toLowerCase())
+  )
+
+  function add(val: string) {
+    const v = val.trim()
+    if (v && !affiliations.includes(v)) onChange([...affiliations, v])
+    setInputVal(''); setOpen(false)
+  }
+
+  function remove(a: string) {
+    onChange(affiliations.filter(x => x !== a))
+  }
+
+  return (
+    <div className="space-y-2">
+      {/* Existing badges */}
+      {affiliations.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {affiliations.map(a => (
+            <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700 flex items-center gap-1">
+              {a}
+              <button onClick={() => remove(a)} className="hover:text-white ml-0.5">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+      {/* Add new */}
+      <div className="relative">
+        <input
+          className="input text-sm"
+          placeholder="Add affiliation..."
+          value={inputVal}
+          onChange={e => { setInputVal(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onKeyDown={e => { if (e.key === 'Enter' && inputVal.trim()) { e.preventDefault(); add(inputVal) } }}
+        />
+        {open && (suggestions.length > 0 || inputVal.trim()) && (
+          <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#1A1A2E] border border-[#3D3D60] rounded-lg shadow-xl max-h-40 overflow-y-auto">
+            {suggestions.map(a => (
+              <button key={a} type="button" onMouseDown={() => add(a)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60] text-[#C8C8E0]">
+                {a}
+              </button>
+            ))}
+            {inputVal.trim() && !allAffiliations.includes(inputVal.trim()) && (
+              <button type="button" onMouseDown={() => add(inputVal)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60] text-teal-300 italic">
+                + Add "{inputVal.trim()}"
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 type SortField = 'base_name' | 'stars' | 'level'
@@ -136,6 +204,9 @@ function SortBtn({ field, current, dir, onClick }: {
 export default function Characters() {
   const [chars, setChars]     = useState<Character[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Collect all unique affiliations for autocomplete
+  const allAffiliations = [...new Set(chars.flatMap(c => c.affiliations ?? []))].sort()
   const [search, setSearch]   = useState('')
   const [filterStars, setFilterStars]       = useState<Stars | 0>(0)
   const [filterStatus, setFilterStatus]     = useState<CharacterStatus | ''>('')
@@ -285,6 +356,7 @@ export default function Characters() {
                   </button>
                 </th>
                 <th className="text-center py-2 font-normal text-xs">Version</th>
+                <th className="text-center py-2 font-normal text-xs">Affiliations</th>
                 <th className="text-center py-2 font-normal">
                   <button onClick={() => toggleSort('stars')} className="flex items-center gap-1 mx-auto hover:text-white transition-colors">
                     ★ {sortField === 'stars' ? (sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
@@ -307,6 +379,13 @@ export default function Characters() {
                   <td className="py-2 text-center font-medium">{c.base_name || parseBaseName(c.name).base}</td>
                   <td className="py-2 text-center text-xs text-[#C8C8E0]">
                     {c.version && <span className="bg-[#3D3D60] px-1.5 py-0.5 rounded">{c.version}</span>}
+                  </td>
+                  <td className="py-2 text-center">
+                    <div className="flex flex-wrap gap-1 justify-center max-w-40">
+                      {(c.affiliations ?? []).map(a => (
+                        <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
+                      ))}
+                    </div>
                   </td>
                   <td className="py-2 text-center"><StarBadge stars={c.stars as Stars} /></td>
                   <td className="py-2 text-center">
@@ -387,6 +466,14 @@ export default function Characters() {
                     {form.ascended ? '⬆ Ascended' : '⬆ Not ascended'}
                   </button>
                 </div>
+              </div>
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Affiliations</label>
+                <AffiliationEditor
+                  affiliations={form.affiliations ?? []}
+                  onChange={v => setForm(f => ({ ...f, affiliations: v }))}
+                  allAffiliations={allAffiliations}
+                />
               </div>
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Notes</label>

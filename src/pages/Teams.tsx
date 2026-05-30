@@ -19,9 +19,9 @@ const EMPTY_FORM: Omit<Team, 'id' | 'created_at' | 'updated_at'> = {
   all_3_non_boosted: null, note_additionnelle: null,
 }
 
-function SlotDisplay({ label, character, build, support, boost, css, strategy }: {
+function SlotDisplay({ label, character, build, support, boost, css, strategy, affiliations }: {
   label: string; character: string | null; build: string | null; support: string | null
-  boost: string | null; css: boolean; strategy: string | null
+  boost: string | null; css: boolean; strategy: string | null; affiliations?: string[]
 }) {
   const hasBoost = boost === 'Required'
   const hasContent = character || build || support || hasBoost || css || strategy
@@ -30,10 +30,19 @@ function SlotDisplay({ label, character, build, support, boost, css, strategy }:
     <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
       <p className="text-xs font-semibold text-marvel-gold uppercase">{label}</p>
       {character && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-white">{character}</span>
-          {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
-          {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-white">{character}</span>
+            {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+            {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+          </div>
+          {(affiliations ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {(affiliations ?? []).map(a => (
+                <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
+              ))}
+            </div>
+          )}
         </div>
       )}
       {build   && <p className="text-xs text-[#C8C8E0]">Build: {build}</p>}
@@ -112,7 +121,10 @@ export default function Teams() {
   const visible = regularTeams.filter(t => {
     const matchTab      = t.status === tab
     const matchSearch   = t.name.toLowerCase().includes(search.toLowerCase()) ||
-      [t.left_character, t.mid_character, t.right_character].some(c => c?.toLowerCase().includes(search.toLowerCase()))
+      [t.left_character, t.mid_character, t.right_character].some(c => c?.toLowerCase().includes(search.toLowerCase())) ||
+      [t.left_character, t.mid_character, t.right_character].some(c =>
+        c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(search.toLowerCase())) : false
+      )
     const matchFavorite  = filterFavorite === 'all' || (filterFavorite === 'yes' ? t.favorite : !t.favorite)
     const matchWinfinite = filterWinfinite === 'all' || (filterWinfinite === 'yes' ? t.winfinite === 'Yes' : t.winfinite !== 'Yes')
     return matchTab && matchSearch && matchFavorite && matchWinfinite
@@ -163,6 +175,11 @@ export default function Teams() {
 
   const charOptions    = toCharacterOptions(characters)
   const supportOptions = toSupportOptions(supports)
+
+  // Map character name → affiliations for display
+  const charAffiliations = Object.fromEntries(
+    characters.map(c => [c.name, c.affiliations ?? []])
+  )
 
   const TABS: { key: Tab; label: string }[] = [
     { key: 'active',   label: 'Active Teams' },
@@ -220,9 +237,9 @@ export default function Teams() {
         {expanded === team.id && (
           <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
             <div className="grid grid-cols-3 gap-3">
-              <SlotDisplay label="Left"   character={team.left_character}  build={team.left_build}  support={team.left_support}  boost={team.left_boost}  css={team.left_css}  strategy={team.left_strategy} />
-              <SlotDisplay label="Middle" character={team.mid_character}   build={team.mid_build}   support={team.mid_support}   boost={team.mid_boost}   css={team.mid_css}   strategy={team.mid_strategy} />
-              <SlotDisplay label="Right"  character={team.right_character} build={team.right_build} support={team.right_support} boost={team.right_boost} css={team.right_css} strategy={team.right_strategy} />
+              <SlotDisplay label="Left"   character={team.left_character}  build={team.left_build}  support={team.left_support}  boost={team.left_boost}  css={team.left_css}  strategy={team.left_strategy}  affiliations={team.left_character  ? charAffiliations[team.left_character]  : []} />
+              <SlotDisplay label="Middle" character={team.mid_character}   build={team.mid_build}   support={team.mid_support}   boost={team.mid_boost}   css={team.mid_css}   strategy={team.mid_strategy}   affiliations={team.mid_character   ? charAffiliations[team.mid_character]   : []} />
+              <SlotDisplay label="Right"  character={team.right_character} build={team.right_build} support={team.right_support} boost={team.right_boost} css={team.right_css} strategy={team.right_strategy}  affiliations={team.right_character ? charAffiliations[team.right_character] : []} />
             </div>
             {team.note_additionnelle && (
               <div className="bg-[#1C1C2E] rounded-lg p-3">
