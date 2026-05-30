@@ -76,7 +76,13 @@ async function autoAssignDuplicates(chars: Character[], nameFilter?: string): Pr
   return result
 }
 
-// ── AffiliationEditor ─────────────────────────────────────────────────────────
+// Common MPQ affiliations — pre-populated for quick reference
+const DEFAULT_AFFILIATIONS = [
+  'Avengers', 'Champions', 'Defenders', 'Guardians of the Galaxy',
+  'Heroes', 'Horsemen', 'Illuminati', 'Inhumans',
+  'S.H.I.E.L.D.', 'Spider-Friends', 'Symbiote', 'Villains',
+  'X-Men', 'X-Force',
+]
 function AffiliationEditor({ affiliations, onChange, allAffiliations }: {
   affiliations: string[]
   onChange: (v: string[]) => void
@@ -205,8 +211,10 @@ export default function Characters() {
   const [chars, setChars]     = useState<Character[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Collect all unique affiliations for autocomplete
-  const allAffiliations = [...new Set(chars.flatMap(c => c.affiliations ?? []))].sort()
+  // Collect all unique affiliations from existing characters only
+  const allAffiliations = [...new Set(
+    chars.flatMap(c => Array.isArray(c.affiliations) ? c.affiliations : [])
+  )].sort()
   const [search, setSearch]   = useState('')
   const [filterStars, setFilterStars]       = useState<Stars | 0>(0)
   const [filterStatus, setFilterStatus]     = useState<CharacterStatus | ''>('')
@@ -382,7 +390,7 @@ export default function Characters() {
                   </td>
                   <td className="py-2 text-center">
                     <div className="flex flex-wrap gap-1 justify-center max-w-40">
-                      {([...(c.affiliations ?? [])].sort()).map(a => (
+                      {([...(Array.isArray(c.affiliations) ? c.affiliations : [])].sort()).map(a => (
                         <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
                       ))}
                     </div>

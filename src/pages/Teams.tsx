@@ -176,9 +176,9 @@ export default function Teams() {
   const charOptions    = toCharacterOptions(characters)
   const supportOptions = toSupportOptions(supports)
 
-  // Map character name → affiliations for display
-  const charAffiliations = Object.fromEntries(
-    characters.map(c => [c.name, c.affiliations ?? []])
+  // Map character name → affiliations for display (handle NULL from DB)
+  const charAffiliations: Record<string, string[]> = Object.fromEntries(
+    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
   )
 
   const TABS: { key: Tab; label: string }[] = [

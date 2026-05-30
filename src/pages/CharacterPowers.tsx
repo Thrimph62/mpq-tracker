@@ -147,7 +147,7 @@ export default function CharacterPowers() {
     const name = cm[p.character_id]?.name?.toLowerCase() ?? ''
     const matchSearch = !search || [
       name, p.power_name, p.couleur, p.description,
-      ...(cm[p.character_id]?.affiliations ?? []),
+      ...(Array.isArray(cm[p.character_id]?.affiliations) ? cm[p.character_id].affiliations : []),
       ...EFFECTS.flatMap(n => [
         p[`effect_${n}_category`], p[`effect_${n}_sous_category`],
         p[`effect_${n}_sous_category_2`], p[`effect_${n}_sous_category_3`],
@@ -334,10 +334,10 @@ export default function CharacterPowers() {
                       <PowerCard key={p.id} p={p} />
                     ))}
                     {/* Affiliations at the bottom */}
-                    {([...(char?.affiliations ?? [])].sort()).length > 0 && (
+                    {([...(Array.isArray(char?.affiliations) ? char.affiliations : [])].sort()).length > 0 && (
                       <div className="flex flex-wrap gap-1 pt-2 border-t border-[#3D3D60]/50">
                         <span className="text-xs text-[#C8C8E0] mr-1">Affiliations:</span>
-                        {([...(char?.affiliations ?? [])].sort()).map(a => (
+                        {([...(Array.isArray(char?.affiliations) ? char.affiliations : [])].sort()).map(a => (
                           <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
                         ))}
                       </div>
