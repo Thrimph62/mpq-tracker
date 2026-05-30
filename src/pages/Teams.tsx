@@ -36,9 +36,9 @@ function SlotDisplay({ label, character, build, support, boost, css, strategy, a
             {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
             {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
           </div>
-          {(affiliations ?? []).length > 0 && (
+          {([...(affiliations ?? [])].sort()).length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {(affiliations ?? []).map(a => (
+              {([...(affiliations ?? [])].sort()).map(a => (
                 <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
               ))}
             </div>

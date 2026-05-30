@@ -91,7 +91,7 @@ function AffiliationEditor({ affiliations, onChange, allAffiliations }: {
 
   function add(val: string) {
     const v = val.trim()
-    if (v && !affiliations.includes(v)) onChange([...affiliations, v])
+    if (v && !affiliations.includes(v)) onChange([...affiliations, v].sort())
     setInputVal(''); setOpen(false)
   }
 
@@ -382,7 +382,7 @@ export default function Characters() {
                   </td>
                   <td className="py-2 text-center">
                     <div className="flex flex-wrap gap-1 justify-center max-w-40">
-                      {(c.affiliations ?? []).map(a => (
+                      {([...(c.affiliations ?? [])].sort()).map(a => (
                         <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
                       ))}
                     </div>

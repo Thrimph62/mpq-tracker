@@ -334,10 +334,10 @@ export default function CharacterPowers() {
                       <PowerCard key={p.id} p={p} />
                     ))}
                     {/* Affiliations at the bottom */}
-                    {(char?.affiliations ?? []).length > 0 && (
+                    {([...(char?.affiliations ?? [])].sort()).length > 0 && (
                       <div className="flex flex-wrap gap-1 pt-2 border-t border-[#3D3D60]/50">
                         <span className="text-xs text-[#C8C8E0] mr-1">Affiliations:</span>
-                        {(char?.affiliations ?? []).map(a => (
+                        {([...(char?.affiliations ?? [])].sort()).map(a => (
                           <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
                         ))}
                       </div>
