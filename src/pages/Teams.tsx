@@ -57,7 +57,13 @@ function SlotDisplay({ label, character, build, support, boost, css, strategy, a
 }
 
 // ── PickAThird ────────────────────────────────────────────────────────────────
-function PickAThird({ characters, supports }: { characters: Character[]; supports: Support[] }) {
+function PickAThird({ characters, supports, charAffiliations, search, onSearchChange }: {
+  characters: Character[]
+  supports: Support[]
+  charAffiliations: Record<string, string[]>
+  search: string
+  onSearchChange: (v: string) => void
+}) {
   const [duos, setDuos]       = useState<CoreDuo[]>([])
   const [thirds, setThirds]   = useState<CoreDuoThird[]>([])
   const [loading, setLoading] = useState(true)
@@ -162,10 +168,19 @@ function PickAThird({ characters, supports }: { characters: Character[]; support
       <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-1.5">
         <p className="text-xs font-semibold text-marvel-gold uppercase">{label}</p>
         {char && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-white">{char}</span>
-            {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
-            {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold text-white">{char}</span>
+              {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+              {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+            </div>
+            {(charAffiliations[char] ?? []).length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {[...(charAffiliations[char] ?? [])].sort().map(a => (
+                  <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {build   && <p className="text-xs text-[#C8C8E0]">Build: {build}</p>}
@@ -177,17 +192,34 @@ function PickAThird({ characters, supports }: { characters: Character[]; support
 
   if (loading) return <Spinner />
 
+  const filteredDuos = duos.filter(d =>
+    !search || [d.name, d.left_character, d.right_character]
+      .some(v => v?.toLowerCase().includes(search.toLowerCase())) ||
+    [d.left_character, d.right_character].some(c =>
+      c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(search.toLowerCase())) : false
+    ) ||
+    thirds.filter(t => t.core_duo_id === d.id).some(t =>
+      t.character?.toLowerCase().includes(search.toLowerCase())
+    )
+  )
+
   return (
     <div className="space-y-3">
+      {/* Search bar */}
+      <div className="relative max-w-sm">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
+        <input className="input pl-9" placeholder="Search core duo or character..."
+          value={search} onChange={e => onSearchChange(e.target.value)} />
+      </div>
       <div className="flex justify-end">
         <button onClick={openAddDuo} className="btn-primary flex items-center gap-2">
           <Plus size={16} /> New Core Duo
         </button>
       </div>
 
-      {duos.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No core duos yet</div>}
+      {filteredDuos.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No core duos found</div>}
 
-      {duos.map(duo => {
+      {filteredDuos.map(duo => {
         const duoThirds = thirds.filter(t => t.core_duo_id === duo.id)
         const isOpen    = expanded === duo.id
         return (
@@ -426,6 +458,14 @@ export default function Teams() {
 
 
 
+  const charOptions    = toCharacterOptions(characters)
+  const supportOptions = toSupportOptions(supports)
+
+  // Must be defined BEFORE visible filter (used in matchSearch)
+  const charAffiliations: Record<string, string[]> = Object.fromEntries(
+    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
+  )
+
   const regularTeams = teams
 
   const visible = regularTeams.filter(t => {
@@ -480,16 +520,11 @@ export default function Teams() {
   const charOptions    = toCharacterOptions(characters)
   const supportOptions = toSupportOptions(supports)
 
-  // Map character name → affiliations for display (handle NULL from DB)
-  const charAffiliations: Record<string, string[]> = Object.fromEntries(
-    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
-  )
-
   const TABS: { key: Tab; label: string }[] = [
-    { key: 'active',   label: 'Active Teams' },
-    { key: 'to_test',  label: 'To Test' },
-    { key: 'archived', label: 'Archived' },
+    { key: 'active',     label: 'Active Teams' },
     { key: 'pick_third', label: 'Pick a 3rd' },
+    { key: 'to_test',    label: 'To Test' },
+    { key: 'archived',   label: 'Archived' },
   ]
 
   function TeamCard({ team }: { team: Team }) {
@@ -609,7 +644,7 @@ export default function Teams() {
 
       {/* List */}
       {tab === 'pick_third' ? (
-        <PickAThird characters={characters} supports={supports} />
+        <PickAThird characters={characters} supports={supports} charAffiliations={charAffiliations} search={search} onSearchChange={setSearch} />
       ) : loading ? <Spinner /> : (
         <div className="space-y-3">
           {currentList.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No teams found</div>}
