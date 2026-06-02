@@ -517,9 +517,6 @@ export default function Teams() {
     await load()
   }
 
-  const charOptions    = toCharacterOptions(characters)
-  const supportOptions = toSupportOptions(supports)
-
   const TABS: { key: Tab; label: string }[] = [
     { key: 'active',     label: 'Active Teams' },
     { key: 'pick_third', label: 'Pick a 3rd' },
