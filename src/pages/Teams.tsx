@@ -404,14 +404,16 @@ export default function Teams() {
   const [duoCount, setDuoCount]     = useState(0)
 
   async function load() {
-    const [{ data: t }, { data: c }, { data: s }] = await Promise.all([
+    const [{ data: t }, { data: c }, { data: s }, { data: d }] = await Promise.all([
       supabase.from('mpq_tracker_teams').select('*').order('name'),
       supabase.from('mpq_tracker_characters').select('*').order('base_name').order('version'),
       supabase.from('mpq_tracker_supports').select('*').order('name'),
+      supabase.from('mpq_tracker_core_duos').select('id'),
     ])
     if (t) setTeams(t)
     if (c) setCharacters((c as any[]).filter(ch => !ch.is_duplicate))
     if (s) setSupports(s)
+    if (d) setDuoCount(d.length)
     setLoading(false)
   }
   useEffect(() => { load() }, [])
@@ -494,10 +496,10 @@ export default function Teams() {
   )
 
   const TABS: { key: Tab; label: string }[] = [
-    { key: 'active',   label: 'Active Teams' },
-    { key: 'to_test',  label: 'To Test' },
-    { key: 'archived', label: 'Archived' },
+    { key: 'active',     label: 'Active Teams' },
     { key: 'pick_third', label: 'Pick a 3rd' },
+    { key: 'to_test',    label: 'To Test' },
+    { key: 'archived',   label: 'Archived' },
   ]
 
   function TeamCard({ team }: { team: Team }) {
