@@ -57,18 +57,18 @@ function SlotDisplay({ label, character, build, support, boost, css, strategy, a
 }
 
 // ── PickAThird ────────────────────────────────────────────────────────────────
-function PickAThird({ characters, supports, charAffiliations, search, onSearchChange }: {
+function PickAThird({ characters, supports, charAffiliations, search, onSearchChange, onCountChange }: {
   characters: Character[]
   supports: Support[]
   charAffiliations: Record<string, string[]>
   search: string
   onSearchChange: (v: string) => void
+  onCountChange: (n: number) => void
 }) {
   const [duos, setDuos]       = useState<CoreDuo[]>([])
   const [thirds, setThirds]   = useState<CoreDuoThird[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
-  const [expandedThird, setExpandedThird] = useState<string | null>(null)
   const [modal, setModal]     = useState<'add' | 'edit' | null>(null)
   const [editDuo, setEditDuo] = useState<CoreDuo | null>(null)
   const [thirdModal, setThirdModal] = useState<{ duoId: string; third?: CoreDuoThird } | null>(null)
@@ -95,7 +95,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
       supabase.from('mpq_tracker_core_duos').select('*').order('created_at'),
       supabase.from('mpq_tracker_core_duo_thirds').select('*').order('character'),
     ])
-    if (d) setDuos(d)
+    if (d) { setDuos(d); onCountChange(d.length) }
     if (t) setThirds(t)
     setLoading(false)
   }
@@ -169,62 +169,32 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
       <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-1.5">
         <p className="text-xs font-semibold text-marvel-gold uppercase">{label}</p>
         {char && (
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold text-white">{char}</span>
-              {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
-              {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
-            </div>
-            {(charAffiliations[char] ?? []).length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {[...(charAffiliations[char] ?? [])].sort().map(a => (
-                  <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
-                ))}
-              </div>
-            )}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-white">{char}</span>
+            {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+            {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
           </div>
         )}
         {build   && <p className="text-xs text-[#C8C8E0]">Build: {build}</p>}
         {support && <p className="text-xs text-[#C8C8E0]">Support: {support}</p>}
-        {strategy && (
-          <div className="border-t border-[#3D3D60] pt-2">
-            <p className="text-xs text-[#C8C8E0] whitespace-pre-line leading-relaxed">{strategy}</p>
-          </div>
-        )}
+        {strategy && <p className="text-xs text-[#C8C8E0] italic border-l-2 border-[#3D3D60] pl-2 whitespace-pre-line mt-1">{strategy}</p>}
       </div>
     )
   }
 
   if (loading) return <Spinner />
 
-  const filteredDuos = duos.filter(d =>
-    !search || [d.name, d.left_character, d.right_character]
-      .some(v => v?.toLowerCase().includes(search.toLowerCase())) ||
-    [d.left_character, d.right_character].some(c =>
-      c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(search.toLowerCase())) : false
-    ) ||
-    thirds.filter(t => t.core_duo_id === d.id).some(t =>
-      t.character?.toLowerCase().includes(search.toLowerCase())
-    )
-  )
-
   return (
     <div className="space-y-3">
-      {/* Search bar */}
-      <div className="relative max-w-sm">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
-        <input className="input pl-9" placeholder="Search core duo or character..."
-          value={search} onChange={e => onSearchChange(e.target.value)} />
-      </div>
       <div className="flex justify-end">
         <button onClick={openAddDuo} className="btn-primary flex items-center gap-2">
           <Plus size={16} /> New Core Duo
         </button>
       </div>
 
-      {filteredDuos.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No core duos found</div>}
+      {duos.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No core duos yet</div>}
 
-      {filteredDuos.map(duo => {
+      {duos.map(duo => {
         const duoThirds = thirds.filter(t => t.core_duo_id === duo.id)
         const isOpen    = expanded === duo.id
         return (
@@ -274,49 +244,26 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
                     </button>
                   </div>
                   {duoThirds.length === 0 && <p className="text-xs text-[#555]">No 3rd characters yet</p>}
-                  <div className="space-y-1">
-                    {duoThirds.map(t => {
-                      const isThirdOpen = expandedThird === t.id
-                      const affiliations = t.character ? ([...(charAffiliations[t.character] ?? [])].sort()) : []
-                      return (
-                        <div key={t.id} className="bg-[#1C1C2E] rounded-lg overflow-hidden">
-                          {/* Collapsed: name only */}
-                          <div className="flex items-center justify-between px-3 py-2">
-                            <button onClick={() => setExpandedThird(isThirdOpen ? null : t.id)}
-                              className="flex items-center gap-2 flex-1 text-left group">
-                              <span className="text-sm font-semibold text-white group-hover:text-marvel-gold transition-colors">{t.character ?? '—'}</span>
-                              {t.boost === 'Required' && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
-                              {t.css && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
-                              {isThirdOpen ? <ChevronUp size={12} className="text-[#C8C8E0] shrink-0" /> : <ChevronDown size={12} className="text-[#C8C8E0] shrink-0" />}
-                            </button>
-                            <div className="flex gap-2 shrink-0">
-                              <button onClick={() => { const { id, core_duo_id, created_at, updated_at, ...rest } = t; setThirdForm(rest); setThirdModal({ duoId: duo.id, third: t }) }}
-                                className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
-                              <button onClick={() => removeThird(t.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
-                            </div>
+                  <div className="space-y-2">
+                    {duoThirds.map(t => (
+                      <div key={t.id} className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-white">{t.character ?? '—'}</span>
+                            {t.boost === 'Required' && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+                            {t.css && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
                           </div>
-                          {/* Expanded: details */}
-                          {isThirdOpen && (
-                            <div className="px-3 pb-3 pt-1 border-t border-[#3D3D60] space-y-1.5">
-                              {affiliations.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {affiliations.map(a => (
-                                    <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
-                                  ))}
-                                </div>
-                              )}
-                              {t.build   && <p className="text-xs text-[#C8C8E0]">Build: {t.build}</p>}
-                              {t.support && <p className="text-xs text-[#C8C8E0]">Support: {t.support}</p>}
-                              {t.strategy && (
-                                <div className="border-t border-[#3D3D60] pt-2">
-                                  <p className="text-xs text-[#C8C8E0] whitespace-pre-line leading-relaxed">{t.strategy}</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                          {t.build   && <p className="text-xs text-[#C8C8E0]">Build: {t.build}</p>}
+                          {t.support && <p className="text-xs text-[#C8C8E0]">Support: {t.support}</p>}
+                          {t.strategy && <p className="text-xs text-[#C8C8E0] italic border-l-2 border-[#3D3D60] pl-2 whitespace-pre-line">{t.strategy}</p>}
                         </div>
-                      )
-                    })}
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          <button onClick={() => { const { id, core_duo_id, created_at, updated_at, ...rest } = t; setThirdForm(rest); setThirdModal({ duoId: duo.id, third: t }) }}
+                            className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
+                          <button onClick={() => removeThird(t.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -454,6 +401,7 @@ export default function Teams() {
   const [form, setForm]             = useState<typeof EMPTY_FORM>(EMPTY_FORM)
   const [editId, setEditId]         = useState<string | null>(null)
   const [saving, setSaving]         = useState(false)
+  const [duoCount, setDuoCount]     = useState(0)  const [duoCount, setDuoCount]     = useState(0)
 
   async function load() {
     const [{ data: t }, { data: c }, { data: s }] = await Promise.all([
@@ -486,14 +434,6 @@ export default function Teams() {
 
 
 
-  const charOptions    = toCharacterOptions(characters)
-  const supportOptions = toSupportOptions(supports)
-
-  // Must be defined BEFORE visible filter (used in matchSearch)
-  const charAffiliations: Record<string, string[]> = Object.fromEntries(
-    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
-  )
-
   const regularTeams = teams
 
   const visible = regularTeams.filter(t => {
@@ -507,6 +447,10 @@ export default function Teams() {
     const matchWinfinite = filterWinfinite === 'all' || (filterWinfinite === 'yes' ? t.winfinite === 'Yes' : t.winfinite !== 'Yes')
     return matchTab && matchSearch && matchFavorite && matchWinfinite
   })
+
+    !search || t.name.toLowerCase().includes(search.toLowerCase()) ||
+    [t.left_character, t.mid_character, t.right_character].some(c => c?.toLowerCase().includes(search.toLowerCase()))
+  )
 
   function openAdd() {
     setForm({ ...EMPTY_FORM, status: tab === 'archived' ? 'active' : tab === 'pick_third' ? 'active' : tab })
@@ -545,11 +489,19 @@ export default function Teams() {
     await load()
   }
 
+  const charOptions    = toCharacterOptions(characters)
+  const supportOptions = toSupportOptions(supports)
+
+  // Map character name → affiliations for display (handle NULL from DB)
+  const charAffiliations: Record<string, string[]> = Object.fromEntries(
+    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
+  )
+
   const TABS: { key: Tab; label: string }[] = [
-    { key: 'active',     label: 'Active Teams' },
+    { key: 'active',   label: 'Active Teams' },
+    { key: 'to_test',  label: 'To Test' },
+    { key: 'archived', label: 'Archived' },
     { key: 'pick_third', label: 'Pick a 3rd' },
-    { key: 'to_test',    label: 'To Test' },
-    { key: 'archived',   label: 'Archived' },
   ]
 
   function TeamCard({ team }: { team: Team }) {
@@ -630,7 +582,7 @@ export default function Teams() {
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === key ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'}`}>
             {label}
             <span className="ml-2 text-xs opacity-70">
-              ({key === 'pick_third' ? '' : regularTeams.filter(x => x.status === key).length})
+              ({key === 'pick_third' ? duoCount : regularTeams.filter(x => x.status === key).length})
             </span>
           </button>
         ))}
@@ -669,7 +621,7 @@ export default function Teams() {
 
       {/* List */}
       {tab === 'pick_third' ? (
-        <PickAThird characters={characters} supports={supports} charAffiliations={charAffiliations} search={search} onSearchChange={setSearch} />
+        <PickAThird characters={characters} supports={supports} charAffiliations={charAffiliations} search={search} onSearchChange={setSearch} onCountChange={setDuoCount} />
       ) : loading ? <Spinner /> : (
         <div className="space-y-3">
           {currentList.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No teams found</div>}
