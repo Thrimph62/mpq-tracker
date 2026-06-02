@@ -185,17 +185,33 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
 
   if (loading) return <Spinner />
 
+  const filteredDuos = duos.filter(d =>
+    !search || [d.name, d.left_character, d.right_character]
+      .some(v => v?.toLowerCase().includes(search.toLowerCase())) ||
+    [d.left_character, d.right_character].some(c =>
+      c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(search.toLowerCase())) : false
+    ) ||
+    thirds.filter(t => t.core_duo_id === d.id)
+      .some(t => t.character?.toLowerCase().includes(search.toLowerCase()))
+  )
+
   return (
     <div className="space-y-3">
-      <div className="flex justify-end">
+      {/* Search bar */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
+          <input className="input pl-9" placeholder="Search core duo or character..."
+            value={search} onChange={e => onSearchChange(e.target.value)} />
+        </div>
         <button onClick={openAddDuo} className="btn-primary flex items-center gap-2">
           <Plus size={16} /> New Core Duo
         </button>
       </div>
 
-      {duos.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No core duos yet</div>}
+      {filteredDuos.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No core duos found</div>}
 
-      {duos.map(duo => {
+      {filteredDuos.map(duo => {
         const duoThirds = thirds.filter(t => t.core_duo_id === duo.id)
         const isOpen    = expanded === duo.id
         return (
@@ -460,6 +476,13 @@ export default function Teams() {
 
   const regularTeams = teams
 
+  // Must be defined BEFORE visible filter
+  const charOptions    = toCharacterOptions(characters)
+  const supportOptions = toSupportOptions(supports)
+  const charAffiliations: Record<string, string[]> = Object.fromEntries(
+    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
+  )
+
   const visible = regularTeams.filter(t => {
     const matchTab      = t.status === tab
     const matchSearch   = t.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -508,14 +531,6 @@ export default function Teams() {
     await supabase.from('mpq_tracker_teams').update({ status: 'active', updated_at: new Date().toISOString() }).eq('id', id)
     await load()
   }
-
-  const charOptions    = toCharacterOptions(characters)
-  const supportOptions = toSupportOptions(supports)
-
-  // Map character name → affiliations for display (handle NULL from DB)
-  const charAffiliations: Record<string, string[]> = Object.fromEntries(
-    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
-  )
 
   const TABS: { key: Tab; label: string }[] = [
     { key: 'active',     label: 'Active Teams' },
