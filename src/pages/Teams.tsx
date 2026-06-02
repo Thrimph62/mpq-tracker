@@ -440,10 +440,6 @@ export default function Teams() {
     return matchTab && matchSearch && matchFavorite && matchWinfinite
   })
 
-    !search || t.name.toLowerCase().includes(search.toLowerCase()) ||
-    [t.left_character, t.mid_character, t.right_character].some(c => c?.toLowerCase().includes(search.toLowerCase()))
-  )
-
   function openAdd() {
     setForm({ ...EMPTY_FORM, status: tab === 'archived' ? 'active' : tab === 'pick_third' ? 'active' : tab })
     setEditId(null); setModal('add')
