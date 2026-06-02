@@ -401,7 +401,7 @@ export default function Teams() {
   const [form, setForm]             = useState<typeof EMPTY_FORM>(EMPTY_FORM)
   const [editId, setEditId]         = useState<string | null>(null)
   const [saving, setSaving]         = useState(false)
-  const [duoCount, setDuoCount]     = useState(0)  const [duoCount, setDuoCount]     = useState(0)
+  const [duoCount, setDuoCount]     = useState(0)
 
   async function load() {
     const [{ data: t }, { data: c }, { data: s }] = await Promise.all([
