@@ -57,7 +57,14 @@ function SlotDisplay({ label, character, build, support, boost, css, strategy, a
 }
 
 // ── PickAThird ────────────────────────────────────────────────────────────────
-function PickAThird({ characters, supports }: { characters: Character[]; supports: Support[] }) {
+function PickAThird({ characters, supports, charAffiliations, search, onSearchChange, onCountChange }: {
+  characters: Character[]
+  supports: Support[]
+  charAffiliations: Record<string, string[]>
+  search: string
+  onSearchChange: (v: string) => void
+  onCountChange: (n: number) => void
+}) {
   const [duos, setDuos]       = useState<CoreDuo[]>([])
   const [thirds, setThirds]   = useState<CoreDuoThird[]>([])
   const [loading, setLoading] = useState(true)
@@ -89,7 +96,7 @@ function PickAThird({ characters, supports }: { characters: Character[]; support
       supabase.from('mpq_tracker_core_duos').select('*').order('created_at'),
       supabase.from('mpq_tracker_core_duo_thirds').select('*').order('character'),
     ])
-    if (d) setDuos(d)
+    if (d) { setDuos(d); onCountChange(d.length) }
     if (t) setThirds(t)
     setLoading(false)
   }
@@ -416,16 +423,19 @@ export default function Teams() {
   const [form, setForm]             = useState<typeof EMPTY_FORM>(EMPTY_FORM)
   const [editId, setEditId]         = useState<string | null>(null)
   const [saving, setSaving]         = useState(false)
+  const [duoCount, setDuoCount]     = useState(0)
 
   async function load() {
-    const [{ data: t }, { data: c }, { data: s }] = await Promise.all([
+    const [{ data: t }, { data: c }, { data: s }, { data: d }] = await Promise.all([
       supabase.from('mpq_tracker_teams').select('*').order('name'),
       supabase.from('mpq_tracker_characters').select('*').order('base_name').order('version'),
       supabase.from('mpq_tracker_supports').select('*').order('name'),
+      supabase.from('mpq_tracker_core_duos').select('id'),
     ])
     if (t) setTeams(t)
     if (c) setCharacters((c as any[]).filter(ch => !ch.is_duplicate))
     if (s) setSupports(s)
+    if (d) setDuoCount(d.length)
     setLoading(false)
   }
   useEffect(() => { load() }, [])
@@ -508,10 +518,10 @@ export default function Teams() {
   )
 
   const TABS: { key: Tab; label: string }[] = [
-    { key: 'active',   label: 'Active Teams' },
-    { key: 'to_test',  label: 'To Test' },
-    { key: 'archived', label: 'Archived' },
+    { key: 'active',     label: 'Active Teams' },
     { key: 'pick_third', label: 'Pick a 3rd' },
+    { key: 'to_test',    label: 'To Test' },
+    { key: 'archived',   label: 'Archived' },
   ]
 
   function TeamCard({ team }: { team: Team }) {
@@ -592,7 +602,7 @@ export default function Teams() {
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === key ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'}`}>
             {label}
             <span className="ml-2 text-xs opacity-70">
-              ({regularTeams.filter(x => x.status === key).length})
+              ({key === 'pick_third' ? duoCount : regularTeams.filter(x => x.status === key).length})
             </span>
           </button>
         ))}
@@ -631,7 +641,7 @@ export default function Teams() {
 
       {/* List */}
       {tab === 'pick_third' ? (
-        <PickAThird characters={characters} supports={supports} />
+        <PickAThird characters={characters} supports={supports} charAffiliations={charAffiliations} search={search} onSearchChange={setSearch} onCountChange={setDuoCount} />
       ) : loading ? <Spinner /> : (
         <div className="space-y-3">
           {currentList.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No teams found</div>}
