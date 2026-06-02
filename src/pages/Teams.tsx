@@ -68,6 +68,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
   const [thirds, setThirds]   = useState<CoreDuoThird[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [expandedThird, setExpandedThird] = useState<string | null>(null)
   const [modal, setModal]     = useState<'add' | 'edit' | null>(null)
   const [editDuo, setEditDuo] = useState<CoreDuo | null>(null)
   const [thirdModal, setThirdModal] = useState<{ duoId: string; third?: CoreDuoThird } | null>(null)
@@ -185,7 +186,11 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
         )}
         {build   && <p className="text-xs text-[#C8C8E0]">Build: {build}</p>}
         {support && <p className="text-xs text-[#C8C8E0]">Support: {support}</p>}
-        {strategy && <p className="text-xs text-[#C8C8E0] italic border-l-2 border-[#3D3D60] pl-2 whitespace-pre-line mt-1">{strategy}</p>}
+        {strategy && (
+          <div className="border-t border-[#3D3D60] pt-2">
+            <p className="text-xs text-[#C8C8E0] whitespace-pre-line leading-relaxed">{strategy}</p>
+          </div>
+        )}
       </div>
     )
   }
@@ -269,26 +274,49 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
                     </button>
                   </div>
                   {duoThirds.length === 0 && <p className="text-xs text-[#555]">No 3rd characters yet</p>}
-                  <div className="space-y-2">
-                    {duoThirds.map(t => (
-                      <div key={t.id} className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-semibold text-white">{t.character ?? '—'}</span>
-                            {t.boost === 'Required' && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
-                            {t.css && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+                  <div className="space-y-1">
+                    {duoThirds.map(t => {
+                      const isThirdOpen = expandedThird === t.id
+                      const affiliations = t.character ? ([...(charAffiliations[t.character] ?? [])].sort()) : []
+                      return (
+                        <div key={t.id} className="bg-[#1C1C2E] rounded-lg overflow-hidden">
+                          {/* Collapsed: name only */}
+                          <div className="flex items-center justify-between px-3 py-2">
+                            <button onClick={() => setExpandedThird(isThirdOpen ? null : t.id)}
+                              className="flex items-center gap-2 flex-1 text-left group">
+                              <span className="text-sm font-semibold text-white group-hover:text-marvel-gold transition-colors">{t.character ?? '—'}</span>
+                              {t.boost === 'Required' && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+                              {t.css && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+                              {isThirdOpen ? <ChevronUp size={12} className="text-[#C8C8E0] shrink-0" /> : <ChevronDown size={12} className="text-[#C8C8E0] shrink-0" />}
+                            </button>
+                            <div className="flex gap-2 shrink-0">
+                              <button onClick={() => { const { id, core_duo_id, created_at, updated_at, ...rest } = t; setThirdForm(rest); setThirdModal({ duoId: duo.id, third: t }) }}
+                                className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
+                              <button onClick={() => removeThird(t.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
+                            </div>
                           </div>
-                          {t.build   && <p className="text-xs text-[#C8C8E0]">Build: {t.build}</p>}
-                          {t.support && <p className="text-xs text-[#C8C8E0]">Support: {t.support}</p>}
-                          {t.strategy && <p className="text-xs text-[#C8C8E0] italic border-l-2 border-[#3D3D60] pl-2 whitespace-pre-line">{t.strategy}</p>}
+                          {/* Expanded: details */}
+                          {isThirdOpen && (
+                            <div className="px-3 pb-3 pt-1 border-t border-[#3D3D60] space-y-1.5">
+                              {affiliations.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {affiliations.map(a => (
+                                    <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
+                                  ))}
+                                </div>
+                              )}
+                              {t.build   && <p className="text-xs text-[#C8C8E0]">Build: {t.build}</p>}
+                              {t.support && <p className="text-xs text-[#C8C8E0]">Support: {t.support}</p>}
+                              {t.strategy && (
+                                <div className="border-t border-[#3D3D60] pt-2">
+                                  <p className="text-xs text-[#C8C8E0] whitespace-pre-line leading-relaxed">{t.strategy}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                          <button onClick={() => { const { id, core_duo_id, created_at, updated_at, ...rest } = t; setThirdForm(rest); setThirdModal({ duoId: duo.id, third: t }) }}
-                            className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
-                          <button onClick={() => removeThird(t.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -602,7 +630,7 @@ export default function Teams() {
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === key ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'}`}>
             {label}
             <span className="ml-2 text-xs opacity-70">
-              ({regularTeams.filter(x => x.status === key).length})
+              ({key === 'pick_third' ? '' : regularTeams.filter(x => x.status === key).length})
             </span>
           </button>
         ))}
