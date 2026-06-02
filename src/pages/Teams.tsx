@@ -5,13 +5,13 @@ import { OkBadge } from '../components/Badges'
 import { SearchDropdown, toCharacterOptions, toSupportOptions } from '../components/SearchDropdown'
 import { Plus, Search, X, ChevronDown, ChevronUp, Pencil, Trash2, Star } from 'lucide-react'
 
-type Tab = 'active' | 'to_test' | 'archived' | 'template' | 'pick_third'
+type Tab = 'active' | 'to_test' | 'archived' | 'pick_third'
 type Pos = 'left' | 'mid' | 'right'
 
 const POS_LABELS: Record<Pos, string> = { left: 'Left', mid: 'Middle', right: 'Right' }
 
 const EMPTY_FORM: Omit<Team, 'id' | 'created_at' | 'updated_at'> = {
-  name: '', is_template: false, template_name: null, status: 'active', favorite: false,
+  name: '', status: 'active', favorite: false,
   left_character: null,  left_build: null,  left_support: null,  left_boost: null,  left_css: false,  left_strategy: null,
   mid_character: null,   mid_build: null,   mid_support: null,   mid_boost: null,   mid_css: false,   mid_strategy: null,
   right_character: null, right_build: null, right_support: null, right_boost: null, right_css: false, right_strategy: null,
@@ -394,7 +394,6 @@ export default function Teams() {
   const [form, setForm]             = useState<typeof EMPTY_FORM>(EMPTY_FORM)
   const [editId, setEditId]         = useState<string | null>(null)
   const [saving, setSaving]         = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('')
 
   async function load() {
     const [{ data: t }, { data: c }, { data: s }] = await Promise.all([
@@ -409,7 +408,6 @@ export default function Teams() {
   }
   useEffect(() => { load() }, [])
 
-  const templates = teams.filter(t => t.is_template)
 
   function autoName(f: typeof EMPTY_FORM): string {
     return [f.left_character, f.mid_character, f.right_character].filter(Boolean).join(' / ')
@@ -426,21 +424,9 @@ export default function Teams() {
     })
   }
 
-  function applyTemplate(templateId: string) {
-    const tpl = teams.find(t => t.id === templateId)
-    if (!tpl) return
-    const { id, created_at, updated_at, is_template, template_name, name, status, favorite, ...rest } = tpl
-    const newName = autoName(rest as typeof EMPTY_FORM)
-    setForm(prev => ({ ...prev, ...rest, name: newName, is_template: false, template_name: null, status: 'active' }))
-    setSelectedTemplate(templateId)
-  }
 
-  function clearTemplate() {
-    setForm(EMPTY_FORM)
-    setSelectedTemplate('')
-  }
 
-  const regularTeams = teams.filter(t => !t.is_template)
+  const regularTeams = teams
 
   const visible = regularTeams.filter(t => {
     const matchTab      = t.status === tab
@@ -454,21 +440,19 @@ export default function Teams() {
     return matchTab && matchSearch && matchFavorite && matchWinfinite
   })
 
-  const visibleTemplates = templates.filter(t =>
     !search || t.name.toLowerCase().includes(search.toLowerCase()) ||
-    t.template_name?.toLowerCase().includes(search.toLowerCase()) ||
     [t.left_character, t.mid_character, t.right_character].some(c => c?.toLowerCase().includes(search.toLowerCase()))
   )
 
   function openAdd() {
-    setForm({ ...EMPTY_FORM, status: tab === 'archived' || tab === 'template' ? 'active' : tab, is_template: tab === 'template' })
-    setEditId(null); setSelectedTemplate(''); setModal('add')
+    setForm({ ...EMPTY_FORM, status: tab === 'archived' ? 'active' : tab === 'pick_third' ? 'active' : tab })
+    setEditId(null); setModal('add')
   }
   function openEdit(t: Team) {
     const { id, created_at, updated_at, ...rest } = t
-    setForm(rest); setEditId(t.id); setSelectedTemplate(''); setModal('edit')
+    setForm(rest); setEditId(t.id); setModal('edit')
   }
-  function closeModal() { setModal(null); setEditId(null); setSelectedTemplate('') }
+  function closeModal() { setModal(null); setEditId(null) }
 
   const f = (key: keyof typeof EMPTY_FORM) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -509,7 +493,6 @@ export default function Teams() {
     { key: 'active',   label: 'Active Teams' },
     { key: 'to_test',  label: 'To Test' },
     { key: 'archived', label: 'Archived' },
-    { key: 'template',   label: 'Templates' },
     { key: 'pick_third', label: 'Pick a 3rd' },
   ]
 
@@ -522,32 +505,25 @@ export default function Teams() {
               className="text-left w-full group">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors truncate">
-                  {team.is_template ? (team.template_name || team.name) : team.name}
+                  {team.name}
                 </h3>
-                {team.is_template && team.template_name && team.name && (
-                  <span className="text-xs text-[#C8C8E0] truncate">({team.name})</span>
-                )}
                 {team.winfinite === 'Yes' && (
                   <span className="badge text-xs bg-cyan-900/60 text-cyan-300 border border-cyan-700 shrink-0">Winf.</span>
                 )}
                 {expanded === team.id ? <ChevronUp size={14} className="text-[#C8C8E0] shrink-0" /> : <ChevronDown size={14} className="text-[#C8C8E0] shrink-0" />}
               </div>
             </button>
-            {!team.is_template && (
-              <div className="flex flex-wrap gap-3 mt-1 text-xs text-[#C8C8E0]">
-                {team.hn1 && <span>HN1: <OkBadge value={team.hn1} /></span>}
-                {team.hn2 && <span>HN2: <OkBadge value={team.hn2} /></span>}
-                {team.hn3 && <span>HN3: <OkBadge value={team.hn3} /></span>}
-                {team.cn  && <span>CN: <OkBadge value={team.cn} /></span>}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-3 mt-1 text-xs text-[#C8C8E0]">
+              {team.hn1 && <span>HN1: <OkBadge value={team.hn1} /></span>}
+              {team.hn2 && <span>HN2: <OkBadge value={team.hn2} /></span>}
+              {team.hn3 && <span>HN3: <OkBadge value={team.hn3} /></span>}
+              {team.cn  && <span>CN: <OkBadge value={team.cn} /></span>}
+            </div>
           </div>
           <div className="flex gap-2 shrink-0 items-center">
-            {!team.is_template && (
-              <button onClick={() => toggleFavorite(team.id, team.favorite)} className="p-1 transition-colors hover:scale-110">
-                <Star size={16} className={team.favorite ? 'fill-yellow-400 text-yellow-400' : 'text-[#3D3D60] hover:text-yellow-400'} />
-              </button>
-            )}
+            <button onClick={() => toggleFavorite(team.id, team.favorite)} className="p-1 transition-colors hover:scale-110">
+              <Star size={16} className={team.favorite ? 'fill-yellow-400 text-yellow-400' : 'text-[#3D3D60] hover:text-yellow-400'} />
+            </button>
             {tab === 'to_test' && (
               <button onClick={() => moveToActive(team.id)}
                 className="text-xs bg-green-900/40 text-green-300 border border-green-700 px-2 py-1 rounded hover:bg-green-900/60 transition-colors">
@@ -578,19 +554,17 @@ export default function Teams() {
     )
   }
 
-  const currentList = tab === 'template' ? visibleTemplates : visible
+  const currentList = visible
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="page-title">Teams</h1>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> {tab === 'template' ? 'New Template' : 'Add'}
-        </button>
-      ) : tab !== 'pick_third' && (
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> Add
-        </button>
+        {tab !== 'pick_third' && (
+          <button onClick={openAdd} className="btn-primary flex items-center gap-2">
+            <Plus size={16} /> Add
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -600,14 +574,14 @@ export default function Teams() {
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === key ? 'bg-marvel-red text-white' : 'text-[#C8C8E0] hover:text-white'}`}>
             {label}
             <span className="ml-2 text-xs opacity-70">
-              ({key === 'template' ? templates.length : regularTeams.filter(x => x.status === key).length})
+              ({regularTeams.filter(x => x.status === key).length})
             </span>
           </button>
         ))}
       </div>
 
       {/* Filters (not on template or pick_third tab) */}
-      {tab !== 'template' && tab !== 'pick_third' && (
+      {tab !== 'pick_third' && (
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
@@ -635,20 +609,14 @@ export default function Teams() {
         </div>
       )}
 
-      {tab === 'template' && (
-        <div className="relative max-w-sm">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
-          <input className="input pl-9" placeholder="Search templates..."
-            value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-      )}
+
 
       {/* List */}
       {tab === 'pick_third' ? (
         <PickAThird characters={characters} supports={supports} />
       ) : loading ? <Spinner /> : (
         <div className="space-y-3">
-          {currentList.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No {tab === 'template' ? 'templates' : 'teams'} found</div>}
+          {currentList.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No teams found</div>}
           {currentList.map(team => <TeamCard key={team.id} team={team} />)}
         </div>
       )}
@@ -659,86 +627,54 @@ export default function Teams() {
           <div className="card w-full max-w-4xl my-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-marvel text-xl text-marvel-gold">
-                {form.is_template ? (modal === 'add' ? 'New Template' : 'Edit Template') : (modal === 'add' ? 'New Team' : 'Edit Team')}
+                {modal === 'add' ? 'New Team' : 'Edit Team'}
               </h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-4">
 
-              {/* Apply template — only when adding a regular team */}
-              {modal === 'add' && !form.is_template && templates.length > 0 && (
-                <div className="bg-[#1C1C2E] rounded-lg p-3 flex items-center gap-3">
-                  <label className="text-xs text-[#C8C8E0] shrink-0">Apply template:</label>
-                  <select className="input text-sm flex-1"
-                    value={selectedTemplate}
-                    onChange={e => e.target.value ? applyTemplate(e.target.value) : clearTemplate()}>
-                    <option value="">— None —</option>
-                    {templates.map(t => (
-                      <option key={t.id} value={t.id}>{t.template_name || t.name}</option>
-                    ))}
-                  </select>
-                  {selectedTemplate && (
-                    <button onClick={clearTemplate} className="text-xs text-[#C8C8E0] hover:text-white underline shrink-0">Clear</button>
-                  )}
-                </div>
-              )}
-
-              {/* Template name (if template) */}
-              {form.is_template && (
-                <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Template name <span className="text-[#555]">(optional custom name)</span></label>
-                  <input className="input" value={form.template_name ?? ''}
-                    onChange={e => setForm(f => ({ ...f, template_name: e.target.value || null }))}
-                    placeholder="Ex: Thor Winfinite, Polaris Goon team..." />
-                </div>
-              )}
-
               {/* Row 1: Name (75%) + Status (25%) */}
               <div className="flex gap-3">
                 <div className="flex-[3]">
                   <label className="text-xs text-[#C8C8E0] mb-1 block">
-                    {form.is_template ? 'Characters' : 'Team name'} <span className="text-[#555]">(auto-filled)</span>
+                    Team name <span className="text-[#555]">(auto-filled)</span>
                   </label>
                   <input className="input" value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                     placeholder="Char 1 / Char 2 / Char 3" />
                 </div>
-                {!form.is_template && (
-                  <div className="flex-[1]">
-                    <label className="text-xs text-[#C8C8E0] mb-1 block">Status</label>
-                    <select className="input" value={form.status} onChange={f('status')}>
-                      <option value="active">Active</option>
-                      <option value="to_test">To Test</option>
-                      <option value="archived">Archived</option>
-                    </select>
-                  </div>
-                )}
+                <div className="flex-[1]">
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Status</label>
+                  <select className="input" value={form.status} onChange={f('status')}>
+                    <option value="active">Active</option>
+                    <option value="to_test">To Test</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
               </div>
 
               {/* Row 2: HN1 + HN2 + HN3 + CN + Winfinite */}
-              {!form.is_template && (
-                <div className="grid grid-cols-5 gap-3">
-                  {(['hn1', 'hn2', 'hn3', 'cn'] as const).map(key => (
-                    <div key={key}>
-                      <label className="text-xs text-[#C8C8E0] mb-1 block">{key.toUpperCase()}</label>
-                      <select className="input" value={form[key] ?? ''} onChange={f(key)}>
-                        <option value="">—</option>
-                        <option value="No">No</option>
-                        <option value="Yes">Yes</option>
-                        <option value="Partial">Partial</option>
-                      </select>
-                    </div>
-                  ))}
-                  <div>
-                    <label className="text-xs text-[#C8C8E0] mb-1 block">Winfinite</label>
-                    <select className="input" value={form.winfinite ?? ''} onChange={f('winfinite')}>
+              <div className="grid grid-cols-5 gap-3">
+                {(['hn1', 'hn2', 'hn3', 'cn'] as const).map(key => (
+                  <div key={key}>
+                    <label className="text-xs text-[#C8C8E0] mb-1 block">{key.toUpperCase()}</label>
+                    <select className="input" value={form[key] ?? ''} onChange={f(key)}>
                       <option value="">—</option>
-                      <option value="Yes">Yes</option>
                       <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="Partial">Partial</option>
                     </select>
                   </div>
+                ))}
+                <div>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Winfinite</label>
+                  <select className="input" value={form.winfinite ?? ''} onChange={f('winfinite')}>
+                    <option value="">—</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
                 </div>
-              )}
+              </div>
 
               {/* 3 Slots side by side */}
               <div className="grid grid-cols-3 gap-3">
