@@ -128,3 +128,26 @@ export interface RosterSummary {
   not_owned: number
   ascended:  number   // indépendant du statut — cumul par tier
 }
+
+export interface CoreDuo {
+  id: string
+  name: string | null
+  left_character: string | null;  left_build: string | null;  left_support: string | null;  left_boost: string | null;  left_css: boolean;  left_strategy: string | null
+  right_character: string | null; right_build: string | null; right_support: string | null; right_boost: string | null; right_css: boolean; right_strategy: string | null
+  note_additionnelle: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CoreDuoThird {
+  id: string
+  core_duo_id: string
+  character: string | null
+  build: string | null
+  support: string | null
+  boost: string | null
+  css: boolean
+  strategy: string | null
+  created_at: string
+  updated_at: string
+}

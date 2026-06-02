@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Team, TeamStatus, Character, Support } from '../types'
+import { Team, TeamStatus, Character, Support, CoreDuo, CoreDuoThird } from '../types'
 import { OkBadge } from '../components/Badges'
 import { SearchDropdown, toCharacterOptions, toSupportOptions } from '../components/SearchDropdown'
-import { Plus, Search, X, ChevronDown, ChevronUp, Pencil, Trash2, Star, Copy } from 'lucide-react'
+import { Plus, Search, X, ChevronDown, ChevronUp, Pencil, Trash2, Star } from 'lucide-react'
 
-type Tab = 'active' | 'to_test' | 'archived' | 'template'
+type Tab = 'active' | 'to_test' | 'archived' | 'template' | 'pick_third'
 type Pos = 'left' | 'mid' | 'right'
 
 const POS_LABELS: Record<Pos, string> = { left: 'Left', mid: 'Middle', right: 'Right' }
@@ -56,6 +56,330 @@ function SlotDisplay({ label, character, build, support, boost, css, strategy, a
   )
 }
 
+// ── PickAThird ────────────────────────────────────────────────────────────────
+function PickAThird({ characters, supports }: { characters: Character[]; supports: Support[] }) {
+  const [duos, setDuos]       = useState<CoreDuo[]>([])
+  const [thirds, setThirds]   = useState<CoreDuoThird[]>([])
+  const [loading, setLoading] = useState(true)
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [modal, setModal]     = useState<'add' | 'edit' | null>(null)
+  const [editDuo, setEditDuo] = useState<CoreDuo | null>(null)
+  const [thirdModal, setThirdModal] = useState<{ duoId: string; third?: CoreDuoThird } | null>(null)
+
+  const EMPTY_DUO: Omit<CoreDuo, 'id' | 'created_at' | 'updated_at'> = {
+    name: null,
+    left_character: null,  left_build: null,  left_support: null,  left_boost: null,  left_css: false,  left_strategy: null,
+    right_character: null, right_build: null, right_support: null, right_boost: null, right_css: false, right_strategy: null,
+    note_additionnelle: null,
+  }
+  const EMPTY_THIRD: Omit<CoreDuoThird, 'id' | 'core_duo_id' | 'created_at' | 'updated_at'> = {
+    character: null, build: null, support: null, boost: null, css: false, strategy: null,
+  }
+
+  const [duoForm, setDuoForm]     = useState<typeof EMPTY_DUO>(EMPTY_DUO)
+  const [thirdForm, setThirdForm] = useState<typeof EMPTY_THIRD>(EMPTY_THIRD)
+  const [saving, setSaving]       = useState(false)
+
+  const charOptions    = toCharacterOptions(characters)
+  const supportOptions = toSupportOptions(supports)
+
+  async function load() {
+    const [{ data: d }, { data: t }] = await Promise.all([
+      supabase.from('mpq_tracker_core_duos').select('*').order('created_at'),
+      supabase.from('mpq_tracker_core_duo_thirds').select('*').order('character'),
+    ])
+    if (d) setDuos(d)
+    if (t) setThirds(t)
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+
+  function autoName(f: typeof EMPTY_DUO) {
+    return [f.left_character, f.right_character].filter(Boolean).join(' + ')
+  }
+
+  function setDuoSlot(pos: 'left' | 'right', field: string, val: string | boolean | null) {
+    setDuoForm(prev => {
+      const updated = { ...prev, [`${pos}_${field}`]: val }
+      if (field === 'character') {
+        const generated = autoName(updated)
+        if (!prev.name || prev.name === autoName(prev)) updated.name = generated
+      }
+      return updated
+    })
+  }
+
+  async function saveDuo() {
+    setSaving(true)
+    if (modal === 'add') {
+      await supabase.from('mpq_tracker_core_duos').insert([duoForm])
+    } else if (editDuo) {
+      await supabase.from('mpq_tracker_core_duos').update({ ...duoForm, updated_at: new Date().toISOString() }).eq('id', editDuo.id)
+    }
+    await load(); setModal(null); setEditDuo(null); setSaving(false)
+  }
+
+  async function removeDuo(id: string) {
+    if (!confirm('Delete this core duo?')) return
+    await supabase.from('mpq_tracker_core_duos').delete().eq('id', id)
+    setDuos(prev => prev.filter(d => d.id !== id))
+    setThirds(prev => prev.filter(t => t.core_duo_id !== id))
+  }
+
+  async function saveThird() {
+    if (!thirdModal) return
+    setSaving(true)
+    if (thirdModal.third) {
+      await supabase.from('mpq_tracker_core_duo_thirds').update({ ...thirdForm, updated_at: new Date().toISOString() }).eq('id', thirdModal.third.id)
+    } else {
+      await supabase.from('mpq_tracker_core_duo_thirds').insert([{ ...thirdForm, core_duo_id: thirdModal.duoId }])
+    }
+    await load(); setThirdModal(null); setThirdForm(EMPTY_THIRD); setSaving(false)
+  }
+
+  async function removeThird(id: string) {
+    if (!confirm('Remove this 3rd character?')) return
+    await supabase.from('mpq_tracker_core_duo_thirds').delete().eq('id', id)
+    setThirds(prev => prev.filter(t => t.id !== id))
+  }
+
+  function openAddDuo() { setDuoForm(EMPTY_DUO); setEditDuo(null); setModal('add') }
+  function openEditDuo(duo: CoreDuo) {
+    const { id, created_at, updated_at, ...rest } = duo
+    setDuoForm(rest); setEditDuo(duo); setModal('edit')
+  }
+
+  function SlotCol({ pos, duo }: { pos: 'left' | 'right'; duo: CoreDuo }) {
+    const label     = pos === 'left' ? 'Left' : 'Right'
+    const char      = duo[`${pos}_character`]
+    const build     = duo[`${pos}_build`]
+    const support   = duo[`${pos}_support`]
+    const boost     = duo[`${pos}_boost`]
+    const css       = duo[`${pos}_css`]
+    const strategy  = duo[`${pos}_strategy`]
+    const hasBoost  = boost === 'Required'
+    return (
+      <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-1.5">
+        <p className="text-xs font-semibold text-marvel-gold uppercase">{label}</p>
+        {char && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-white">{char}</span>
+            {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+            {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+          </div>
+        )}
+        {build   && <p className="text-xs text-[#C8C8E0]">Build: {build}</p>}
+        {support && <p className="text-xs text-[#C8C8E0]">Support: {support}</p>}
+        {strategy && <p className="text-xs text-[#C8C8E0] italic border-l-2 border-[#3D3D60] pl-2 whitespace-pre-line mt-1">{strategy}</p>}
+      </div>
+    )
+  }
+
+  if (loading) return <Spinner />
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <button onClick={openAddDuo} className="btn-primary flex items-center gap-2">
+          <Plus size={16} /> New Core Duo
+        </button>
+      </div>
+
+      {duos.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No core duos yet</div>}
+
+      {duos.map(duo => {
+        const duoThirds = thirds.filter(t => t.core_duo_id === duo.id)
+        const isOpen    = expanded === duo.id
+        return (
+          <div key={duo.id} className="card">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4">
+              <button onClick={() => setExpanded(isOpen ? null : duo.id)} className="flex-1 text-left group">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors">{duo.name || '—'}</h3>
+                  <span className="text-xs text-[#C8C8E0]">({duoThirds.length} 3rd{duoThirds.length !== 1 ? 's' : ''})</span>
+                  {isOpen ? <ChevronUp size={14} className="text-[#C8C8E0]" /> : <ChevronDown size={14} className="text-[#C8C8E0]" />}
+                </div>
+              </button>
+              <div className="flex gap-2 shrink-0">
+                <button onClick={() => openEditDuo(duo)} className="text-[#C8C8E0] hover:text-white p-1"><Pencil size={14} /></button>
+                <button onClick={() => removeDuo(duo.id)} className="text-[#C8C8E0] hover:text-red-400 p-1"><Trash2 size={14} /></button>
+              </div>
+            </div>
+
+            {isOpen && (
+              <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
+                {/* Left + Middle (reserved) + Right */}
+                <div className="grid grid-cols-3 gap-3">
+                  <SlotCol pos="left"  duo={duo} />
+                  <div className="bg-[#1C1C2E] rounded-lg p-3 border border-dashed border-[#3D3D60] flex items-center justify-center">
+                    <p className="text-xs text-[#555] text-center">Middle<br/>← 3rd character</p>
+                  </div>
+                  <SlotCol pos="right" duo={duo} />
+                </div>
+
+                {/* Additional note */}
+                {duo.note_additionnelle && (
+                  <div className="bg-[#1C1C2E] rounded-lg p-3">
+                    <p className="text-xs text-[#C8C8E0] font-semibold mb-1">Additional note</p>
+                    <p className="text-xs text-[#C8C8E0] whitespace-pre-line">{duo.note_additionnelle}</p>
+                  </div>
+                )}
+
+                {/* 3rd characters */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-marvel-gold">3rd Characters</p>
+                    <button
+                      onClick={() => { setThirdForm(EMPTY_THIRD); setThirdModal({ duoId: duo.id }) }}
+                      className="text-xs bg-[#3D3D60] hover:bg-marvel-red/40 text-[#C8C8E0] hover:text-white px-2 py-1 rounded transition-all">
+                      + Add 3rd
+                    </button>
+                  </div>
+                  {duoThirds.length === 0 && <p className="text-xs text-[#555]">No 3rd characters yet</p>}
+                  <div className="space-y-2">
+                    {duoThirds.map(t => (
+                      <div key={t.id} className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-white">{t.character ?? '—'}</span>
+                            {t.boost === 'Required' && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+                            {t.css && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+                          </div>
+                          {t.build   && <p className="text-xs text-[#C8C8E0]">Build: {t.build}</p>}
+                          {t.support && <p className="text-xs text-[#C8C8E0]">Support: {t.support}</p>}
+                          {t.strategy && <p className="text-xs text-[#C8C8E0] italic border-l-2 border-[#3D3D60] pl-2 whitespace-pre-line">{t.strategy}</p>}
+                        </div>
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          <button onClick={() => { const { id, core_duo_id, created_at, updated_at, ...rest } = t; setThirdForm(rest); setThirdModal({ duoId: duo.id, third: t }) }}
+                            className="text-[#C8C8E0] hover:text-white"><Pencil size={13} /></button>
+                          <button onClick={() => removeThird(t.id)} className="text-[#C8C8E0] hover:text-red-400"><Trash2 size={13} /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })}
+
+      {/* Core Duo Modal */}
+      {modal && (
+        <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
+          <div className="card w-full max-w-3xl my-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Core Duo' : 'Edit Core Duo'}</h2>
+              <button onClick={() => { setModal(null); setEditDuo(null) }}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Name <span className="text-[#555]">(auto-filled)</span></label>
+                <input className="input" value={duoForm.name ?? ''}
+                  onChange={e => setDuoForm(f => ({ ...f, name: e.target.value || null }))} placeholder="A + B" />
+              </div>
+              {/* Left + Right slots (Middle reserved) */}
+              <div className="grid grid-cols-3 gap-3">
+                {(['left', 'right'] as const).map((pos, idx) => (
+                  <div key={pos} className={`bg-[#1C1C2E] rounded-lg p-3 space-y-2 ${idx === 0 ? '' : 'col-start-3'}`}>
+                    <p className="text-xs font-semibold text-marvel-gold uppercase">{pos === 'left' ? 'Left' : 'Right'}</p>
+                    <div>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Character</label>
+                      <SearchDropdown value={duoForm[`${pos}_character`]} onChange={v => setDuoSlot(pos, 'character', v)} options={charOptions} placeholder="Search..." />
+                    </div>
+                    <div>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Build</label>
+                      <input className="input text-sm" placeholder="5/3/5" value={duoForm[`${pos}_build`] ?? ''} onChange={e => setDuoSlot(pos, 'build', e.target.value || null)} />
+                    </div>
+                    <div>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Support</label>
+                      <SearchDropdown value={duoForm[`${pos}_support`]} onChange={v => setDuoSlot(pos, 'support', v)} options={supportOptions} placeholder="Search..." />
+                    </div>
+                    <div>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Boost</label>
+                      <select className="input text-sm" value={duoForm[`${pos}_boost`] ?? 'Not Required'} onChange={e => setDuoSlot(pos, 'boost', e.target.value)}>
+                        <option value="Not Required">Not Required</option>
+                        <option value="Required">Required</option>
+                      </select>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={duoForm[`${pos}_css`]} onChange={e => setDuoSlot(pos, 'css', e.target.checked)} className="w-4 h-4 accent-purple-600" />
+                      <span className="text-xs text-[#C8C8E0]">CSS Only</span>
+                    </label>
+                    <div>
+                      <label className="text-xs text-[#C8C8E0] mb-1 block">Strategy</label>
+                      <textarea className="input resize-none h-20 text-sm" value={duoForm[`${pos}_strategy`] ?? ''} onChange={e => setDuoSlot(pos, 'strategy', e.target.value || null)} placeholder="Strategy..." />
+                    </div>
+                  </div>
+                ))}
+                {/* Middle placeholder */}
+                <div className="bg-[#1C1C2E] rounded-lg p-3 border border-dashed border-[#3D3D60] flex items-center justify-center col-start-2 row-start-1">
+                  <p className="text-xs text-[#555] text-center">Middle<br/>← 3rd character<br/>(added later)</p>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Additional note</label>
+                <textarea className="input resize-none h-16" value={duoForm.note_additionnelle ?? ''} onChange={e => setDuoForm(f => ({ ...f, note_additionnelle: e.target.value || null }))} />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => { setModal(null); setEditDuo(null) }} className="btn-secondary flex-1">Cancel</button>
+                <button onClick={saveDuo} disabled={saving} className="btn-primary flex-1">{saving ? 'Saving...' : 'Save'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit 3rd Modal */}
+      {thirdModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
+          <div className="card w-full max-w-md my-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-marvel text-xl text-marvel-gold">{thirdModal.third ? 'Edit 3rd Character' : 'Add 3rd Character'}</h2>
+              <button onClick={() => { setThirdModal(null); setThirdForm(EMPTY_THIRD) }}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Character</label>
+                <SearchDropdown value={thirdForm.character} onChange={v => setThirdForm(f => ({ ...f, character: v }))} options={charOptions} placeholder="Search..." />
+              </div>
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Build</label>
+                <input className="input text-sm" placeholder="5/3/5" value={thirdForm.build ?? ''} onChange={e => setThirdForm(f => ({ ...f, build: e.target.value || null }))} />
+              </div>
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Support</label>
+                <SearchDropdown value={thirdForm.support} onChange={v => setThirdForm(f => ({ ...f, support: v }))} options={supportOptions} placeholder="Search..." />
+              </div>
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Boost</label>
+                <select className="input" value={thirdForm.boost ?? 'Not Required'} onChange={e => setThirdForm(f => ({ ...f, boost: e.target.value }))}>
+                  <option value="Not Required">Not Required</option>
+                  <option value="Required">Required</option>
+                </select>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={thirdForm.css} onChange={e => setThirdForm(f => ({ ...f, css: e.target.checked }))} className="w-4 h-4 accent-purple-600" />
+                <span className="text-xs text-[#C8C8E0]">CSS Only</span>
+              </label>
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Strategy</label>
+                <textarea className="input resize-none h-20 text-sm" value={thirdForm.strategy ?? ''} onChange={e => setThirdForm(f => ({ ...f, strategy: e.target.value || null }))} placeholder="Strategy for this 3rd..." />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => { setThirdModal(null); setThirdForm(EMPTY_THIRD) }} className="btn-secondary flex-1">Cancel</button>
+                <button onClick={saveThird} disabled={saving} className="btn-primary flex-1">{saving ? 'Saving...' : 'Save'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main Teams component ──────────────────────────────────────────────────────
 export default function Teams() {
   const [teams, setTeams]           = useState<Team[]>([])
   const [characters, setCharacters] = useState<Character[]>([])
@@ -118,11 +442,6 @@ export default function Teams() {
 
   const regularTeams = teams.filter(t => !t.is_template)
 
-  // Map character name → affiliations (must be before visible filter)
-  const charAffiliations: Record<string, string[]> = Object.fromEntries(
-    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
-  )
-
   const visible = regularTeams.filter(t => {
     const matchTab      = t.status === tab
     const matchSearch   = t.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -181,11 +500,17 @@ export default function Teams() {
   const charOptions    = toCharacterOptions(characters)
   const supportOptions = toSupportOptions(supports)
 
+  // Map character name → affiliations for display (handle NULL from DB)
+  const charAffiliations: Record<string, string[]> = Object.fromEntries(
+    characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
+  )
+
   const TABS: { key: Tab; label: string }[] = [
     { key: 'active',   label: 'Active Teams' },
     { key: 'to_test',  label: 'To Test' },
     { key: 'archived', label: 'Archived' },
-    { key: 'template', label: 'Templates' },
+    { key: 'template',   label: 'Templates' },
+    { key: 'pick_third', label: 'Pick a 3rd' },
   ]
 
   function TeamCard({ team }: { team: Team }) {
@@ -262,6 +587,10 @@ export default function Teams() {
         <button onClick={openAdd} className="btn-primary flex items-center gap-2">
           <Plus size={16} /> {tab === 'template' ? 'New Template' : 'Add'}
         </button>
+      ) : tab !== 'pick_third' && (
+        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
+          <Plus size={16} /> Add
+        </button>
       </div>
 
       {/* Tabs */}
@@ -277,8 +606,8 @@ export default function Teams() {
         ))}
       </div>
 
-      {/* Filters (not on template tab) */}
-      {tab !== 'template' && (
+      {/* Filters (not on template or pick_third tab) */}
+      {tab !== 'template' && tab !== 'pick_third' && (
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
@@ -306,7 +635,6 @@ export default function Teams() {
         </div>
       )}
 
-      {/* Template search */}
       {tab === 'template' && (
         <div className="relative max-w-sm">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
@@ -316,7 +644,9 @@ export default function Teams() {
       )}
 
       {/* List */}
-      {loading ? <Spinner /> : (
+      {tab === 'pick_third' ? (
+        <PickAThird characters={characters} supports={supports} />
+      ) : loading ? <Spinner /> : (
         <div className="space-y-3">
           {currentList.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No {tab === 'template' ? 'templates' : 'teams'} found</div>}
           {currentList.map(team => <TeamCard key={team.id} team={team} />)}
