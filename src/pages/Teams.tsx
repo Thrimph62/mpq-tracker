@@ -158,50 +158,56 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
   }
 
   function SlotCol({ pos, duo }: { pos: 'left' | 'right'; duo: CoreDuo }) {
-    const label     = pos === 'left' ? 'Left' : 'Right'
-    const char      = duo[`${pos}_character`]
-    const build     = duo[`${pos}_build`]
-    const support   = duo[`${pos}_support`]
-    const boost     = duo[`${pos}_boost`]
-    const css       = duo[`${pos}_css`]
-    const strategy  = duo[`${pos}_strategy`]
-    const hasBoost  = boost === 'Required'
+    const label        = pos === 'left' ? 'Left' : 'Right'
+    const char         = duo[`${pos}_character`]
+    const build        = duo[`${pos}_build`]
+    const support      = duo[`${pos}_support`]
+    const boost        = duo[`${pos}_boost`]
+    const css          = duo[`${pos}_css`]
+    const strategy     = duo[`${pos}_strategy`]
+    const hasBoost     = boost === 'Required'
+    const affiliations = char ? ([...(charAffiliations[char] ?? [])].sort()) : []
     return (
       <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-1.5">
         <p className="text-xs font-semibold text-marvel-gold uppercase">{label}</p>
         {char && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-white">{char}</span>
-            {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
-            {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold text-white">{char}</span>
+              {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+              {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+            </div>
+            {affiliations.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {affiliations.map(a => (
+                  <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {build   && <p className="text-xs text-[#C8C8E0]">Build: {build}</p>}
         {support && <p className="text-xs text-[#C8C8E0]">Support: {support}</p>}
-        {strategy && <p className="text-xs text-[#C8C8E0] italic border-l-2 border-[#3D3D60] pl-2 whitespace-pre-line mt-1">{strategy}</p>}
+        {strategy && (
+          <div className="border-t border-[#3D3D60] pt-2 mt-1">
+            <p className="text-xs text-[#C8C8E0] whitespace-pre-line leading-relaxed">{strategy}</p>
+          </div>
+        )}
       </div>
     )
   }
 
   if (loading) return <Spinner />
 
-  const filteredDuos = duos.filter(d => {
-    if (!search) return true
-    const s = search.toLowerCase()
-    const duoThirds = thirds.filter(t => t.core_duo_id === d.id)
-    return (
-      [d.name, d.left_character, d.right_character, d.left_support, d.right_support, d.left_strategy, d.right_strategy]
-        .some(v => v?.toLowerCase().includes(s)) ||
-      [d.left_character, d.right_character].some(c =>
-        c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(s)) : false
-      ) ||
-      duoThirds.some(t =>
-        [t.character, t.support, t.strategy]
-          .some(v => v?.toLowerCase().includes(s)) ||
-        (t.character ? (charAffiliations[t.character] ?? []).some(a => a.toLowerCase().includes(s)) : false)
-      )
-    )
-  })
+  const filteredDuos = duos.filter(d =>
+    !search || [d.name, d.left_character, d.right_character]
+      .some(v => v?.toLowerCase().includes(search.toLowerCase())) ||
+    [d.left_character, d.right_character].some(c =>
+      c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(search.toLowerCase())) : false
+    ) ||
+    thirds.filter(t => t.core_duo_id === d.id)
+      .some(t => t.character?.toLowerCase().includes(search.toLowerCase()))
+  )
 
   return (
     <div className="space-y-3">
@@ -220,7 +226,11 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
       {filteredDuos.length === 0 && <div className="card text-center text-[#C8C8E0] py-12">No core duos found</div>}
 
       {filteredDuos.map(duo => {
-        const duoThirds = thirds.filter(t => t.core_duo_id === duo.id)
+        const allDuoThirds = thirds.filter(t => t.core_duo_id === duo.id)
+        const duoThirds = search ? allDuoThirds.filter(t =>
+          [t.character, t.support, t.strategy].some(v => v?.toLowerCase().includes(search.toLowerCase())) ||
+          (t.character ? (charAffiliations[t.character] ?? []).some(a => a.toLowerCase().includes(search.toLowerCase())) : false)
+        ) : allDuoThirds
         const isOpen    = expanded === duo.id
         return (
           <div key={duo.id} className="card">
