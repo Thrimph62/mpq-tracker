@@ -199,15 +199,24 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
 
   if (loading) return <Spinner />
 
-  const filteredDuos = duos.filter(d =>
-    !search || [d.name, d.left_character, d.right_character]
-      .some(v => v?.toLowerCase().includes(search.toLowerCase())) ||
-    [d.left_character, d.right_character].some(c =>
-      c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(search.toLowerCase())) : false
-    ) ||
-    thirds.filter(t => t.core_duo_id === d.id)
-      .some(t => t.character?.toLowerCase().includes(search.toLowerCase()))
-  )
+  const filteredDuos = duos.filter(d => {
+    if (!search) return true
+    const s = search.toLowerCase()
+    const duoThirds = thirds.filter(t => t.core_duo_id === d.id)
+    return (
+      [d.name, d.left_character, d.right_character,
+       d.left_support, d.right_support,
+       d.left_strategy, d.right_strategy]
+        .some(v => v?.toLowerCase().includes(s)) ||
+      [d.left_character, d.right_character].some(c =>
+        c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(s)) : false
+      ) ||
+      duoThirds.some(t =>
+        [t.character, t.support, t.strategy].some(v => v?.toLowerCase().includes(s)) ||
+        (t.character ? (charAffiliations[t.character] ?? []).some(a => a.toLowerCase().includes(s)) : false)
+      )
+    )
+  })
 
   return (
     <div className="space-y-3">
