@@ -569,9 +569,20 @@ export default function Teams() {
           <div className="flex-1 min-w-0">
             <button onClick={() => setExpanded(expanded === team.id ? null : team.id)}
               className="text-left w-full group">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors truncate">
-                  {team.name}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors">
+                  {[
+                    { char: team.left_character,  boost: team.left_boost  },
+                    { char: team.mid_character,   boost: team.mid_boost   },
+                    { char: team.right_character, boost: team.right_boost },
+                  ].filter(s => s.char).map((s, i, arr) => (
+                    <span key={i}>
+                      {i > 0 && <span className="text-[#555] mx-1">/</span>}
+                      {s.char}
+                      {s.boost === 'Required' && <span className="ml-1 text-yellow-400">⚡</span>}
+                    </span>
+                  ))}
+                  {!team.left_character && !team.mid_character && !team.right_character && team.name}
                 </h3>
                 {team.custom_name && (
                   <span className="badge text-xs bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] shrink-0">{team.custom_name}</span>
