@@ -23,26 +23,21 @@ function SlotDisplay({ label, character, build, support, boost, css, strategy, a
   label: string; character: string | null; build: string | null; support: string | null
   boost: string | null; css: boolean; strategy: string | null; affiliations?: string[]
 }) {
-  const hasBoost = boost === 'Required'
-  const hasContent = character || build || support || hasBoost || css || strategy
-  if (!hasContent) return null
+  const isRequired = boost === 'Required'
+  const isCss      = css === true
+  const aff        = [...(affiliations ?? [])].sort()
+
   return (
     <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
       <p className="text-xs font-semibold text-marvel-gold uppercase">{label}</p>
-      {(character || hasBoost || css) && (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            {character && <span className="text-sm font-semibold text-white">{character}</span>}
-            {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
-            {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
-          </div>
-          {character && ([...(affiliations ?? [])].sort()).length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {([...(affiliations ?? [])].sort()).map(a => (
-                <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
-              ))}
-            </div>
-          )}
+      {character && <span className="text-sm font-semibold text-white block">{character}</span>}
+      <div className="flex flex-wrap gap-1">
+        {isRequired && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+        {isCss      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
+      </div>
+      {aff.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {aff.map(a => <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>)}
         </div>
       )}
       {build   && <p className="text-xs text-[#C8C8E0]">Build: {build}</p>}
@@ -165,7 +160,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
     const boost        = duo[`${pos}_boost`]
     const css          = duo[`${pos}_css`]
     const strategy     = duo[`${pos}_strategy`]
-    const hasBoost     = boost === 'Required'
+    const hasBoost     = boost?.trim() === 'Required'
     const affiliations = char ? ([...(charAffiliations[char] ?? [])].sort()) : []
     return (
       <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-1.5">
@@ -298,7 +293,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
                             <button onClick={() => setExpandedThird(isThirdOpen ? null : t.id)}
                               className="flex items-center gap-2 flex-1 text-left group">
                               <span className="text-sm font-semibold text-white group-hover:text-marvel-gold transition-colors">{t.character ?? '—'}</span>
-                              {t.boost === 'Required' && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+                              {t.boost?.trim() === 'Required' && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
                               {t.css && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
                               {isThirdOpen ? <ChevronUp size={12} className="text-[#C8C8E0] shrink-0" /> : <ChevronDown size={12} className="text-[#C8C8E0] shrink-0" />}
                             </button>
