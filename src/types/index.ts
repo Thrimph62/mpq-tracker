@@ -64,6 +64,7 @@ export interface Support {
 export interface Team {
   id: string
   name: string
+  custom_name: string | null
   is_template: boolean
   template_name: string | null
   left_character: string | null;  left_build: string | null;  left_support: string | null;  left_boost: string | null;  left_css: boolean;  left_strategy: string | null

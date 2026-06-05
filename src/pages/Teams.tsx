@@ -11,7 +11,7 @@ type Pos = 'left' | 'mid' | 'right'
 const POS_LABELS: Record<Pos, string> = { left: 'Left', mid: 'Middle', right: 'Right' }
 
 const EMPTY_FORM: Omit<Team, 'id' | 'created_at' | 'updated_at'> = {
-  name: '', status: 'active', favorite: false,
+  name: '', custom_name: null, status: 'active', favorite: false,
   left_character: null,  left_build: null,  left_support: null,  left_boost: null,  left_css: false,  left_strategy: null,
   mid_character: null,   mid_build: null,   mid_support: null,   mid_boost: null,   mid_css: false,   mid_strategy: null,
   right_character: null, right_build: null, right_support: null, right_boost: null, right_css: false, right_strategy: null,
@@ -29,14 +29,14 @@ function SlotDisplay({ label, character, build, support, boost, css, strategy, a
   return (
     <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-2">
       <p className="text-xs font-semibold text-marvel-gold uppercase">{label}</p>
-      {character && (
+      {(character || hasBoost || css) && (
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-white">{character}</span>
+            {character && <span className="text-sm font-semibold text-white">{character}</span>}
             {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
             {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
           </div>
-          {([...(affiliations ?? [])].sort()).length > 0 && (
+          {character && ([...(affiliations ?? [])].sort()).length > 0 && (
             <div className="flex flex-wrap gap-1">
               {([...(affiliations ?? [])].sort()).map(a => (
                 <span key={a} className="badge text-xs bg-teal-900/40 text-teal-300 border border-teal-700">{a}</span>
@@ -170,10 +170,10 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
     return (
       <div className="bg-[#1C1C2E] rounded-lg p-3 space-y-1.5">
         <p className="text-xs font-semibold text-marvel-gold uppercase">{label}</p>
-        {char && (
+        {(char || hasBoost || css) && (
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold text-white">{char}</span>
+              {char && <span className="text-sm font-semibold text-white">{char}</span>}
               {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
               {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
             </div>
@@ -513,6 +513,7 @@ export default function Teams() {
   const visible = regularTeams.filter(t => {
     const matchTab      = t.status === tab
     const matchSearch   = t.name.toLowerCase().includes(search.toLowerCase()) ||
+      (t.custom_name?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
       [t.left_character, t.mid_character, t.right_character].some(c => c?.toLowerCase().includes(search.toLowerCase())) ||
       [t.left_character, t.mid_character, t.right_character].some(c =>
         c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(search.toLowerCase())) : false
@@ -577,6 +578,9 @@ export default function Teams() {
                 <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors truncate">
                   {team.name}
                 </h3>
+                {team.custom_name && (
+                  <span className="badge text-xs bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] shrink-0">{team.custom_name}</span>
+                )}
                 {team.winfinite === 'Yes' && (
                   <span className="badge text-xs bg-cyan-900/60 text-cyan-300 border border-cyan-700 shrink-0">Winf.</span>
                 )}
@@ -721,6 +725,14 @@ export default function Teams() {
                     <option value="archived">Archived</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Custom name */}
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Custom name <span className="text-[#555]">(optional)</span></label>
+                <input className="input" value={form.custom_name ?? ''}
+                  onChange={e => setForm(f => ({ ...f, custom_name: e.target.value || null }))}
+                  placeholder="Ex: My Winfinite team, Polaris goons..." />
               </div>
 
               {/* Row 2: HN1 + HN2 + HN3 + CN + Winfinite */}
