@@ -32,7 +32,7 @@ function SlotDisplay({ label, character, build, support, boost, css, strategy, a
       <p className="text-xs font-semibold text-marvel-gold uppercase">{label}</p>
       {character && <span className="text-sm font-semibold text-white block">{character}</span>}
       <div className="flex flex-wrap gap-1">
-        {isRequired && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+        {isRequired && <span className="badge text-xs bg-orange-800 text-orange-100 border border-orange-500">Boost Required</span>}
         {isCss      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
       </div>
       {aff.length > 0 && (
@@ -169,7 +169,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               {char && <span className="text-sm font-semibold text-white">{char}</span>}
-              {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+              {hasBoost && <span className="badge text-xs bg-orange-800 text-orange-100 border border-orange-500">Boost Required</span>}
               {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
             </div>
             {affiliations.length > 0 && (
@@ -293,7 +293,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
                             <button onClick={() => setExpandedThird(isThirdOpen ? null : t.id)}
                               className="flex items-center gap-2 flex-1 text-left group">
                               <span className="text-sm font-semibold text-white group-hover:text-marvel-gold transition-colors">{t.character ?? '—'}</span>
-                              {t.boost?.trim() === 'Required' && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
+                              {t.boost?.trim() === 'Required' && <span className="badge text-xs bg-orange-800 text-orange-100 border border-orange-500">Boost Required</span>}
                               {t.css && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
                               {isThirdOpen ? <ChevronUp size={12} className="text-[#C8C8E0] shrink-0" /> : <ChevronDown size={12} className="text-[#C8C8E0] shrink-0" />}
                             </button>
