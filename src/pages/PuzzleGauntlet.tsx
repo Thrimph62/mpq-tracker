@@ -68,7 +68,8 @@ export default function PuzzleGauntlet() {
   function closeModal() { setModal(null); setEditId(null) }
 
   function setSlot(pos: 'gauche' | 'milieu' | 'droite', field: 'character' | 'build' | 'support', val: string | null) {
-    setForm(f => ({ ...f, [`${pos}_${field}`]: val }))
+    const dbField = field === 'character' ? 'personnage' : field
+    setForm(f => ({ ...f, [`${pos}_${dbField}`]: val }))
   }
 
   async function save() {
@@ -195,7 +196,7 @@ export default function PuzzleGauntlet() {
                   <div>
                     <label className="text-xs text-[#C8C8E0] mb-1 block">Character</label>
                     <SearchDropdown
-                      value={form[`${pos}_character`]}
+                      value={form[`${pos}_personnage`]}
                       onChange={v => setSlot(pos, 'character', v)}
                       options={charOptions}
                       placeholder="Search for a character..."
