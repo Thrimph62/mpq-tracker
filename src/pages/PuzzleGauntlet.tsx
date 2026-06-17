@@ -60,7 +60,7 @@ export default function PuzzleGauntlet() {
     return acc
   }, {})
 
-  function openAdd()    { setForm(EMPTY); setEditId(null); setModal('add') }
+  function openAdd(cat?: string) { setForm({ ...EMPTY, categorie: cat ?? null }); setEditId(null); setModal('add') }
   function openEdit(n: PGType) {
     const { id, created_at, updated_at, ...rest } = n
     setForm(rest); setEditId(n.id); setModal('edit')
@@ -114,7 +114,13 @@ export default function PuzzleGauntlet() {
             if (catNodes.length === 0) return null
             return (
               <div key={cat}>
-                <h2 className="font-marvel text-lg text-marvel-gold mb-2">{cat}</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-marvel text-lg text-marvel-gold">{cat}</h2>
+                  <button onClick={() => openAdd(cat)}
+                    className="text-xs bg-[#3D3D60] hover:bg-marvel-red/40 text-[#C8C8E0] hover:text-white px-2 py-1 rounded transition-all">
+                    + Node
+                  </button>
+                </div>
                 <div className="space-y-2">
                   {catNodes.map(n => (
                     <div key={n.id} className="card">
@@ -175,8 +181,17 @@ export default function PuzzleGauntlet() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Category</label>
-                  <input className="input text-sm" value={form.categorie ?? ''}
-                    onChange={e => setForm(f => ({ ...f, categorie: e.target.value || null }))} />
+                  <select className="input text-sm" value={form.categorie ?? ''}
+                    onChange={e => setForm(f => ({ ...f, categorie: e.target.value || null }))}>
+                    <option value="">— None —</option>
+                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    <option value="__new__">+ New category...</option>
+                  </select>
+                  {form.categorie === '__new__' && (
+                    <input className="input text-sm mt-1" placeholder="New category name..."
+                      autoFocus
+                      onChange={e => setForm(f => ({ ...f, categorie: e.target.value || null }))} />
+                  )}
                 </div>
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Node</label>
@@ -221,12 +236,6 @@ export default function PuzzleGauntlet() {
                   </div>
                 </div>
               ))}
-
-              <div>
-                <label className="text-xs text-[#C8C8E0] mb-1 block">Team used</label>
-                <input className="input text-sm" value={form.equipe_utilisee ?? ''}
-                  onChange={e => setForm(f => ({ ...f, equipe_utilisee: e.target.value || null }))} />
-              </div>
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Strategy / Note</label>
                 <textarea className="input resize-none h-24 text-sm" value={form.note ?? ''}
