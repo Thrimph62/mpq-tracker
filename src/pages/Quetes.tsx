@@ -7,9 +7,9 @@ import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-
 
 const EMPTY: Omit<Quete, 'id' | 'created_at' | 'updated_at'> = {
   nom: '',
-  gauche_character: null, gauche_build: null, gauche_support: null,
-  milieu_character: null, milieu_build: null, milieu_support: null,
-  droite_character: null, droite_build: null, droite_support: null,
+  gauche_personnage: null, gauche_build: null, gauche_support: null,
+  milieu_personnage: null, milieu_build: null, milieu_support: null,
+  droite_personnage: null, droite_build: null, droite_support: null,
   note: null,
 }
 
@@ -38,7 +38,7 @@ export default function Quetes() {
       supabase.from('mpq_tracker_supports').select('*').order('name'),
     ])
     if (q) setQuetes(q)
-    if (c) setCharacters(c)
+    if (c) setCharacters((c as any[]).filter(ch => !ch.is_duplicate))
     if (s) setSupports(s)
     setLoading(false)
   }
@@ -46,7 +46,7 @@ export default function Quetes() {
 
   const visible = quetes.filter(q =>
     q.nom.toLowerCase().includes(search.toLowerCase()) ||
-    [q.gauche_character, q.milieu_character, q.droite_character]
+    [q.gauche_personnage, q.milieu_personnage, q.droite_personnage]
       .some(c => c?.toLowerCase().includes(search.toLowerCase()))
   )
 
@@ -110,9 +110,9 @@ export default function Quetes() {
               {expanded === q.id && (
                 <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
                   <div className="grid grid-cols-3 gap-3">
-                    <TeamSlot character={q.gauche_character} build={q.gauche_build} support={q.gauche_support} />
-                    <TeamSlot character={q.milieu_character} build={q.milieu_build} support={q.milieu_support} />
-                    <TeamSlot character={q.droite_character} build={q.droite_build} support={q.droite_support} />
+                    <TeamSlot character={q.gauche_personnage} build={q.gauche_build} support={q.gauche_support} />
+                    <TeamSlot character={q.milieu_personnage} build={q.milieu_build} support={q.milieu_support} />
+                    <TeamSlot character={q.droite_personnage} build={q.droite_build} support={q.droite_support} />
                   </div>
                   {q.note && (
                     <div className="bg-[#1C1C2E] rounded-lg p-3">
@@ -132,7 +132,7 @@ export default function Quetes() {
         <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
           <div className="card w-full max-w-xl my-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Quest' : 'Edit Quête'}</h2>
+              <h2 className="font-marvel text-xl text-marvel-gold">{modal === 'add' ? 'New Quest' : 'Edit Quest'}</h2>
               <button onClick={closeModal}><X size={18} className="text-[#C8C8E0] hover:text-white" /></button>
             </div>
             <div className="space-y-3">

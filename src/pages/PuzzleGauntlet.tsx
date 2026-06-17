@@ -7,9 +7,9 @@ import { Plus, Search, X, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-
 
 const EMPTY: Omit<PGType, 'id' | 'created_at' | 'updated_at'> = {
   categorie: null, node: null, condition_victoire: null,
-  gauche_character: null, gauche_build: null, gauche_support: null,
-  milieu_character: null, milieu_build: null, milieu_support: null,
-  droite_character: null, droite_build: null, droite_support: null,
+  gauche_personnage: null, gauche_build: null, gauche_support: null,
+  milieu_personnage: null, milieu_build: null, milieu_support: null,
+  droite_personnage: null, droite_build: null, droite_support: null,
   equipe_utilisee: null, note: null,
 }
 
@@ -39,7 +39,7 @@ export default function PuzzleGauntlet() {
       supabase.from('mpq_tracker_supports').select('*').order('name'),
     ])
     if (n) setNodes(n)
-    if (c) setCharacters(c)
+    if (c) setCharacters((c as any[]).filter(ch => !ch.is_duplicate))
     if (s) setSupports(s)
     setLoading(false)
   }
@@ -49,7 +49,7 @@ export default function PuzzleGauntlet() {
 
   const visible = nodes.filter(n => {
     const matchSearch = !search || [n.node, n.categorie, n.condition_victoire,
-      n.gauche_character, n.milieu_character, n.droite_character]
+      n.gauche_personnage, n.milieu_personnage, n.droite_personnage]
       .some(v => v?.toLowerCase().includes(search.toLowerCase()))
     const matchCat = !filterCat || n.categorie === filterCat
     return matchSearch && matchCat
@@ -135,9 +135,9 @@ export default function PuzzleGauntlet() {
                       {expanded === n.id && (
                         <div className="mt-4 pt-4 border-t border-[#3D3D60] space-y-4">
                           <div className="grid grid-cols-3 gap-3">
-                            <TeamSlot character={n.gauche_character} build={n.gauche_build} support={n.gauche_support} />
-                            <TeamSlot character={n.milieu_character} build={n.milieu_build} support={n.milieu_support} />
-                            <TeamSlot character={n.droite_character} build={n.droite_build} support={n.droite_support} />
+                            <TeamSlot character={n.gauche_personnage} build={n.gauche_build} support={n.gauche_support} />
+                            <TeamSlot character={n.milieu_personnage} build={n.milieu_build} support={n.milieu_support} />
+                            <TeamSlot character={n.droite_personnage} build={n.droite_build} support={n.droite_support} />
                           </div>
                           {n.equipe_utilisee && (
                             <div className="bg-purple-900/20 border border-purple-700/40 rounded-lg p-3">
