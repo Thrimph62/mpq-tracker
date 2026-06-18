@@ -181,15 +181,17 @@ export default function PuzzleGauntlet() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Category</label>
-                  <select className="input text-sm" value={form.categorie ?? ''}
-                    onChange={e => setForm(f => ({ ...f, categorie: e.target.value || null }))}>
+                  <select className="input text-sm"
+                    value={form.categorie && categories.includes(form.categorie) ? form.categorie : (form.categorie ? '__new__' : '')}
+                    onChange={e => setForm(f => ({ ...f, categorie: e.target.value === '__new__' ? '' : (e.target.value || null) }))}>
                     <option value="">— None —</option>
                     {categories.map(c => <option key={c} value={c}>{c}</option>)}
                     <option value="__new__">+ New category...</option>
                   </select>
-                  {form.categorie === '__new__' && (
+                  {form.categorie !== null && !categories.includes(form.categorie ?? '') && (
                     <input className="input text-sm mt-1" placeholder="New category name..."
                       autoFocus
+                      value={form.categorie ?? ''}
                       onChange={e => setForm(f => ({ ...f, categorie: e.target.value || null }))} />
                   )}
                 </div>
