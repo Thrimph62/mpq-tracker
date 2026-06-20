@@ -27,8 +27,17 @@ export default function PuzzleGauntlet() {
   const [search, setSearch]       = useState('')
   const [filterCat, setFilterCat] = useState('')
   const [expanded, setExpanded]   = useState<string | null>(null)
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set())
   const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
   const [form, setForm]           = useState<typeof EMPTY>(EMPTY)
+
+  function toggleCat(cat: string) {
+    setExpandedCats(prev => {
+      const next = new Set(prev)
+      if (next.has(cat)) next.delete(cat); else next.add(cat)
+      return next
+    })
+  }
   const [editId, setEditId]       = useState<string | null>(null)
   const [saving, setSaving]       = useState(false)
 
@@ -112,16 +121,21 @@ export default function PuzzleGauntlet() {
         <div className="space-y-6">
           {Object.entries(grouped).map(([cat, catNodes]) => {
             if (catNodes.length === 0) return null
+            const isOpen = expandedCats.has(cat)
             return (
-              <div key={cat}>
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="font-marvel text-lg text-marvel-gold">{cat}</h2>
+              <div key={cat} className="card">
+                <div className="flex items-center justify-between">
+                  <button onClick={() => toggleCat(cat)} className="flex items-center gap-2 flex-1 text-left group">
+                    {isOpen ? <ChevronUp size={14} className="text-[#C8C8E0]" /> : <ChevronDown size={14} className="text-[#C8C8E0]" />}
+                    <h2 className="font-marvel text-lg text-marvel-gold group-hover:opacity-80">{cat}</h2>
+                    <span className="text-xs text-[#C8C8E0]">({catNodes.length} node{catNodes.length !== 1 ? 's' : ''})</span>
+                  </button>
                   <button onClick={() => openAdd(cat)}
-                    className="text-xs bg-[#3D3D60] hover:bg-marvel-red/40 text-[#C8C8E0] hover:text-white px-2 py-1 rounded transition-all">
+                    className="text-xs bg-[#3D3D60] hover:bg-marvel-red/40 text-[#C8C8E0] hover:text-white px-2 py-1 rounded transition-all shrink-0">
                     + Node
                   </button>
                 </div>
-                <div className="space-y-2">
+                {isOpen && <div className="mt-3 pt-3 border-t border-[#3D3D60] space-y-2">
                   {catNodes.map(n => (
                     <div key={n.id} className="card">
                       <div className="flex items-start justify-between gap-4">
@@ -162,7 +176,7 @@ export default function PuzzleGauntlet() {
                       )}
                     </div>
                   ))}
-                </div>
+                </div>}
               </div>
             )
           })}
