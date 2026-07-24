@@ -68,6 +68,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
   const [modal, setModal]     = useState<'add' | 'edit' | null>(null)
   const [editDuo, setEditDuo] = useState<CoreDuo | null>(null)
   const [thirdModal, setThirdModal] = useState<{ duoId: string; third?: CoreDuoThird } | null>(null)
+  const [customNameSearch, setCustomNameSearch] = useState('')
 
   const EMPTY_DUO: Omit<CoreDuo, 'id' | 'created_at' | 'updated_at'> = {
     name: null,
@@ -197,6 +198,9 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
   if (loading) return <Spinner />
 
   const filteredDuos = duos.filter(d => {
+    if (customNameSearch && !(d.custom_name?.toLowerCase().includes(customNameSearch.toLowerCase()) ?? false)) {
+      return false
+    }
     if (!search) return true
     const s = search.toLowerCase()
     const duoThirds = thirds.filter(t => t.core_duo_id === d.id)
@@ -223,6 +227,11 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
           <input className="input pl-9" placeholder="Search core duo or character..."
             value={search} onChange={e => onSearchChange(e.target.value)} />
+        </div>
+        <div className="relative flex-1 max-w-sm">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
+          <input className="input pl-9" placeholder="Search by custom name..."
+            value={customNameSearch} onChange={e => setCustomNameSearch(e.target.value)} />
         </div>
         <button onClick={openAddDuo} className="btn-primary flex items-center gap-2">
           <Plus size={16} /> New Core Duo
@@ -464,6 +473,7 @@ export default function Teams() {
   const [loading, setLoading]       = useState(true)
   const [tab, setTab]               = useState<Tab>('active')
   const [search, setSearch]         = useState('')
+  const [customNameSearch, setCustomNameSearch] = useState('')
   const [filterFavorite, setFilterFavorite]   = useState<'all' | 'yes' | 'no'>('all')
   const [filterWinfinite, setFilterWinfinite] = useState<'all' | 'yes' | 'no'>('all')
   const [expanded, setExpanded]     = useState<string | null>(null)
@@ -526,7 +536,9 @@ export default function Teams() {
       )
     const matchFavorite  = filterFavorite === 'all' || (filterFavorite === 'yes' ? t.favorite : !t.favorite)
     const matchWinfinite = filterWinfinite === 'all' || (filterWinfinite === 'yes' ? t.winfinite === 'Yes' : t.winfinite !== 'Yes')
-    return matchTab && matchSearch && matchFavorite && matchWinfinite
+    const matchCustomName = tab !== 'active' || !customNameSearch ||
+      (t.custom_name?.toLowerCase().includes(customNameSearch.toLowerCase()) ?? false)
+    return matchTab && matchSearch && matchFavorite && matchWinfinite && matchCustomName
   })
 
   function openAdd() {
@@ -668,6 +680,13 @@ export default function Teams() {
             <input className="input pl-9" placeholder="Search team or character..."
               value={search} onChange={e => setSearch(e.target.value)} />
           </div>
+          {tab === 'active' && (
+            <div className="relative flex-1 min-w-48">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C8C8E0]" />
+              <input className="input pl-9" placeholder="Search by custom name..."
+                value={customNameSearch} onChange={e => setCustomNameSearch(e.target.value)} />
+            </div>
+          )}
           <div className="flex gap-1 bg-[#1E1E38] p-1 rounded-lg">
             {(['all', 'yes', 'no'] as const).map(v => (
               <button key={v} onClick={() => setFilterFavorite(v)}

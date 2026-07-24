@@ -28,13 +28,26 @@ export function SearchDropdown({ value, onChange, onSelectId, options, placehold
     o.label.toLowerCase().includes(query.toLowerCase())
   ).slice(0, 20)
 
+  const exactMatch = options.some(o => o.label.toLowerCase() === query.toLowerCase())
+
   return (
     <div className="relative">
       <input
         className="input text-sm"
         placeholder={placeholder}
         value={open ? query : (value ?? '')}
-        onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) { onChange(null); onSelectId?.(null) } }}
+        onChange={e => {
+          const v = e.target.value
+          setQuery(v)
+          setOpen(true)
+          if (!v) {
+            onChange(null); onSelectId?.(null)
+          } else if (allowFreeText) {
+            // Commit as free text live, so it's never lost on blur/close.
+            // Selecting a suggestion below will overwrite this with the canonical label + id.
+            onChange(v); onSelectId?.(null)
+          }
+        }}
         onFocus={() => { setQuery(value ?? ''); setOpen(true) }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
       />
@@ -52,10 +65,10 @@ export function SearchDropdown({ value, onChange, onSelectId, options, placehold
               {o.sublabel && <span style={{ color: o.starColor }} className="ml-2 text-xs">{o.sublabel}</span>}
             </button>
           ))}
-          {allowFreeText && filtered.length === 0 && query && (
+          {allowFreeText && query && !exactMatch && (
             <button type="button" onMouseDown={() => { onChange(query); onSelectId?.(null); setOpen(false) }}
               className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60] text-[#C8C8E0] italic">
-              Utiliser "{query}" (texte libre)
+              Use "{query}" (new entry)
             </button>
           )}
         </div>
