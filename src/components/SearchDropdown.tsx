@@ -90,3 +90,12 @@ export function toSupportOptions(supports: Support[]) {
     sublabel: s.restriction && s.restriction !== '/' ? s.restriction : undefined,
   }))
 }
+
+// Builds alphabetically-sorted, de-duplicated dropdown options from a list of
+// free-text values (e.g. previously-used custom names). Used with SearchDropdown
+// to give an autocomplete experience while still allowing a brand-new value.
+export function toNameOptions(values: (string | null | undefined)[]) {
+  const unique = Array.from(new Set(values.filter((v): v is string => !!v && v.trim() !== '')))
+  unique.sort((a, b) => a.localeCompare(b))
+  return unique.map(v => ({ id: v, label: v }))
+}

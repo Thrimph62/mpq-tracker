@@ -28,8 +28,6 @@ export default function PuzzleGauntlet() {
   const [filterCat, setFilterCat] = useState('')
   const [expanded, setExpanded]   = useState<string | null>(null)
   const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set())
-  const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
-  const [form, setForm]           = useState<typeof EMPTY>(EMPTY)
 
   function toggleCat(cat: string) {
     setExpandedCats(prev => {
@@ -38,6 +36,8 @@ export default function PuzzleGauntlet() {
       return next
     })
   }
+  const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
+  const [form, setForm]           = useState<typeof EMPTY>(EMPTY)
   const [editId, setEditId]       = useState<string | null>(null)
   const [saving, setSaving]       = useState(false)
 
@@ -69,7 +69,7 @@ export default function PuzzleGauntlet() {
     return acc
   }, {})
 
-  function openAdd(cat?: string) { setForm({ ...EMPTY, categorie: cat ?? null }); setEditId(null); setModal('add') }
+  function openAdd()    { setForm(EMPTY); setEditId(null); setModal('add') }
   function openEdit(n: PGType) {
     const { id, created_at, updated_at, ...rest } = n
     setForm(rest); setEditId(n.id); setModal('edit')
@@ -77,8 +77,7 @@ export default function PuzzleGauntlet() {
   function closeModal() { setModal(null); setEditId(null) }
 
   function setSlot(pos: 'gauche' | 'milieu' | 'droite', field: 'character' | 'build' | 'support', val: string | null) {
-    const dbField = field === 'character' ? 'personnage' : field
-    setForm(f => ({ ...f, [`${pos}_${dbField}`]: val }))
+    setForm(f => ({ ...f, [`${pos}_${field}`]: val }))
   }
 
   async function save() {
@@ -135,7 +134,8 @@ export default function PuzzleGauntlet() {
                     + Node
                   </button>
                 </div>
-                {isOpen && <div className="mt-3 pt-3 border-t border-[#3D3D60] space-y-2">
+                {isOpen && (
+                <div className="mt-3 pt-3 border-t border-[#3D3D60] space-y-2">
                   {catNodes.map(n => (
                     <div key={n.id} className="card">
                       <div className="flex items-start justify-between gap-4">
@@ -176,7 +176,8 @@ export default function PuzzleGauntlet() {
                       )}
                     </div>
                   ))}
-                </div>}
+                </div>
+                )}
               </div>
             )
           })}
@@ -195,19 +196,8 @@ export default function PuzzleGauntlet() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Category</label>
-                  <select className="input text-sm"
-                    value={form.categorie && categories.includes(form.categorie) ? form.categorie : (form.categorie ? '__new__' : '')}
-                    onChange={e => setForm(f => ({ ...f, categorie: e.target.value === '__new__' ? '' : (e.target.value || null) }))}>
-                    <option value="">— None —</option>
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                    <option value="__new__">+ New category...</option>
-                  </select>
-                  {form.categorie !== null && !categories.includes(form.categorie ?? '') && (
-                    <input className="input text-sm mt-1" placeholder="New category name..."
-                      autoFocus
-                      value={form.categorie ?? ''}
-                      onChange={e => setForm(f => ({ ...f, categorie: e.target.value || null }))} />
-                  )}
+                  <input className="input text-sm" value={form.categorie ?? ''}
+                    onChange={e => setForm(f => ({ ...f, categorie: e.target.value || null }))} />
                 </div>
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Node</label>
@@ -227,7 +217,7 @@ export default function PuzzleGauntlet() {
                   <div>
                     <label className="text-xs text-[#C8C8E0] mb-1 block">Character</label>
                     <SearchDropdown
-                      value={form[`${pos}_personnage`]}
+                      value={form[`${pos}_character`]}
                       onChange={v => setSlot(pos, 'character', v)}
                       options={charOptions}
                       placeholder="Search for a character..."
@@ -252,6 +242,12 @@ export default function PuzzleGauntlet() {
                   </div>
                 </div>
               ))}
+
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Team used</label>
+                <input className="input text-sm" value={form.equipe_utilisee ?? ''}
+                  onChange={e => setForm(f => ({ ...f, equipe_utilisee: e.target.value || null }))} />
+              </div>
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Strategy / Note</label>
                 <textarea className="input resize-none h-24 text-sm" value={form.note ?? ''}

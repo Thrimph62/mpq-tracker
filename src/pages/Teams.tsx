@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Team, TeamStatus, Character, Support, CoreDuo, CoreDuoThird } from '../types'
 import { OkBadge } from '../components/Badges'
-import { SearchDropdown, toCharacterOptions, toSupportOptions } from '../components/SearchDropdown'
+import { SearchDropdown, toCharacterOptions, toSupportOptions, toNameOptions } from '../components/SearchDropdown'
 import { Plus, Search, X, ChevronDown, ChevronUp, Pencil, Trash2, Star } from 'lucide-react'
 
 type Tab = 'active' | 'to_test' | 'archived' | 'pick_third'
@@ -32,7 +32,7 @@ function SlotDisplay({ label, character, build, support, boost, css, strategy, a
       <p className="text-xs font-semibold text-marvel-gold uppercase">{label}</p>
       {character && <span className="text-sm font-semibold text-white block">{character}</span>}
       <div className="flex flex-wrap gap-1">
-        {isRequired && <span className="badge text-xs bg-orange-800 text-orange-100 border border-orange-500">Boost Required</span>}
+        {isRequired && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
         {isCss      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
       </div>
       {aff.length > 0 && (
@@ -71,6 +71,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
 
   const EMPTY_DUO: Omit<CoreDuo, 'id' | 'created_at' | 'updated_at'> = {
     name: null,
+    custom_name: null,
     left_character: null,  left_build: null,  left_support: null,  left_boost: null,  left_css: false,  left_strategy: null,
     right_character: null, right_build: null, right_support: null, right_boost: null, right_css: false, right_strategy: null,
     note_additionnelle: null,
@@ -83,8 +84,9 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
   const [thirdForm, setThirdForm] = useState<typeof EMPTY_THIRD>(EMPTY_THIRD)
   const [saving, setSaving]       = useState(false)
 
-  const charOptions    = toCharacterOptions(characters)
-  const supportOptions = toSupportOptions(supports)
+  const charOptions      = toCharacterOptions(characters)
+  const supportOptions   = toSupportOptions(supports)
+  const duoNameOptions   = toNameOptions(duos.map(d => d.custom_name))
 
   async function load() {
     const [{ data: d }, { data: t }] = await Promise.all([
@@ -169,7 +171,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               {char && <span className="text-sm font-semibold text-white">{char}</span>}
-              {hasBoost && <span className="badge text-xs bg-orange-800 text-orange-100 border border-orange-500">Boost Required</span>}
+              {hasBoost && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
               {css      && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
             </div>
             {affiliations.length > 0 && (
@@ -199,7 +201,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
     const s = search.toLowerCase()
     const duoThirds = thirds.filter(t => t.core_duo_id === d.id)
     return (
-      [d.name, d.left_character, d.right_character,
+      [d.name, d.custom_name, d.left_character, d.right_character,
        d.left_support, d.right_support,
        d.left_strategy, d.right_strategy]
         .some(v => v?.toLowerCase().includes(s)) ||
@@ -243,6 +245,9 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
               <button onClick={() => setExpanded(isOpen ? null : duo.id)} className="flex-1 text-left group">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors">{duo.name || '—'}</h3>
+                  {duo.custom_name && (
+                    <span className="badge text-xs bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] shrink-0">{duo.custom_name}</span>
+                  )}
                   <span className="text-xs text-[#C8C8E0]">({duoThirds.length} 3rd{duoThirds.length !== 1 ? 's' : ''})</span>
                   {isOpen ? <ChevronUp size={14} className="text-[#C8C8E0]" /> : <ChevronDown size={14} className="text-[#C8C8E0]" />}
                 </div>
@@ -293,7 +298,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
                             <button onClick={() => setExpandedThird(isThirdOpen ? null : t.id)}
                               className="flex items-center gap-2 flex-1 text-left group">
                               <span className="text-sm font-semibold text-white group-hover:text-marvel-gold transition-colors">{t.character ?? '—'}</span>
-                              {t.boost?.trim() === 'Required' && <span className="badge text-xs bg-orange-800 text-orange-100 border border-orange-500">Boost Required</span>}
+                              {t.boost?.trim() === 'Required' && <span className="badge text-xs bg-orange-900/60 text-orange-300 border border-orange-700">Boost Required</span>}
                               {t.css && <span className="badge text-xs bg-purple-900/60 text-purple-300 border border-purple-800">CSS Only</span>}
                               {isThirdOpen ? <ChevronUp size={12} className="text-[#C8C8E0] shrink-0" /> : <ChevronDown size={12} className="text-[#C8C8E0] shrink-0" />}
                             </button>
@@ -345,6 +350,11 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Name <span className="text-[#555]">(auto-filled)</span></label>
                 <input className="input" value={duoForm.name ?? ''}
                   onChange={e => setDuoForm(f => ({ ...f, name: e.target.value || null }))} placeholder="A + B" />
+              </div>
+              <div>
+                <label className="text-xs text-[#C8C8E0] mb-1 block">Custom name <span className="text-[#555]">(optional)</span></label>
+                <SearchDropdown value={duoForm.custom_name} onChange={v => setDuoForm(f => ({ ...f, custom_name: v }))}
+                  options={duoNameOptions} placeholder="Ex: My favorite duo..." />
               </div>
               {/* Left + Right slots (Middle reserved) */}
               <div className="grid grid-cols-3 gap-3">
@@ -499,8 +509,9 @@ export default function Teams() {
   const regularTeams = teams
 
   // Must be defined BEFORE visible filter
-  const charOptions    = toCharacterOptions(characters)
-  const supportOptions = toSupportOptions(supports)
+  const charOptions      = toCharacterOptions(characters)
+  const supportOptions   = toSupportOptions(supports)
+  const teamNameOptions  = toNameOptions(teams.map(t => t.custom_name))
   const charAffiliations: Record<string, string[]> = Object.fromEntries(
     characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
   )
@@ -569,20 +580,9 @@ export default function Teams() {
           <div className="flex-1 min-w-0">
             <button onClick={() => setExpanded(expanded === team.id ? null : team.id)}
               className="text-left w-full group">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors">
-                  {[
-                    { char: team.left_character,  boost: team.left_boost  },
-                    { char: team.mid_character,   boost: team.mid_boost   },
-                    { char: team.right_character, boost: team.right_boost },
-                  ].filter(s => s.char).map((s, i, arr) => (
-                    <span key={i}>
-                      {i > 0 && <span className="text-[#555] mx-1">/</span>}
-                      {s.char}
-                      {s.boost === 'Required' && <span className="ml-1 text-yellow-400">⚡</span>}
-                    </span>
-                  ))}
-                  {!team.left_character && !team.mid_character && !team.right_character && team.name}
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors truncate">
+                  {team.name}
                 </h3>
                 {team.custom_name && (
                   <span className="badge text-xs bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] shrink-0">{team.custom_name}</span>
@@ -736,9 +736,8 @@ export default function Teams() {
               {/* Custom name */}
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Custom name <span className="text-[#555]">(optional)</span></label>
-                <input className="input" value={form.custom_name ?? ''}
-                  onChange={e => setForm(f => ({ ...f, custom_name: e.target.value || null }))}
-                  placeholder="Ex: My Winfinite team, Polaris goons..." />
+                <SearchDropdown value={form.custom_name} onChange={v => setForm(f => ({ ...f, custom_name: v }))}
+                  options={teamNameOptions} placeholder="Ex: My Winfinite team, Polaris goons..." />
               </div>
 
               {/* Row 2: HN1 + HN2 + HN3 + CN + Winfinite */}
