@@ -77,6 +77,83 @@ export function SearchDropdown({ value, onChange, onSelectId, options, placehold
   )
 }
 
+// ── Multi-value tag input (multiple custom names on one team/duo) ─────────────
+interface MultiNameInputProps {
+  values: string[]
+  onChange: (vals: string[]) => void
+  options: { id: string; label: string }[]
+  placeholder?: string
+}
+
+export function MultiNameInput({ values, onChange, options, placeholder = 'Add a name...' }: MultiNameInputProps) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen]   = useState(false)
+
+  const lowerValues = values.map(v => v.toLowerCase())
+  const filtered = options
+    .filter(o => !lowerValues.includes(o.label.toLowerCase()))
+    .filter(o => o.label.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 20)
+
+  const exactMatch = lowerValues.includes(query.trim().toLowerCase()) ||
+    options.some(o => o.label.toLowerCase() === query.trim().toLowerCase())
+
+  function addValue(v: string) {
+    const trimmed = v.trim()
+    setQuery('')
+    setOpen(false)
+    if (!trimmed || lowerValues.includes(trimmed.toLowerCase())) return
+    onChange([...values, trimmed])
+  }
+
+  function removeValue(v: string) {
+    onChange(values.filter(x => x !== v))
+  }
+
+  return (
+    <div className="relative">
+      {values.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-1.5">
+          {values.map(v => (
+            <span key={v} className="badge text-xs bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] flex items-center gap-1">
+              {v}
+              <button type="button" onClick={() => removeValue(v)} className="hover:text-white leading-none">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+      <input
+        className="input text-sm"
+        placeholder={placeholder}
+        value={query}
+        onChange={e => { setQuery(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addValue(query) } }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+      />
+      {open && (
+        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-[#252540] border border-[#3D3D60] rounded-lg shadow-xl max-h-52 overflow-y-auto">
+          {filtered.map(o => (
+            <button key={o.id} type="button" onMouseDown={() => addValue(o.label)}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60]">
+              <span className="text-white">{o.label}</span>
+            </button>
+          ))}
+          {query.trim() && !exactMatch && (
+            <button type="button" onMouseDown={() => addValue(query)}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-[#3D3D60] text-[#C8C8E0] italic">
+              Add "{query.trim()}" (new entry)
+            </button>
+          )}
+          {filtered.length === 0 && !query.trim() && (
+            <div className="px-3 py-2 text-sm text-[#555]">Type to search or add a new name…</div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Typed helpers ─────────────────────────────────────────────────────────────
 export function toCharacterOptions(characters: Character[]) {
   // Deduplicate by name — same name can appear multiple times (different levels/copies)

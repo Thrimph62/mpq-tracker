@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Team, TeamStatus, Character, Support, CoreDuo, CoreDuoThird } from '../types'
 import { OkBadge } from '../components/Badges'
-import { SearchDropdown, toCharacterOptions, toSupportOptions, toNameOptions } from '../components/SearchDropdown'
+import { SearchDropdown, MultiNameInput, toCharacterOptions, toSupportOptions, toNameOptions } from '../components/SearchDropdown'
 import { Plus, Search, X, ChevronDown, ChevronUp, Pencil, Trash2, Star } from 'lucide-react'
 
 type Tab = 'active' | 'to_test' | 'archived' | 'pick_third'
@@ -11,7 +11,7 @@ type Pos = 'left' | 'mid' | 'right'
 const POS_LABELS: Record<Pos, string> = { left: 'Left', mid: 'Middle', right: 'Right' }
 
 const EMPTY_FORM: Omit<Team, 'id' | 'created_at' | 'updated_at'> = {
-  name: '', custom_name: null, status: 'active', favorite: false,
+  name: '', custom_name: [], status: 'active', favorite: false,
   left_character: null,  left_build: null,  left_support: null,  left_boost: null,  left_css: false,  left_strategy: null,
   mid_character: null,   mid_build: null,   mid_support: null,   mid_boost: null,   mid_css: false,   mid_strategy: null,
   right_character: null, right_build: null, right_support: null, right_boost: null, right_css: false, right_strategy: null,
@@ -72,7 +72,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
 
   const EMPTY_DUO: Omit<CoreDuo, 'id' | 'created_at' | 'updated_at'> = {
     name: null,
-    custom_name: null,
+    custom_name: [],
     left_character: null,  left_build: null,  left_support: null,  left_boost: null,  left_css: false,  left_strategy: null,
     right_character: null, right_build: null, right_support: null, right_boost: null, right_css: false, right_strategy: null,
     note_additionnelle: null,
@@ -87,7 +87,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
 
   const charOptions      = toCharacterOptions(characters)
   const supportOptions   = toSupportOptions(supports)
-  const duoNameOptions   = toNameOptions(duos.map(d => d.custom_name))
+  const duoNameOptions   = toNameOptions(duos.flatMap(d => d.custom_name ?? []))
 
   async function load() {
     const [{ data: d }, { data: t }] = await Promise.all([
@@ -198,17 +198,18 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
   if (loading) return <Spinner />
 
   const filteredDuos = duos.filter(d => {
-    if (customNameSearch && !(d.custom_name?.toLowerCase().includes(customNameSearch.toLowerCase()) ?? false)) {
+    if (customNameSearch && !(d.custom_name ?? []).some(n => n.toLowerCase().includes(customNameSearch.toLowerCase()))) {
       return false
     }
     if (!search) return true
     const s = search.toLowerCase()
     const duoThirds = thirds.filter(t => t.core_duo_id === d.id)
     return (
-      [d.name, d.custom_name, d.left_character, d.right_character,
+      [d.name, d.left_character, d.right_character,
        d.left_support, d.right_support,
        d.left_strategy, d.right_strategy]
         .some(v => v?.toLowerCase().includes(s)) ||
+      (d.custom_name ?? []).some(n => n.toLowerCase().includes(s)) ||
       [d.left_character, d.right_character].some(c =>
         c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(s)) : false
       ) ||
@@ -254,9 +255,9 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
               <button onClick={() => setExpanded(isOpen ? null : duo.id)} className="flex-1 text-left group">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors">{duo.name || '—'}</h3>
-                  {duo.custom_name && (
-                    <span className="badge text-xs bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] shrink-0">{duo.custom_name}</span>
-                  )}
+                  {(duo.custom_name ?? []).map(n => (
+                    <span key={n} className="badge text-xs bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] shrink-0">{n}</span>
+                  ))}
                   <span className="text-xs text-[#C8C8E0]">({duoThirds.length} 3rd{duoThirds.length !== 1 ? 's' : ''})</span>
                   {isOpen ? <ChevronUp size={14} className="text-[#C8C8E0]" /> : <ChevronDown size={14} className="text-[#C8C8E0]" />}
                 </div>
@@ -362,7 +363,7 @@ function PickAThird({ characters, supports, charAffiliations, search, onSearchCh
               </div>
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Custom name <span className="text-[#555]">(optional)</span></label>
-                <SearchDropdown value={duoForm.custom_name} onChange={v => setDuoForm(f => ({ ...f, custom_name: v }))}
+                <MultiNameInput values={duoForm.custom_name ?? []} onChange={v => setDuoForm(f => ({ ...f, custom_name: v }))}
                   options={duoNameOptions} placeholder="Ex: My favorite duo..." />
               </div>
               {/* Left + Right slots (Middle reserved) */}
@@ -521,7 +522,7 @@ export default function Teams() {
   // Must be defined BEFORE visible filter
   const charOptions      = toCharacterOptions(characters)
   const supportOptions   = toSupportOptions(supports)
-  const teamNameOptions  = toNameOptions(teams.map(t => t.custom_name))
+  const teamNameOptions  = toNameOptions(teams.flatMap(t => t.custom_name ?? []))
   const charAffiliations: Record<string, string[]> = Object.fromEntries(
     characters.map(c => [c.name, Array.isArray(c.affiliations) ? c.affiliations : []])
   )
@@ -529,7 +530,7 @@ export default function Teams() {
   const visible = regularTeams.filter(t => {
     const matchTab      = t.status === tab
     const matchSearch   = t.name.toLowerCase().includes(search.toLowerCase()) ||
-      (t.custom_name?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+      (t.custom_name ?? []).some(n => n.toLowerCase().includes(search.toLowerCase())) ||
       [t.left_character, t.mid_character, t.right_character].some(c => c?.toLowerCase().includes(search.toLowerCase())) ||
       [t.left_character, t.mid_character, t.right_character].some(c =>
         c ? (charAffiliations[c] ?? []).some(a => a.toLowerCase().includes(search.toLowerCase())) : false
@@ -537,7 +538,7 @@ export default function Teams() {
     const matchFavorite  = filterFavorite === 'all' || (filterFavorite === 'yes' ? t.favorite : !t.favorite)
     const matchWinfinite = filterWinfinite === 'all' || (filterWinfinite === 'yes' ? t.winfinite === 'Yes' : t.winfinite !== 'Yes')
     const matchCustomName = tab !== 'active' || !customNameSearch ||
-      (t.custom_name?.toLowerCase().includes(customNameSearch.toLowerCase()) ?? false)
+      (t.custom_name ?? []).some(n => n.toLowerCase().includes(customNameSearch.toLowerCase()))
     return matchTab && matchSearch && matchFavorite && matchWinfinite && matchCustomName
   })
 
@@ -596,9 +597,9 @@ export default function Teams() {
                 <h3 className="font-semibold text-white group-hover:text-marvel-gold transition-colors truncate">
                   {team.name}
                 </h3>
-                {team.custom_name && (
-                  <span className="badge text-xs bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] shrink-0">{team.custom_name}</span>
-                )}
+                {(team.custom_name ?? []).map(n => (
+                  <span key={n} className="badge text-xs bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] shrink-0">{n}</span>
+                ))}
                 {team.winfinite === 'Yes' && (
                   <span className="badge text-xs bg-cyan-900/60 text-cyan-300 border border-cyan-700 shrink-0">Winf.</span>
                 )}
@@ -755,7 +756,7 @@ export default function Teams() {
               {/* Custom name */}
               <div>
                 <label className="text-xs text-[#C8C8E0] mb-1 block">Custom name <span className="text-[#555]">(optional)</span></label>
-                <SearchDropdown value={form.custom_name} onChange={v => setForm(f => ({ ...f, custom_name: v }))}
+                <MultiNameInput values={form.custom_name ?? []} onChange={v => setForm(f => ({ ...f, custom_name: v }))}
                   options={teamNameOptions} placeholder="Ex: My Winfinite team, Polaris goons..." />
               </div>
 

@@ -64,7 +64,7 @@ export interface Support {
 export interface Team {
   id: string
   name: string
-  custom_name: string | null
+  custom_name: string[] | null
   is_template: boolean
   template_name: string | null
   left_character: string | null;  left_build: string | null;  left_support: string | null;  left_boost: string | null;  left_css: boolean;  left_strategy: string | null
@@ -133,7 +133,7 @@ export interface RosterSummary {
 export interface CoreDuo {
   id: string
   name: string | null
-  custom_name: string | null
+  custom_name: string[] | null
   left_character: string | null;  left_build: string | null;  left_support: string | null;  left_boost: string | null;  left_css: boolean;  left_strategy: string | null
   right_character: string | null; right_build: string | null; right_support: string | null; right_boost: string | null; right_css: boolean; right_strategy: string | null
   note_additionnelle: string | null
