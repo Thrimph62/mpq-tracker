@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { fetchAll } from '../lib/fetchAll'
 import { Character, CharacterStatus, Stars } from '../types'
 import { StarBadge, InlineStatusBadge, InlineAscendedBadge, InlineDuplicateBadge } from '../components/Badges'
 import { Plus, Search, X, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
@@ -227,12 +228,11 @@ export default function Characters() {
   const [saving, setSaving]       = useState(false)
 
   async function load() {
-    const { data } = await supabase.from('mpq_tracker_characters').select('*')
-      .order('base_name').order('version').order('level', { ascending: false })
-    if (data) {
-      const assigned = await autoAssignDuplicates(data as Character[])
-      setChars(assigned)
-    }
+    try {
+      // paginated: a truncated list would make autoAssignDuplicates pick wrong originals
+      const data = await fetchAll<Character>('mpq_tracker_characters', ['base_name', 'version', 'id'])
+      setChars(await autoAssignDuplicates(data))
+    } catch (e) { console.error(e) }
     setLoading(false)
   }
   useEffect(() => { load() }, [])
