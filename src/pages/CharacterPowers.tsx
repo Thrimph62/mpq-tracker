@@ -30,7 +30,7 @@ const EFFECTS = [1, 2, 3, 4, 5, 6, 7, 8] as const
 type EffectNum = typeof EFFECTS[number]
 
 const EMPTY: Omit<CharacterPower, 'id' | 'created_at' | 'updated_at'> = {
-  character_id: '', power_name: null, couleur: null, position: null, description: null,
+  character_id: '', power_name: null, couleur: null, position: null, sous_position: null, description: null,
   effect_1_cout: null, effect_1_category: null, effect_1_sous_category: null, effect_1_sous_category_2: null, effect_1_sous_category_3: null,
   effect_2_cout: null, effect_2_category: null, effect_2_sous_category: null, effect_2_sous_category_2: null, effect_2_sous_category_3: null,
   effect_3_cout: null, effect_3_category: null, effect_3_sous_category: null, effect_3_sous_category_2: null, effect_3_sous_category_3: null,
@@ -84,6 +84,10 @@ function hasEffect(f: typeof EMPTY, n: EffectNum) {
   return EFFECT_FIELDS.some(x => (f as any)[`effect_${n}_${x}`] != null)
 }
 
+// Sort key: position, then the plain power before its variants (3, 3a, 3b...)
+const posKey = (p: CharacterPower) => (p.position ?? 99) * 10 + (p.sous_position ? p.sous_position.charCodeAt(0) - 96 : 0)
+const posLabel = (p: CharacterPower) => p.position ? `${p.position}${p.sous_position ?? ''}` : '—'
+
 // Defined at module level so React keeps them mounted between renders
 function Th({ col, label, sortCol, sortDir, onSort }: {
   col: SortCol; label: string; sortCol: SortCol; sortDir: SortDir; onSort: (c: SortCol) => void
@@ -102,10 +106,10 @@ function PowerCard({ p, onEdit, onRemove }: {
   p: CharacterPower; onEdit: (p: CharacterPower) => void; onRemove: (id: string) => void
 }) {
   return (
-    <div className="bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group">
+    <div className={`bg-[#1C1C2E] rounded-lg p-3 flex items-start gap-3 group ${p.sous_position ? 'ml-5' : ''}`}>
       <div className="flex-1 space-y-2 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          {p.position   && <span className="badge bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] text-xs">#{p.position}</span>}
+          {p.position   && <span className="badge bg-[#3D3D60] text-[#C8C8E0] border border-[#52527A] text-xs">#{posLabel(p)}</span>}
           {p.couleur    && <CouleurBadge couleur={p.couleur} />}
           {p.power_name && <p className="text-sm font-semibold text-white">{p.power_name}</p>}
         </div>
@@ -225,10 +229,10 @@ export default function CharacterPowers() {
     if      (sortCol === 'character')  { va = cm[a.character_id]?.name?.toLowerCase() ?? ''; vb = cm[b.character_id]?.name?.toLowerCase() ?? '' }
     else if (sortCol === 'power_name') { va = a.power_name?.toLowerCase() ?? ''; vb = b.power_name?.toLowerCase() ?? '' }
     else if (sortCol === 'couleur')    { va = a.couleur?.toLowerCase() ?? ''; vb = b.couleur?.toLowerCase() ?? '' }
-    else                               { va = a.position ?? 99; vb = b.position ?? 99 }
+    else                               { va = posKey(a); vb = posKey(b) }
     if (va < vb) return sortDir === 'asc' ? -1 : 1
     if (va > vb) return sortDir === 'asc' ? 1 : -1
-    return (a.position ?? 99) - (b.position ?? 99)
+    return posKey(a) - posKey(b)
   }), [filtered, cm, sortCol, sortDir])
 
   // Group by original character, alphabetical; powers inside each group sorted by position
@@ -239,12 +243,19 @@ export default function CharacterPowers() {
       ;(g[k] = g[k] ?? []).push(p)
     })
     return Object.entries(g)
-      .map(([id, list]) => [id, list.sort((a, b) => (a.position ?? 99) - (b.position ?? 99))] as [string, CharacterPower[]])
+      .map(([id, list]) => [id, list.sort((a, b) => posKey(a) - posKey(b))] as [string, CharacterPower[]])
       .sort((a, b) => {
         const na = cm[a[0]]?.name?.toLowerCase() ?? '', nb = cm[b[0]]?.name?.toLowerCase() ?? ''
         return na < nb ? -1 : na > nb ? 1 : 0
       })
   }, [filtered, cm])
+
+  // The plain power (no letter) of the same character + position: a variant takes its color
+  const mainPower = useMemo(() => {
+    if (!form.character_id || !form.position || !form.sous_position) return null
+    return powers.find(p => (cm[p.character_id]?.id ?? p.character_id) === form.character_id
+      && p.position === form.position && !p.sous_position) ?? null
+  }, [powers, cm, form.character_id, form.position, form.sous_position])
 
   function openAdd(characterId?: string) {
     setForm({ ...EMPTY, character_id: characterId ?? '' }); setEditId(null); setShown(1); setModal('add')
@@ -275,12 +286,26 @@ export default function CharacterPowers() {
 
   async function save() {
     if (!form.character_id) return
+    const owner = (cid: string) => cm[cid]?.id ?? cid
+    if (form.position && powers.some(p => p.id !== editId && owner(p.character_id) === form.character_id
+        && p.position === form.position && (p.sous_position ?? null) === (form.sous_position ?? null))) {
+      setFormError(`This character already has power ${form.position}${form.sous_position ?? ''}. Change the position or the variant letter.`)
+      return
+    }
     setSaving(true); setFormError(null)
-    const t = supabase.from('mpq_tracker_character_powers')
+    const t   = supabase.from('mpq_tracker_character_powers')
+    const row = { ...form, couleur: mainPower ? mainPower.couleur : form.couleur }
     const { error } = modal === 'add'
-      ? await t.insert([form])
-      : await t.update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId!)
+      ? await t.insert([row])
+      : await t.update({ ...row, updated_at: new Date().toISOString() }).eq('id', editId!)
     if (error) { setFormError(error.message); setSaving(false); return }  // modal stays open, input kept
+    if (form.position && !form.sous_position) {
+      // plain power saved: its variants follow its color
+      const ids = characters.filter(c => owner(c.id) === form.character_id).map(c => c.id)
+      const { error: e2 } = await supabase.from('mpq_tracker_character_powers')
+        .update({ couleur: form.couleur }).in('character_id', ids).eq('position', form.position).not('sous_position', 'is', null)
+      if (e2) { setFormError(e2.message); setSaving(false); return }
+    }
     await load(); closeModal(); setSaving(false)
   }
 
@@ -412,7 +437,7 @@ export default function CharacterPowers() {
               {sortedFiltered.map(p => (
                 <tr key={p.id} className="border-b border-[#3D3D60]/40 hover:bg-[#3D3D60]/20 align-top">
                   <td className="py-2 px-2 font-medium text-white text-center">{cm[p.character_id]?.name ?? '—'}</td>
-                  <td className="py-2 px-2 text-center text-marvel-gold font-bold">{p.position ?? '—'}</td>
+                  <td className="py-2 px-2 text-center text-marvel-gold font-bold">{posLabel(p)}</td>
                   <td className="py-2 px-2 text-[#D8D8EE] text-center">{p.power_name ?? '—'}</td>
                   <td className="py-2 px-2 text-center"><CouleurBadge couleur={p.couleur} /></td>
                   <td className="py-2 px-2 text-xs text-[#C8C8E0] italic max-w-40 truncate" title={p.description ?? ''}>{p.description ?? '—'}</td>
@@ -464,19 +489,27 @@ export default function CharacterPowers() {
                 </div>
                 <div>
                   <label className="text-xs text-[#C8C8E0] mb-1 block">Color</label>
-                  <select className="input" value={form.couleur ?? ''}
+                  <select className="input" value={mainPower ? (mainPower.couleur ?? '') : (form.couleur ?? '')}
+                    disabled={!!mainPower} title={mainPower ? `Same color as power ${form.position}` : undefined}
                     onChange={e => setForm(f => ({ ...f, couleur: e.target.value || null }))}>
                     <option value="">— None —</option>
                     {COULEURS.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-[#C8C8E0] mb-1 block">Position (1–6)</label>
-                  <select className="input" value={form.position ?? ''}
-                    onChange={e => setForm(f => ({ ...f, position: e.target.value ? Number(e.target.value) : null }))}>
-                    <option value="">—</option>
-                    {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n}</option>)}
-                  </select>
+                  <label className="text-xs text-[#C8C8E0] mb-1 block">Position (1–6) / Variant</label>
+                  <div className="flex gap-2">
+                    <select className="input flex-1 min-w-0" value={form.position ?? ''}
+                      onChange={e => setForm(f => ({ ...f, position: e.target.value ? Number(e.target.value) : null, sous_position: e.target.value ? f.sous_position : null }))}>
+                      <option value="">—</option>
+                      {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                    <select className="input w-20" value={form.sous_position ?? ''} disabled={!form.position}
+                      onChange={e => setForm(f => ({ ...f, sous_position: e.target.value || null }))}>
+                      <option value="">—</option>
+                      {['a','b','c','d','e','f'].map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </div>
                 </div>
               </div>
 
