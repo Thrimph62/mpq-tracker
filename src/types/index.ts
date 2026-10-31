@@ -33,11 +33,15 @@ export interface CharacterPower {
   couleur: string | null
   position: number | null
   description: string | null
-  // Up to 4 effects — each with its own MP cost + category/sub chain
+  // Up to 8 effects — each with its own MP cost + category/sub chain
   effect_1_cout: number | null; effect_1_category: string | null; effect_1_sous_category: string | null; effect_1_sous_category_2: string | null; effect_1_sous_category_3: string | null
   effect_2_cout: number | null; effect_2_category: string | null; effect_2_sous_category: string | null; effect_2_sous_category_2: string | null; effect_2_sous_category_3: string | null
   effect_3_cout: number | null; effect_3_category: string | null; effect_3_sous_category: string | null; effect_3_sous_category_2: string | null; effect_3_sous_category_3: string | null
   effect_4_cout: number | null; effect_4_category: string | null; effect_4_sous_category: string | null; effect_4_sous_category_2: string | null; effect_4_sous_category_3: string | null
+  effect_5_cout: number | null; effect_5_category: string | null; effect_5_sous_category: string | null; effect_5_sous_category_2: string | null; effect_5_sous_category_3: string | null
+  effect_6_cout: number | null; effect_6_category: string | null; effect_6_sous_category: string | null; effect_6_sous_category_2: string | null; effect_6_sous_category_3: string | null
+  effect_7_cout: number | null; effect_7_category: string | null; effect_7_sous_category: string | null; effect_7_sous_category_2: string | null; effect_7_sous_category_3: string | null
+  effect_8_cout: number | null; effect_8_category: string | null; effect_8_sous_category: string | null; effect_8_sous_category_2: string | null; effect_8_sous_category_3: string | null
   created_at: string
   updated_at: string
 }
