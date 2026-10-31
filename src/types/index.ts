@@ -32,6 +32,7 @@ export interface CharacterPower {
   power_name: string | null
   couleur: string | null
   position: number | null
+  sous_position: string | null  // variant letter a–f (3a, 3b...), null for a normal power
   description: string | null
   // Up to 8 effects — each with its own MP cost + category/sub chain
   effect_1_cout: number | null; effect_1_category: string | null; effect_1_sous_category: string | null; effect_1_sous_category_2: string | null; effect_1_sous_category_3: string | null
