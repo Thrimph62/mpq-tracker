@@ -26,7 +26,7 @@ const COULEUR_BORDER: Record<Couleur, string> = {
   Red:    'border-red-700',    Yellow: 'border-yellow-600',
 }
 
-const EFFECTS = [1, 2, 3, 4] as const
+const EFFECTS = [1, 2, 3, 4, 5, 6, 7, 8] as const
 type EffectNum = typeof EFFECTS[number]
 
 const EMPTY: Omit<CharacterPower, 'id' | 'created_at' | 'updated_at'> = {
@@ -35,6 +35,10 @@ const EMPTY: Omit<CharacterPower, 'id' | 'created_at' | 'updated_at'> = {
   effect_2_cout: null, effect_2_category: null, effect_2_sous_category: null, effect_2_sous_category_2: null, effect_2_sous_category_3: null,
   effect_3_cout: null, effect_3_category: null, effect_3_sous_category: null, effect_3_sous_category_2: null, effect_3_sous_category_3: null,
   effect_4_cout: null, effect_4_category: null, effect_4_sous_category: null, effect_4_sous_category_2: null, effect_4_sous_category_3: null,
+  effect_5_cout: null, effect_5_category: null, effect_5_sous_category: null, effect_5_sous_category_2: null, effect_5_sous_category_3: null,
+  effect_6_cout: null, effect_6_category: null, effect_6_sous_category: null, effect_6_sous_category_2: null, effect_6_sous_category_3: null,
+  effect_7_cout: null, effect_7_category: null, effect_7_sous_category: null, effect_7_sous_category_2: null, effect_7_sous_category_3: null,
+  effect_8_cout: null, effect_8_category: null, effect_8_sous_category: null, effect_8_sous_category_2: null, effect_8_sous_category_3: null,
 }
 
 type ViewMode = 'table' | 'byCharacter'
@@ -72,6 +76,12 @@ function getFormEffectData(form: typeof EMPTY, n: EffectNum): EffectData {
     sous_category_3: form[`effect_${n}_sous_category_3`],
     degats: null, quantite: null, force: null, choix: null, autre: null, trigger: null,
   }
+}
+
+const EFFECT_FIELDS = ['cout', 'category', 'sous_category', 'sous_category_2', 'sous_category_3'] as const
+
+function hasEffect(f: typeof EMPTY, n: EffectNum) {
+  return EFFECT_FIELDS.some(x => (f as any)[`effect_${n}_${x}`] != null)
 }
 
 // Defined at module level so React keeps them mounted between renders
@@ -135,6 +145,7 @@ export default function CharacterPowers() {
   const [form, setForm]             = useState<typeof EMPTY>(EMPTY)
   const [editId, setEditId]         = useState<string | null>(null)
   const [saving, setSaving]         = useState(false)
+  const [shown, setShown]           = useState(1)   // effects visible in the modal
 
   async function load() {
     try {
@@ -236,17 +247,30 @@ export default function CharacterPowers() {
   }, [filtered, cm])
 
   function openAdd(characterId?: string) {
-    setForm({ ...EMPTY, character_id: characterId ?? '' }); setEditId(null); setModal('add')
+    setForm({ ...EMPTY, character_id: characterId ?? '' }); setEditId(null); setShown(1); setModal('add')
   }
   function openEdit(p: CharacterPower) {
     const { id, created_at, updated_at, ...rest } = p
     // a power sitting on a duplicate moves to the original when saved
-    setForm({ ...rest, character_id: cm[p.character_id]?.id ?? p.character_id }); setEditId(p.id); setModal('edit')
+    setForm({ ...rest, character_id: cm[p.character_id]?.id ?? p.character_id }); setEditId(p.id)
+    setShown(Math.max(1, ...EFFECTS.filter(n => hasEffect(rest, n))))  // show every filled effect
+    setModal('edit')
   }
   function closeModal() { setModal(null); setEditId(null); setFormError(null) }
 
   function setEffect(n: EffectNum, field: keyof EffectData, val: string | null) {
     setForm(f => ({ ...f, [`effect_${n}_${field}`]: val }))
+  }
+
+  // Remove effect n: the following ones shift up (3 becomes 2...), the last one is emptied
+  function removeEffect(n: number) {
+    setForm(f => {
+      const g: any = { ...f }
+      for (let k = n; k <= EFFECTS.length; k++)
+        for (const x of EFFECT_FIELDS) g[`effect_${k}_${x}`] = k < EFFECTS.length ? g[`effect_${k + 1}_${x}`] : null
+      return g
+    })
+    setShown(s => Math.max(1, s - 1))
   }
 
   async function save() {
@@ -464,27 +488,38 @@ export default function CharacterPowers() {
                   placeholder="Full power description..." />
               </div>
 
-              {/* Effects 1–4 */}
+              {/* Effects 1–8: effect 1 always shown, "+ Add effect" reveals the next one */}
               <div>
-                <p className="text-xs font-semibold text-marvel-gold mb-2">Effects (up to 4)</p>
+                <p className="text-xs font-semibold text-marvel-gold mb-2">Effects (up to {EFFECTS.length})</p>
                 <div className="space-y-2">
-                  {EFFECTS.map(n => (
-                    <EffectForm
-                      key={n}
-                      label={`Effect ${n}`}
-                      data={getFormEffectData(form, n)}
-                      onChange={(field, val) => setEffect(n, field, val)}
-                      allCategories={allCategories}
-                      categoryMap={categoryMap}
-                      sousMap={sousMap}
-                      sousMap2={sousMap2}
-                      allTriggers={[]}
-                      coutValue={form[`effect_${n}_cout`]}
-                      onCoutChange={val => setForm(f => ({ ...f, [`effect_${n}_cout`]: val }))}
-                      simplified={true}
-                    />
+                  {EFFECTS.filter(n => n <= shown).map(n => (
+                    <div key={n} className="relative">
+                      <EffectForm
+                        label={`Effect ${n}`}
+                        data={getFormEffectData(form, n)}
+                        onChange={(field, val) => setEffect(n, field, val)}
+                        allCategories={allCategories}
+                        categoryMap={categoryMap}
+                        sousMap={sousMap}
+                        sousMap2={sousMap2}
+                        allTriggers={[]}
+                        coutValue={form[`effect_${n}_cout`]}
+                        onCoutChange={val => setForm(f => ({ ...f, [`effect_${n}_cout`]: val }))}
+                        simplified={true}
+                      />
+                      {n > 1 && (
+                        <button type="button" onClick={() => removeEffect(n)} title="Remove this effect"
+                          className="absolute top-2 right-2 text-[#C8C8E0] hover:text-red-400"><X size={14} /></button>
+                      )}
+                    </div>
                   ))}
                 </div>
+                {shown < EFFECTS.length && (
+                  <button type="button" onClick={() => setShown(s => s + 1)}
+                    className="mt-2 text-xs bg-[#3D3D60] hover:bg-marvel-red/40 text-[#C8C8E0] hover:text-white px-3 py-1.5 rounded transition-all">
+                    + Add effect
+                  </button>
+                )}
               </div>
 
               {formError && (
