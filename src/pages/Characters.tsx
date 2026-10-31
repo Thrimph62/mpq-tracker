@@ -285,8 +285,21 @@ export default function Characters() {
   }
 
   async function remove(id: string) {
-    if (!confirm('Delete this character?')) return
-    await supabase.from('mpq_tracker_characters').delete().eq('id', id)
+    // Deleting a character cascades to its powers. Powers resolve to the original by name,
+    // so if another copy of the same name stays, hand the powers to it first.
+    const name   = chars.find(c => c.id === id)?.name
+    const others = chars.filter(c => c.id !== id && c.name === name)
+    const { count, error: countErr } = await supabase.from('mpq_tracker_character_powers')
+      .select('id', { count: 'exact', head: true }).eq('character_id', id)
+    if (countErr) { alert(countErr.message); return }
+    const n = count ?? 0
+    if (!confirm(n && !others.length ? `Delete this character and its ${n} power${n > 1 ? 's' : ''}?` : 'Delete this character?')) return
+    if (n && others.length) {
+      const { error } = await supabase.from('mpq_tracker_character_powers').update({ character_id: others[0].id }).eq('character_id', id)
+      if (error) { alert(error.message); return }
+    }
+    const { error } = await supabase.from('mpq_tracker_characters').delete().eq('id', id)
+    if (error) { alert(error.message); return }
     const remaining = chars.filter(c => c.id !== id)
     const assigned  = await autoAssignDuplicates(remaining)
     setChars(assigned)
