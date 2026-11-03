@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/fetchAll'
+import { buildTaxonomy, fetchTaxRows, effectPrefixes, TaxRow } from '../lib/taxonomy'
 import { Character, CharacterPower, Stars } from '../types'
 import { StarBadge } from '../components/Badges'
 import { SearchDropdown, toCharacterOptions } from '../components/SearchDropdown'
@@ -150,14 +151,17 @@ export default function CharacterPowers() {
   const [editId, setEditId]         = useState<string | null>(null)
   const [saving, setSaving]         = useState(false)
   const [shown, setShown]           = useState(1)   // effects visible in the modal
+  const [supTax, setSupTax]         = useState<TaxRow[]>([])  // Supports rows (category columns only)
 
   async function load() {
     try {
-      const [pw, ch] = await Promise.all([
+      const [pw, ch, sup] = await Promise.all([
         fetchAll<CharacterPower>('mpq_tracker_character_powers', ['position', 'id']),
         fetchAll<Character>('mpq_tracker_characters', ['base_name', 'version', 'id']),
+        // categories used by Supports are shared; if this read fails the page still works
+        fetchTaxRows('mpq_tracker_supports', [...effectPrefixes(5), 'synergy']).catch(() => [] as TaxRow[]),
       ])
-      setPowers(pw); setCharacters(ch); setError(null)
+      setPowers(pw); setCharacters(ch); setSupTax(sup); setError(null)
     } catch (e: any) {
       setError(e?.message ?? String(e))
     }
@@ -178,27 +182,11 @@ export default function CharacterPowers() {
 
   const charOptions = useMemo(() => toCharacterOptions(origs), [origs])
 
-  const { allCategories, categoryMap, sousMap, sousMap2 } = useMemo(() => {
-    const cats = new Set<string>()
-    const categoryMap: Record<string, string[]> = {}  // category → sous_categories
-    const sousMap:     Record<string, string[]> = {}  // sous_category → sous_category_2
-    const sousMap2:    Record<string, string[]> = {}  // sous_category_2 → sous_category_3
-    const link = (m: Record<string, string[]>, k: string | null, v: string | null) => {
-      if (!k || !v) return
-      const a = m[k] ?? (m[k] = [])
-      if (!a.includes(v)) a.push(v)
-    }
-    for (const p of powers) for (const n of EFFECTS) {
-      const c  = p[`effect_${n}_category`]        as string | null
-      const s1 = p[`effect_${n}_sous_category`]   as string | null
-      const s2 = p[`effect_${n}_sous_category_2`] as string | null
-      const s3 = p[`effect_${n}_sous_category_3`] as string | null
-      if (c) cats.add(c)
-      link(categoryMap, c, s1); link(sousMap, s1, s2); link(sousMap2, s2, s3)
-    }
-    ;[categoryMap, sousMap, sousMap2].forEach(m => Object.values(m).forEach(a => a.sort()))
-    return { allCategories: [...cats].sort(), categoryMap, sousMap, sousMap2 }
-  }, [powers])
+  // Categories from Powers + Supports, merged
+  const { allCategories, categoryMap, sousMap, sousMap2 } = useMemo(() => buildTaxonomy([
+    [powers as unknown as TaxRow[], effectPrefixes(8)],
+    [supTax, [...effectPrefixes(5), 'synergy']],
+  ]), [powers, supTax])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()

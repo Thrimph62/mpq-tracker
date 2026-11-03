@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/fetchAll'
+import { buildTaxonomy, fetchTaxRows, effectPrefixes, TaxRow } from '../lib/taxonomy'
 import { Support } from '../types'
 import { StarBadge } from '../components/Badges'
 import { EffectDisplay, EffectForm, EffectData, catColor } from '../components/EffectFields'
@@ -192,6 +193,7 @@ export default function Supports() {
   const [saving, setSaving]           = useState(false)
   const [customRestr, setCustomRestr] = useState('')
   const [shown, setShown]             = useState(1)   // effects visible in the modal
+  const [powTax, setPowTax]           = useState<TaxRow[]>([])  // Powers rows (category columns only)
 
   function setView(v: ViewMode) {
     setViewState(v)
@@ -200,7 +202,12 @@ export default function Supports() {
 
   async function load() {
     try {
-      setSupports(await fetchAll<Support>('mpq_tracker_supports', ['name', 'id']))
+      const [sup, pw] = await Promise.all([
+        fetchAll<Support>('mpq_tracker_supports', ['name', 'id']),
+        // categories used by Powers are shared; if this read fails the page still works
+        fetchTaxRows('mpq_tracker_character_powers', effectPrefixes(8)).catch(() => [] as TaxRow[]),
+      ])
+      setSupports(sup); setPowTax(pw)
       setError(null)
     } catch (e: any) {
       setError(e?.message ?? String(e))
@@ -215,26 +222,14 @@ export default function Supports() {
   }
 
   // Unique lists built from existing data (effects 1-5 + synergy)
-  const { allCategories, categoryMap, sousMap, sousMap2, allTriggers } = useMemo(() => {
-    const cats = new Set<string>(), trig = new Set<string>()
-    const categoryMap: Record<string, string[]> = {}  // category → sous_categories
-    const sousMap:     Record<string, string[]> = {}  // sous_category → sous_category_2
-    const sousMap2:    Record<string, string[]> = {}  // sous_category_2 → sous_category_3
-    const link = (m: Record<string, string[]>, k: string | null, v: string | null) => {
-      if (!k || !v) return
-      const a = m[k] ?? (m[k] = [])
-      if (!a.includes(v)) a.push(v)
-    }
-    for (const s of supports) for (const p of PREFIXES) {
-      const c = get(s, p, 'category'), s1 = get(s, p, 'sous_category')
-      const s2 = get(s, p, 'sous_category_2'), s3 = get(s, p, 'sous_category_3'), t = get(s, p, 'trigger')
-      if (c) cats.add(c)
-      if (t) trig.add(t)
-      link(categoryMap, c, s1); link(sousMap, s1, s2); link(sousMap2, s2, s3)
-    }
-    ;[categoryMap, sousMap, sousMap2].forEach(m => Object.values(m).forEach(a => a.sort()))
-    return { allCategories: [...cats].sort(), categoryMap, sousMap, sousMap2, allTriggers: [...trig].sort() }
-  }, [supports])
+  // Categories from Supports + Powers, merged (triggers are Supports only)
+  const { allCategories, categoryMap, sousMap, sousMap2 } = useMemo(() => buildTaxonomy([
+    [supports as unknown as TaxRow[], PREFIXES],
+    [powTax, effectPrefixes(8)],
+  ]), [supports, powTax])
+  const allTriggers = useMemo(() =>
+    [...new Set(supports.map(s => PREFIXES.map(p => get(s, p, 'trigger'))).flat().filter(Boolean) as string[])].sort(),
+  [supports])
 
   const allRestrictions = useMemo(() =>
     [...new Set([...DEFAULT_RESTRICTIONS, ...supports.map(s => s.restriction).filter(Boolean) as string[]])].sort(),
