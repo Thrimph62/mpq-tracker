@@ -218,7 +218,7 @@ export default function PuzzleGauntlet() {
                   <div>
                     <label className="text-xs text-[#C8C8E0] mb-1 block">Character</label>
                     <SearchDropdown
-                      value={form[`${pos}_character`]}
+                      value={form[`${pos}_personnage`]}
                       onChange={v => setSlot(pos, 'character', v)}
                       options={charOptions}
                       placeholder="Search for a character..."
