@@ -77,7 +77,8 @@ export default function PuzzleGauntlet() {
   function closeModal() { setModal(null); setEditId(null) }
 
   function setSlot(pos: 'gauche' | 'milieu' | 'droite', field: 'character' | 'build' | 'support', val: string | null) {
-    setForm(f => ({ ...f, [`${pos}_${field}`]: val }))
+    const col = field === 'character' ? 'personnage' : field
+    setForm(f => ({ ...f, [`${pos}_${col}`]: val }))
   }
 
   async function save() {
