@@ -69,7 +69,7 @@ export default function PuzzleGauntlet() {
     return acc
   }, {})
 
-  function openAdd()    { setForm(EMPTY); setEditId(null); setModal('add') }
+  function openAdd(cat?: string) { setForm({ ...EMPTY, categorie: cat ?? null }); setEditId(null); setModal('add') }
   function openEdit(n: PGType) {
     const { id, created_at, updated_at, ...rest } = n
     setForm(rest); setEditId(n.id); setModal('edit')
@@ -83,8 +83,16 @@ export default function PuzzleGauntlet() {
 
   async function save() {
     setSaving(true)
-    if (modal === 'add') await supabase.from('mpq_tracker_puzzle_gauntlet').insert([form])
-    else if (editId) await supabase.from('mpq_tracker_puzzle_gauntlet').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId)
+    const { error } =
+      modal === 'add'
+        ? await supabase.from('mpq_tracker_puzzle_gauntlet').insert([form])
+        : await supabase.from('mpq_tracker_puzzle_gauntlet').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editId!)
+    if (error) {
+      console.error(error)
+      alert(error.message)
+      setSaving(false)
+      return
+    }
     await load(); closeModal(); setSaving(false)
   }
 
@@ -101,7 +109,7 @@ export default function PuzzleGauntlet() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="page-title">Puzzle Gauntlet</h1>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus size={16} /> Add</button>
+        <button onClick={() => openAdd()} className="btn-primary flex items-center gap-2"><Plus size={16} /> Add</button>
       </div>
 
       <div className="flex flex-wrap gap-3">
